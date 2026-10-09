@@ -1,0 +1,47 @@
+// Gera a geometria oficial do recinto (lib/site/planta.json) a partir da digitalização da pág. 6 do PDF.
+// Unidades de saída em metros, origem no centro do raster, eixo X para a direita (leste no desenho),
+// eixo Z para baixo no desenho (sul). Escala medida: 1 px do raster = 0,707 m (vaga de 3,5 m a 45° e passo de 7 px).
+import fs from "node:fs";
+import { PNG } from "pngjs";
+
+const RASTER = "docs/referencias/raster/p6-Image89-1006x612.png";
+const png = PNG.sync.read(fs.readFileSync(RASTER));
+const { width: W, height: H, data } = png;
+export const M_PER_PX = 0.707;
+const lum = (x, y) => { x = Math.round(x); y = Math.round(y); if (x < 0 || y < 0 || x >= W || y >= H) return 255; const i = (y * W + x) * 4; return (data[i] + data[i + 1] + data[i + 2]) / 3; };
+const stripe = (x, y) => { const v = lum(x, y); return v >= 130 && v <= 222 ? 1 : 0; };
+
+const inf = JSON.parse(fs.readFileSync("data-src/contagem-bruta.json"));
+const out = JSON.parse(fs.readFileSync("data-src/contagem-outras.json"));
+const cams = JSON.parse(fs.readFileSync("data-src/cameras-p06.json"));
+
+// lado da faixa de vagas em relação à linha de batentes (+1: y/x crescente)
+const LINHAS = {
+  F1: { setor: "EST", fila: "A", lado: +1, eixo: "h" }, "F2-n": { setor: "EST", fila: "B", lado: -1, eixo: "h" }, "F2-s": { setor: "EST", fila: "C", lado: +1, eixo: "h" },
+  "F3-n": { setor: "EST", fila: "D", lado: -1, eixo: "h" }, "F3-s": { setor: "EST", fila: "E", lado: +1, eixo: "h" }, "F4-n": { setor: "EST", fila: "F", lado: -1, eixo: "h" },
+  "F4-s": { setor: "EST", fila: "G", lado: +1, eixo: "h" }, F5: { setor: "EST", fila: "H", lado: -1, eixo: "h" }, G1: { setor: "EST", fila: "I", lado: +1, eixo: "h" },
+  G2: { setor: "EST", fila: "J", lado: -1, eixo: "h" },
+  "A1-o": { setor: "PUL", fila: "A", lado: -1, eixo: "v" }, "A1-l": { setor: "PUL", fila: "B", lado: +1, eixo: "v" }, "A2-o": { setor: "PUL", fila: "C", lado: -1, eixo: "v" },
+  "A2-l": { setor: "PUL", fila: "D", lado: +1, eixo: "v" }, A3: { setor: "PUL", fila: "E", lado: -1, eixo: "v" },
+};
+// comprimento da vaga ao longo da listra: mede a extensão da listra a partir de cada batente
+const extent = (x, y, dx, dy) => { let last = 0; for (let t = 2; t <= 40; t += 0.5) { let hit = 0; for (const o of [-2.8, -2.4, -2, 2, 2.4, 2.8]) hit = Math.max(hit, stripe(x + dx * t - dy * o, y + dy * t + dx * o)); if (hit) last = t; else if (t - last > 3) break; } return last; };
+
+const stalls = [], linhas = [];
+for (const L of [...inf, ...out]) {
+  const cfg = LINHAS[L.id]; if (!cfg) continue;
+  const pts = L.segmentos.flatMap((s) => s.pontos);
+  const s = Math.SQRT1_2;
+  const cand = cfg.eixo === "h" ? [[-s, cfg.lado * s], [s, cfg.lado * s]] : [[cfg.lado * s, -s], [cfg.lado * s, s]];
+  const votos = cand.map(([dx, dy]) => pts.reduce((a, [x, y]) => { let c = 0; for (let t = 4; t <= 12; t++) for (const o of [-0.7, 0, 0.7]) c += stripe(x + dx * t - dy * o, y + dy * t + dx * o); return a + c; }, 0));
+  // o interior da vaga é branco entre as duas bordas: a direção do eixo é a que cruza MENOS listras
+  const [dx, dy] = cand[votos[0] <= votos[1] ? 0 : 1];
+  const exts = pts.map(([x, y]) => extent(x, y, dx, dy)).sort((a, b) => a - b);
+  const comp = exts[exts.length >> 1];
+  linhas.push({ id: L.id, ...cfg, dir: [dx, dy], votos, comprimentoPx: comp, n: pts.length });
+  pts.forEach(([x, y], i) => stalls.push({ linha: L.id, setor: cfg.setor, fila: cfg.fila, i, gx: x, gy: y, dx, dy, compPx: comp, largPx: 7 * Math.SQRT1_2 }));
+}
+fs.mkdirSync("data-src", { recursive: true });
+fs.writeFileSync("data-src/stalls-raw.json", JSON.stringify({ linhas, stalls }, null, 1));
+for (const l of linhas) console.log(l.id.padEnd(6), "dir", l.dir.map((v) => v.toFixed(2)).join(","), "votos", l.votos.join("/"), "comp px", l.comprimentoPx, "n", l.n);
+console.log("total vagas em espinha de peixe:", stalls.length);

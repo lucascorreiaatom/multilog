@@ -39,3 +39,9 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+# medições locais
+/scratch
+
+# documentos do cliente (SoW, planta de CFTV): ficam só localmente
+/docs/referencias

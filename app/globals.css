@@ -1,26 +1,166 @@
 @import "tailwindcss";
 
+/*
+  Tokens do Conceito 1 (clay). Medidas derivadas da Imagem 1 (captura de 2000 px de uma tela de 1440 px,
+  escala 1,389) e encaixadas no grid de 4 px. Ex.: painel esquerdo 449 px na imagem = 323 px, adotado 320;
+  vídeo AO VIVO 515 x 292 = 371 x 210, adotado 370 x 208 (16:9).
+*/
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  --bg: #e4e7eb;
+  /* superfícies em vidro (glassmorphism): translúcidas para não esconder o pátio 3D; o blur vem de .vidro */
+  --panel: rgb(244 245 247 / 0.6);
+  --card: rgb(255 255 255 / 0.56);
+  --card-muted: rgb(255 255 255 / 0.78);
+  --line: #e6e8ec;
+  --text: #192032;
+  --text-2: #4a5263;
+  --text-3: #7c8495;
+  --accent: #c45126;
+  --accent-hover: #b0471f;
+  --accent-soft: #fbe9e1;
+  --dark: #192032;
+  --on-dark: #ffffff;
+  --chip: rgb(25 32 50 / 0.06);
+
+  /* status de vaga */
+  --st-livre: #3a9a5b;
+  --st-ocupada: #cf4440;
+  --st-conferencia: #4a72e8;
+  --st-saida: #e0962f;
+  --st-reservada: #8a5cd6;
+  --st-vistoria: #1aa3b8;
+  --st-bloqueada: #5c6370;
+  --live: #3a9a5b;
+
+  --shadow-clay: 0 1px 2px rgb(25 32 50 / 0.04), 0 8px 24px rgb(25 32 50 / 0.1), inset 0 1px 0 rgb(255 255 255 / 0.9), inset 0 0 0 1px rgb(255 255 255 / 0.5);
+  --shadow-card: 0 1px 2px rgb(25 32 50 / 0.04), 0 2px 8px rgb(25 32 50 / 0.04), inset 0 0 0 1px rgb(255 255 255 / 0.6);
+  --shadow-float: 0 2px 4px rgb(25 32 50 / 0.06), 0 12px 32px rgb(25 32 50 / 0.12);
+}
+
+:root[data-theme="dark"] {
+  --bg: #0f131c;
+  --panel: rgb(23 28 39 / 0.6);
+  --card: rgb(30 36 49 / 0.56);
+  --card-muted: rgb(40 47 62 / 0.72);
+  --line: #2a3140;
+  --text: #eef0f4;
+  --text-2: #b7bdc9;
+  --text-3: #8a92a2;
+  --accent: #e0683a;
+  --accent-hover: #ec7a4d;
+  --accent-soft: #3a2219;
+  --dark: #eef0f4;
+  --on-dark: #192032;
+  --chip: rgb(255 255 255 / 0.07);
+  --st-livre: #4fb874;
+  --st-ocupada: #e5605b;
+  --st-conferencia: #6a8ff0;
+  --st-saida: #eba84a;
+  --st-reservada: #a47de6;
+  --st-vistoria: #34bccf;
+  --st-bloqueada: #8a92a2;
+  --live: #4fb874;
+  --shadow-clay: 0 1px 2px rgb(0 0 0 / 0.3), 0 8px 24px rgb(0 0 0 / 0.35), inset 0 1px 0 rgb(255 255 255 / 0.08), inset 0 0 0 1px rgb(255 255 255 / 0.06);
+  --shadow-card: 0 1px 2px rgb(0 0 0 / 0.25), inset 0 0 0 1px rgb(255 255 255 / 0.05);
+  --shadow-float: 0 2px 4px rgb(0 0 0 / 0.3), 0 12px 32px rgb(0 0 0 / 0.4);
+}
+
+@theme {
+  /* utilitários de espaçamento em pixels exatos: p-16 = 16px, gap-8 = 8px (grid de 4 px) */
+  --spacing: 1px;
 }
 
 @theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
+  --font-sans: var(--font-inter), ui-sans-serif, system-ui, sans-serif;
+  --color-bg: var(--bg);
+  --color-panel: var(--panel);
+  --color-card: var(--card);
+  --color-card-muted: var(--card-muted);
+  --color-line: var(--line);
+  --color-text: var(--text);
+  --color-text-2: var(--text-2);
+  --color-text-3: var(--text-3);
+  --color-accent: var(--accent);
+  --color-accent-hover: var(--accent-hover);
+  --color-accent-soft: var(--accent-soft);
+  --color-dark: var(--dark);
+  --color-on-dark: var(--on-dark);
+  --color-chip: var(--chip);
+  --color-st-livre: var(--st-livre);
+  --color-st-ocupada: var(--st-ocupada);
+  --color-st-conferencia: var(--st-conferencia);
+  --color-st-saida: var(--st-saida);
+  --color-st-reservada: var(--st-reservada);
+  --color-st-vistoria: var(--st-vistoria);
+  --color-st-bloqueada: var(--st-bloqueada);
+  --color-live: var(--live);
+  --shadow-clay: var(--shadow-clay);
+  --shadow-card: var(--shadow-card);
+  --shadow-float: var(--shadow-float);
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
+html,
+body {
+  height: 100%;
 }
 
 body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  background: var(--bg);
+  color: var(--text);
+  font-family: var(--font-sans);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  overflow: hidden;
+}
+
+/* vidro: desfoca e satura o pátio atrás das superfícies translúcidas. Só nas camadas que ficam
+   direto sobre a cena; cartões dentro de um painel já herdam o desfoque dele. */
+@utility vidro {
+  -webkit-backdrop-filter: blur(24px) saturate(160%);
+  backdrop-filter: blur(24px) saturate(160%);
+}
+
+/* depuração de desempenho (?sem=vidro): sem desfoque atrás das superfícies */
+.sem-vidro * {
+  -webkit-backdrop-filter: none !important;
+  backdrop-filter: none !important;
+}
+
+.tnum {
+  font-variant-numeric: tabular-nums;
+  font-feature-settings: "tnum" 1;
+}
+
+/* TV 4K: dobra a escala mantendo o grid de 4 px exato em pixels físicos */
+@media (min-width: 3200px) {
+  html {
+    zoom: 2;
+  }
+}
+
+/* rolagem sem barra visível; as bordas esvanecem quando há mais conteúdo (data-* vindos de useRolagem) */
+@property --fade-topo {
+  syntax: "<length>";
+  inherits: false;
+  initial-value: 0px;
+}
+@property --fade-base {
+  syntax: "<length>";
+  inherits: false;
+  initial-value: 0px;
+}
+.rolagem {
+  scrollbar-width: none;
+  -webkit-mask-image: linear-gradient(to bottom, transparent, #000 var(--fade-topo), #000 calc(100% - var(--fade-base)), transparent);
+  mask-image: linear-gradient(to bottom, transparent, #000 var(--fade-topo), #000 calc(100% - var(--fade-base)), transparent);
+  transition: --fade-topo 200ms ease, --fade-base 200ms ease;
+}
+.rolagem::-webkit-scrollbar {
+  display: none;
+}
+.rolagem[data-topo] {
+  --fade-topo: 24px;
+}
+.rolagem[data-base] {
+  --fade-base: 48px;
 }
