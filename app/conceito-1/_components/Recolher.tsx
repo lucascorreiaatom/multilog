@@ -13,7 +13,7 @@ export function BotaoRecolher({ bloco, nome }: { bloco: Bloco; nome: string }) {
       aria-label={recolhido ? `Expandir ${nome}` : `Recolher ${nome}`}
       title={recolhido ? "Expandir" : "Recolher"}
       onClick={() => useUi.getState().setBloco(bloco, recolhido ? "aberto" : "recolhido")}
-      className="flex size-32 items-center justify-center rounded-[10px] text-text-2 hover:bg-chip hover:text-text"
+      className="flex size-32 items-center justify-center rounded-full text-text-2 hover:bg-chip hover:text-text"
     >
       {recolhido ? <ChevronDown size={18} /> : <ChevronUp size={18} />}
     </button>

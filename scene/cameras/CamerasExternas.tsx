@@ -5,6 +5,7 @@ import * as THREE from "three";
 import { camerasExternas } from "@/lib/cameras/catalogo";
 import { MODELOS } from "@/lib/cameras/modelos";
 import { useUi } from "@/lib/store/ui";
+import { CAMADA, sobre } from "../camadas";
 import type { Paleta } from "../paleta";
 
 export function CamerasExternas({ p }: { p: Paleta }) {
@@ -39,7 +40,8 @@ export function CamerasExternas({ p }: { p: Paleta }) {
 /** leques de cobertura de todas as câmeras externas (camada opcional) e destaque da selecionada */
 export function Cobertura() {
   const ligada = useUi((s) => s.cobertura);
-  const ativa = useUi((s) => s.cameraAtiva);
+  // card da câmera fechado = nenhuma câmera em destaque
+  const ativa = useUi((s) => (s.blocos.camera === "oculto" ? null : s.cameraAtiva));
   const sensor = useUi((s) => s.sensor);
   const geos = useMemo(() => camerasExternas.map((c) => {
     const mod = MODELOS[c.modelo];
@@ -64,7 +66,7 @@ export function Cobertura() {
           <group key={c.numero} position={[c.posicao[0], 0.12, c.posicao[1]]}>
             {fatias.map((g, i) => (
               <mesh key={i} geometry={g} renderOrder={2}>
-                <meshBasicMaterial color={destaque ? "#e0683a" : "#4a72e8"} transparent opacity={destaque ? (i === sensor || fatias.length === 1 ? 0.26 : 0.12) : 0.08} depthWrite={false} />
+                <meshBasicMaterial color={destaque ? "#e0683a" : "#4a72e8"} transparent opacity={destaque ? (i === sensor || fatias.length === 1 ? 0.26 : 0.12) : 0.08} depthWrite={false} {...sobre(CAMADA.sobreposicao)} />
               </mesh>
             ))}
           </group>

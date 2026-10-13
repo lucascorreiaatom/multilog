@@ -120,6 +120,11 @@ body {
   backdrop-filter: blur(24px) saturate(160%);
 }
 
+/* realce-acento: laranja leve e esfumaçado sobre o fundo do cartão (status selecionado no filtro) */
+.realce-acento {
+  background-image: radial-gradient(130% 160% at 0% 0%, color-mix(in srgb, var(--accent) 12%, transparent), color-mix(in srgb, var(--accent) 2%, transparent) 75%);
+}
+
 /* depuração de desempenho (?sem=vidro): sem desfoque atrás das superfícies */
 .sem-vidro * {
   -webkit-backdrop-filter: none !important;
@@ -163,4 +168,36 @@ body {
 }
 .rolagem[data-base] {
   --fade-base: 48px;
+}
+
+/* pulso "ao vivo": anel sutil que se expande e some a partir do ponto */
+.pulso-vivo {
+  position: relative;
+}
+.pulso-vivo::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  background: inherit;
+  animation: pulso-vivo 2.4s ease-out infinite;
+}
+@keyframes pulso-vivo {
+  0% { transform: scale(1); opacity: 0.5; }
+  70%, 100% { transform: scale(2.4); opacity: 0; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .pulso-vivo::after { animation: none; }
+}
+
+/* entrada suave de superfícies flutuantes (resultados da busca) */
+.animar-entrada {
+  animation: animar-entrada 220ms cubic-bezier(0.22, 1, 0.36, 1);
+  transform-origin: top left;
+}
+@keyframes animar-entrada {
+  from { opacity: 0; transform: translateY(-4px) scale(0.98); }
+}
+@media (prefers-reduced-motion: reduce) {
+  .animar-entrada { animation: none; }
 }

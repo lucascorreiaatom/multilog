@@ -1,18 +1,21 @@
 "use client";
-// Busca global (Cmd+K ou "/"): placas, vagas, câmeras (número, código, modelo, local), gates e setores.
-import * as Dialog from "@radix-ui/react-dialog";
+// Busca global (Cmd+K ou "/"): placas, vagas, câmeras (número, código, modelo, local), gates, setores e prédios.
+// Fica no cabeçalho como ícone; ao abrir, o pill cresce para a direita e vira o campo, com os resultados logo abaixo.
 import { Command } from "cmdk";
-import { DoorOpen, LayoutGrid, Search, SquareParking, Truck, Video } from "lucide-react";
-import { useEffect, useMemo, useState } from "react";
+import { Building2, DoorOpen, LayoutGrid, Search, SquareParking, Truck, Video } from "lucide-react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { todasCameras } from "@/lib/cameras/catalogo";
 import { MODELOS } from "@/lib/cameras/modelos";
 import { STATUS } from "@/lib/patio/tipos";
 import { NOMES_SETOR, planta, SETORES_VAGAS } from "@/lib/site";
 import { usePatio } from "@/lib/store/patio";
 import { useUi } from "@/lib/store/ui";
-import { useRolagem } from "./ui";
+import { cx, useRolagem } from "./ui";
 
 const grupo = "px-8 pt-12 pb-4 text-[12px] font-semibold leading-16 text-text-3 [&_[cmdk-group-heading]]:px-8 [&_[cmdk-group-heading]]:pb-4";
+/** maiúsculas sem acento, para "armazem" achar "Armazém" */
+const normalizar = (s: string) => s.normalize("NFD").replace(/\p{M}/gu, "").toUpperCase();
+
 const item = "flex h-40 cursor-pointer items-center gap-12 rounded-[10px] px-8 text-[13px] leading-20 text-text data-[selected=true]:bg-chip";
 
 export function Busca() {
@@ -21,6 +24,8 @@ export function Busca() {
   const rolagem = useRolagem<HTMLDivElement>();
   const vagas = usePatio((s) => s.vagas);
   const ocupantes = usePatio((s) => s.ocupantes);
+  const raiz = useRef<HTMLDivElement>(null);
+  const campo = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
     const tecla = (e: KeyboardEvent) => {
@@ -41,23 +46,38 @@ export function Busca() {
     return out;
   }, [vagas, ocupantes]);
 
-  const termo = q.trim().toUpperCase();
+  const termo = normalizar(q.trim());
   const limite = termo.length < 2 ? 0 : 8;
-  const fechar = () => { useUi.getState().setBusca(false); setQ(""); };
+  const fechar = () => { useUi.getState().setBusca(false); setQ(""); campo.current?.blur(); };
   const ir = (fn: () => void) => { fn(); fechar(); };
 
+  // ao abrir (clique, "/" ou Cmd+K) o foco vai para o campo; clique fora fecha
+  useEffect(() => {
+    if (!aberta) return;
+    campo.current?.focus();
+    const fora = (e: PointerEvent) => { if (!raiz.current?.contains(e.target as Node)) fechar(); };
+    document.addEventListener("pointerdown", fora);
+    return () => document.removeEventListener("pointerdown", fora);
+  }, [aberta]);
+
   return (
-    <Dialog.Root open={aberta} onOpenChange={(v) => (v ? useUi.getState().setBusca(true) : fechar())}>
-      <Dialog.Portal>
-        <Dialog.Overlay className="fixed inset-0 z-40 bg-[rgb(25_32_50/0.24)]" />
-        <Dialog.Content aria-describedby={undefined} className="fixed top-96 left-1/2 z-50 w-[560px] max-w-[calc(100vw-32px)] -translate-x-1/2 overflow-hidden vidro rounded-[20px] bg-panel shadow-float">
-          <Dialog.Title className="sr-only">Buscar</Dialog.Title>
-          <Command shouldFilter={false} label="Buscar no pátio">
-            <div className="flex h-56 items-center gap-12 px-16">
-              <Search size={18} className="text-text-3" />
-              <Command.Input autoFocus value={q} onValueChange={setQ} placeholder="Placa, vaga (EST-B12), câmera (CAM-005 ou 5), gate, setor"
-                className="h-40 flex-1 bg-transparent text-[14px] leading-20 text-text outline-none placeholder:text-text-3" />
-            </div>
+    <div ref={raiz} className="relative h-48">
+      <Command shouldFilter={false} label="Buscar no pátio" onKeyDown={(e) => { if (e.key === "Escape") { e.preventDefault(); fechar(); } }}>
+        <div className={cx("vidro flex h-48 items-center overflow-hidden rounded-full shadow-card transition-[width,background-color] duration-300 ease-[cubic-bezier(0.22,1,0.36,1)] max-md:transition-none",
+          aberta ? "w-[360px] max-md:w-[calc(100vw-32px)] bg-card" : "w-48 bg-card hover:bg-card-muted")}>
+          <button type="button" aria-label="Buscar placa, vaga, câmera ou prédio" title="Buscar ( / )" aria-expanded={aberta}
+            onClick={() => (aberta ? campo.current?.focus() : useUi.getState().setBusca(true))}
+            className="flex size-48 shrink-0 items-center justify-center rounded-full text-text">
+            <Search size={18} />
+          </button>
+          <Command.Input ref={campo} value={q} onValueChange={setQ} tabIndex={aberta ? 0 : -1} aria-hidden={!aberta}
+            placeholder="Placa, vaga, câmera, gate, setor ou prédio"
+            className={cx("h-48 min-w-0 flex-1 bg-transparent pr-16 text-[14px] leading-20 text-text outline-none placeholder:text-text-3 transition-opacity duration-200",
+              aberta ? "opacity-100 delay-100" : "pointer-events-none opacity-0")} />
+        </div>
+        {aberta && q.length > 0 && (
+          // fundo fora da lista: o esmaecimento da rolagem (máscara) não pode deixar o painel transparente
+          <div className="animar-entrada absolute top-56 left-0 z-50 w-[400px] max-w-[calc(100vw-32px)] overflow-hidden rounded-[20px] bg-panel shadow-float vidro">
             <Command.List ref={rolagem} className="rolagem max-h-[420px] overflow-y-auto px-8 pb-8">
               <Command.Empty className="px-8 py-16 text-[13px] leading-20 text-text-3">{termo.length < 2 ? "Digite ao menos 2 caracteres" : "Nada encontrado"}</Command.Empty>
               {limite > 0 && (
@@ -76,8 +96,15 @@ export function Busca() {
                       </Command.Item>
                     ))}
                   </Command.Group>
+                  <Command.Group heading="Prédios" className={grupo}>
+                    {planta.predios.filter((b) => normalizar(b.nome).includes(termo)).map((b) => (
+                      <Command.Item key={b.id} value={`predio-${b.id}`} className={item} onSelect={() => ir(() => { useUi.getState().selecionar({ tipo: "predio", id: b.id }); useUi.getState().focar({ tipo: "predio", id: b.id }); })}>
+                        <Building2 size={16} /><span className="font-semibold">{b.nome}</span>
+                      </Command.Item>
+                    ))}
+                  </Command.Group>
                   <Command.Group heading="Câmeras" className={grupo}>
-                    {todasCameras.filter((c) => c.codigo.includes(termo) || String(c.numero) === termo.replace(/^0+/, "") || MODELOS[c.modelo].nome.toUpperCase().includes(termo) || c.local.toUpperCase().includes(termo)).slice(0, limite).map((c) => (
+                    {todasCameras.filter((c) => c.codigo.includes(termo) || String(c.numero) === termo.replace(/^0+/, "") || MODELOS[c.modelo].nome.toUpperCase().includes(termo) || normalizar(c.local).includes(termo)).slice(0, limite).map((c) => (
                       <Command.Item key={c.numero} value={`cam-${c.numero}`} className={item} onSelect={() => ir(() => { useUi.getState().exibirCamera(c.numero); if (c.tipo === "externa") useUi.getState().focar({ tipo: "camera", numero: c.numero }); })}>
                         <Video size={16} /><span className="tnum font-semibold">{c.codigo}</span><span className="truncate text-text-2">{c.local} · {MODELOS[c.modelo].nome}</span>
                       </Command.Item>
@@ -89,7 +116,7 @@ export function Busca() {
                         <DoorOpen size={16} /><span className="font-semibold">Gate {g.numero}</span>
                       </Command.Item>
                     ))}
-                    {SETORES_VAGAS.filter((s) => NOMES_SETOR[s].toUpperCase().includes(termo)).map((s) => (
+                    {SETORES_VAGAS.filter((s) => normalizar(NOMES_SETOR[s]).includes(termo)).map((s) => (
                       <Command.Item key={s} value={`setor-${s}`} className={item} onSelect={() => ir(() => { useUi.getState().selecionar({ tipo: "setor", id: s }); useUi.getState().focar({ tipo: "setor", id: s }); })}>
                         <LayoutGrid size={16} /><span className="font-semibold">{NOMES_SETOR[s]}</span>
                       </Command.Item>
@@ -98,9 +125,9 @@ export function Busca() {
                 </>
               )}
             </Command.List>
-          </Command>
-        </Dialog.Content>
-      </Dialog.Portal>
-    </Dialog.Root>
+          </div>
+        )}
+      </Command>
+    </div>
   );
 }

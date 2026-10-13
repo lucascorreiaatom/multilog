@@ -1,6 +1,6 @@
 "use client";
 // Transmissão AO VIVO renderizada: uma câmera virtual na posição, altura e óptica de cada AXIS
-// renderiza a cena (12 qps, baixa resolução) numa textura; um shader aplica a projeção do modelo
+// renderiza a cena (12 qps, na resolução do recorte do card) numa textura; um shader aplica a projeção do modelo
 // (perspectiva por sensor, panorâmica 180° via cubemap, PTZ) e o aspecto de CFTV.
 // É desenhada por cima do canvas, no recorte do elemento de vídeo do card (sem segundo contexto WebGL).
 import { useFrame, useThree } from "@react-three/fiber";
@@ -52,8 +52,8 @@ void main(){
 
 export function Transmissao({ noite, offline }: { noite: boolean; offline: number[] }) {
   const { gl, scene, size } = useThree();
-  const fbo = useMemo(() => new THREE.WebGLRenderTarget(480, 270, { samples: 2 }), []);
-  const cuboRT = useMemo(() => new THREE.WebGLCubeRenderTarget(256), []);
+  const fbo = useMemo(() => new THREE.WebGLRenderTarget(480, 270, { samples: 4 }), []);
+  const cuboRT = useMemo(() => new THREE.WebGLCubeRenderTarget(1024), []);
   const cuboCam = useMemo(() => new THREE.CubeCamera(1, 1800, cuboRT), [cuboRT]);
   const pov = useMemo(() => new THREE.PerspectiveCamera(50, 16 / 9, 0.5, 2400), []);
   const quad = useMemo(() => {
@@ -102,6 +102,10 @@ export function Transmissao({ noite, offline }: { noite: boolean; offline: numbe
         pov.fov = Math.max(1.2, fov);
         pov.aspect = r.width / r.height;
         pov.updateProjectionMatrix();
+        // textura na resolução real do recorte (limitada): 480×270 fixos ficavam borrados no card ampliado
+        const k = Math.min(gl.getPixelRatio(), 1600 / r.width);
+        const fw = Math.round(r.width * k), fh = Math.round(r.height * k);
+        if (fbo.width !== fw || fbo.height !== fh) fbo.setSize(fw, fh);
         pov.position.copy(pos);
         pov.lookAt(pos.x + Math.cos(rumo) * Math.cos(incl), pos.y + Math.sin(incl), pos.z + Math.sin(rumo) * Math.cos(incl));
         gl.setRenderTarget(fbo);

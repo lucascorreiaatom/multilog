@@ -1,14 +1,18 @@
 "use client";
 // Pavimento, canteiros, pintura das vagas (cor do status), cerca, postes, veículos leves e Pátio Container.
-import { useLayoutEffect, useMemo, useRef } from "react";
+import { Suspense, useLayoutEffect, useMemo, useRef } from "react";
 import * as THREE from "three";
 import { criarRng } from "@/lib/patio/ficticio";
 import type { StatusVaga } from "@/lib/patio/tipos";
 import { planta } from "@/lib/site";
 import { usePatio } from "@/lib/store/patio";
 import { useUi } from "@/lib/store/ui";
-import { geometriaCarro } from "../geometrias/caminhao";
+import { CAMADA, sobre } from "../camadas";
+import { atributoFiltro, ocultavel } from "../filtroStatus";
+import { useDetalheChao } from "../materiais/chao";
 import type { Paleta } from "../paleta";
+import { CarrosInstanciados, useModelosCarro, type CarroParado } from "../veiculos/carrosModelo";
+import { cursorClicavel } from "../cursor";
 
 /** cores do piso por status (tons de tinta de piso, mais sóbrios que os da interface) */
 export const COR_PISO: Record<"dia" | "noite", Record<StatusVaga, string>> = {
@@ -36,25 +40,28 @@ function Pavimento({ p }: { p: Paleta }) {
   const area = useMemo(() => forma(planta.cerca), []);
   const cpg = useMemo(() => forma(planta.areaCPG), []);
   const scanner = useMemo(() => forma(planta.scannerPlataforma), []);
+  const detalheAsfalto = useDetalheChao("asfalto");
+  const detalheConcreto = useDetalheChao("concreto");
   return (
     <group>
       <mesh rotation-x={-Math.PI / 2} position-y={0.01} receiveShadow>
         <shapeGeometry args={[area]} />
-        <meshStandardMaterial color={p.asfalto} roughness={0.95} />
+        <meshStandardMaterial color={p.asfalto} roughness={0.95} {...sobre(CAMADA.asfalto)} onBeforeCompile={detalheAsfalto} />
       </mesh>
       <mesh rotation-x={-Math.PI / 2} position-y={0.02} receiveShadow>
         <shapeGeometry args={[cpg]} />
-        <meshStandardMaterial color={p.concreto} roughness={0.9} />
+        <meshStandardMaterial color={p.concreto} roughness={0.9} {...sobre(CAMADA.concreto)} onBeforeCompile={detalheConcreto} />
       </mesh>
       <mesh rotation-x={-Math.PI / 2} position-y={0.03} receiveShadow>
         <shapeGeometry args={[scanner]} />
-        <meshStandardMaterial color={p.concreto} roughness={0.9} />
+        <meshStandardMaterial color={p.concreto} roughness={0.9} {...sobre(CAMADA.scanner)} onBeforeCompile={detalheConcreto} />
       </mesh>
     </group>
   );
 }
 
 function Canteiros({ p }: { p: Paleta }) {
+  const detalheGrama = useDetalheChao("grama");
   // canteiro central em cápsula (meio-fio claro + grama), com ilhas arredondadas nas pontas
   const itens = useMemo(() => planta.canteiros.map((c) => {
     const dx = c.b[0] - c.a[0], dz = c.b[1] - c.a[1], L = Math.hypot(dx, dz);
@@ -70,7 +77,7 @@ function Canteiros({ p }: { p: Paleta }) {
           </mesh>
           <mesh position-y={0.19} receiveShadow>
             <boxGeometry args={[c.L - 0.6, 0.04, c.w - 0.2]} />
-            <meshStandardMaterial color={p.canteiro} roughness={1} />
+            <meshStandardMaterial color={p.canteiro} roughness={1} onBeforeCompile={detalheGrama} />
           </mesh>
           {[-1, 1].map((s) => (
             <group key={s} position-x={(s * c.L) / 2}>
@@ -80,7 +87,7 @@ function Canteiros({ p }: { p: Paleta }) {
               </mesh>
               <mesh position-y={0.19} receiveShadow>
                 <cylinderGeometry args={[c.w * 0.5 + 2.8, c.w * 0.5 + 2.8, 0.04, 28]} />
-                <meshStandardMaterial color={p.canteiro} roughness={1} />
+                <meshStandardMaterial color={p.canteiro} roughness={1} onBeforeCompile={detalheGrama} />
               </mesh>
             </group>
           ))}
@@ -116,14 +123,29 @@ function PinturaVagas({ p, noite }: { p: Paleta; noite: boolean }) {
   useLayoutEffect(() => {
     const cores = COR_PISO[noite ? "noite" : "dia"];
     const c = new THREE.Color();
+    // fora do filtro de status a vaga some (piso e faixas), no shader: só reescreve as flags
+    const flag = (m: THREE.InstancedMesh, k: number) => (m.geometry.getAttribute("aOculto") as THREE.InstancedBufferAttribute | undefined) ?? atributoFiltro(m.geometry, "aOculto", k);
+    const fPiso = flag(piso.current, n), fLinhas = flag(linhas.current, n * 2);
     const pintar = () => {
       const { vagas } = usePatio.getState();
-      planta.vagas.forEach((v, i) => piso.current.setColorAt(i, c.set(cores[vagas[v.id]?.status ?? "livre"])));
+      const filtro = useUi.getState().filtroStatus;
+      planta.vagas.forEach((v, i) => {
+        const st = vagas[v.id]?.status ?? "livre";
+        piso.current.setColorAt(i, c.set(cores[st]));
+        const fora = filtro.length && !filtro.includes(st) ? 1 : 0;
+        fPiso.setX(i, fora);
+        fLinhas.setX(2 * i, fora);
+        fLinhas.setX(2 * i + 1, fora);
+      });
       if (piso.current.instanceColor) piso.current.instanceColor.needsUpdate = true;
+      fPiso.needsUpdate = true;
+      fLinhas.needsUpdate = true;
     };
     pintar();
-    return usePatio.subscribe((s) => s.vagas, pintar);
-  }, [noite]);
+    const des1 = usePatio.subscribe((s) => s.vagas, pintar);
+    const des2 = useUi.subscribe((s) => s.filtroStatus, pintar);
+    return () => { des1(); des2(); };
+  }, [noite, n]);
 
   return (
     <group>
@@ -131,20 +153,24 @@ function PinturaVagas({ p, noite }: { p: Paleta; noite: boolean }) {
         ref={piso}
         args={[undefined, undefined, n]}
         receiveShadow
+        {...cursorClicavel}
         onClick={(e) => {
           if (e.instanceId === undefined) return;
           e.stopPropagation();
           const id = planta.vagas[e.instanceId].id;
+          // vaga escondida pelo filtro não recebe clique
+          const filtro = useUi.getState().filtroStatus;
+          if (filtro.length && !filtro.includes(usePatio.getState().vagas[id]?.status ?? "livre")) return;
           useUi.getState().selecionar({ tipo: "vaga", id });
           useUi.getState().focar({ tipo: "vaga", id });
         }}
       >
         <boxGeometry args={[1, 0.02, 1]} />
-        <meshStandardMaterial roughness={0.85} />
+        <meshStandardMaterial roughness={0.85} {...sobre(CAMADA.pisoVaga)} onBeforeCompile={ocultavel} />
       </instancedMesh>
       <instancedMesh ref={linhas} args={[undefined, undefined, n * 2]} receiveShadow>
         <boxGeometry args={[1, 0.02, 1]} />
-        <meshStandardMaterial color={p.faixa} roughness={0.8} />
+        <meshStandardMaterial color={p.faixa} roughness={0.8} {...sobre(CAMADA.faixaVaga)} onBeforeCompile={ocultavel} />
       </instancedMesh>
     </group>
   );
@@ -240,33 +266,30 @@ function PostesLuz({ p, noite }: { p: Paleta; noite: boolean }) {
   );
 }
 
-function VeiculosLeves({ p }: { p: Paleta }) {
-  const pecas = useMemo(() => geometriaCarro(), []);
-  const corpo = useRef<THREE.InstancedMesh>(null!);
-  const neutro = useRef<THREE.InstancedMesh>(null!);
-  const carros = useMemo(() => {
+/** carros nas vagas leves: modelos do KayKit (hatch, sedã, perua) tingidos com a paleta */
+function CarrosEstacionados({ p }: { p: Paleta }) {
+  const modelos = useModelosCarro();
+  const lotes = useMemo(() => {
     const r = criarRng(31);
-    return planta.vagasLeves.filter(() => r() < 0.72).map((v) => ({ ...v, cor: p.carro[Math.floor(r() * p.carro.length)], vira: r() < 0.5 }));
-  }, [p.carro]);
-  useLayoutEffect(() => {
-    const m = new THREE.Matrix4(), q = new THREE.Quaternion(), y = new THREE.Vector3(0, 1, 0), c = new THREE.Color(), s = new THREE.Vector3(0.95, 0.95, 0.95);
-    carros.forEach((v, i) => {
-      q.setFromAxisAngle(y, (v.giro ? 0 : Math.PI / 2) + (v.vira ? Math.PI : 0));
-      m.compose(new THREE.Vector3(v.centro[0], 0, v.centro[1]), q, s);
-      corpo.current.setMatrixAt(i, m); neutro.current.setMatrixAt(i, m);
-      corpo.current.setColorAt(i, c.set(v.cor));
-    });
-    corpo.current.instanceMatrix.needsUpdate = true; neutro.current.instanceMatrix.needsUpdate = true;
-    if (corpo.current.instanceColor) corpo.current.instanceColor.needsUpdate = true;
-  }, [carros]);
+    const rv = criarRng(32); // sorteio da variante em sequência própria: vagas ocupadas e cores seguem as de antes
+    const lista = planta.vagasLeves.filter(() => r() < 0.72).map((v) => ({ ...v, cor: p.carro[Math.floor(r() * p.carro.length)], vira: r() < 0.5 }));
+    const lotes: CarroParado[][] = modelos.map(() => []);
+    for (const v of lista) {
+      lotes[Math.floor(rv() * modelos.length)].push({
+        x: v.centro[0], z: v.centro[1], giro: (v.giro ? 0 : Math.PI / 2) + (v.vira ? Math.PI : 0), cor: v.cor, escala: 0.95,
+      });
+    }
+    return lotes;
+  }, [p.carro, modelos]);
+  return <>{modelos.map((pecas, k) => <CarrosInstanciados key={k} pecas={pecas} itens={lotes[k]} />)}</>;
+}
+
+function VeiculosLeves({ p }: { p: Paleta }) {
   return (
     <group>
-      <instancedMesh ref={corpo} args={[pecas.corpo, undefined, carros.length]} castShadow>
-        <meshStandardMaterial vertexColors roughness={0.45} />
-      </instancedMesh>
-      <instancedMesh ref={neutro} args={[pecas.neutro, undefined, carros.length]}>
-        <meshStandardMaterial vertexColors roughness={0.6} />
-      </instancedMesh>
+      <Suspense fallback={null}>
+        <CarrosEstacionados p={p} />
+      </Suspense>
       {planta.coberturasLeves.map((c, i) => {
         const xs = c.map((q) => q[0]), zs = c.map((q) => q[1]);
         const cx = (Math.min(...xs) + Math.max(...xs)) / 2, cz = (Math.min(...zs) + Math.max(...zs)) / 2;
@@ -284,6 +307,7 @@ function VeiculosLeves({ p }: { p: Paleta }) {
 }
 
 function PatioContainer({ p }: { p: Paleta }) {
+  const detalheGrama = useDetalheChao("grama");
   const caixas = useRef<THREE.InstancedMesh>(null!);
   const lista = useMemo(() => {
     const r = criarRng(52);
@@ -320,11 +344,7 @@ function PatioContainer({ p }: { p: Paleta }) {
           </mesh>
           <mesh position-y={0.31} receiveShadow>
             <cylinderGeometry args={[5, 5, 0.04, 24]} />
-            <meshStandardMaterial color={p.canteiro} roughness={1} />
-          </mesh>
-          <mesh position-y={5.5} castShadow>
-            <icosahedronGeometry args={[3.4, 1]} />
-            <meshStandardMaterial color={p.copa[1]} roughness={0.9} />
+            <meshStandardMaterial color={p.canteiro} roughness={1} onBeforeCompile={detalheGrama} />
           </mesh>
         </group>
       ))}

@@ -25,7 +25,7 @@ export function FormLogin() {
           </label>
         ))}
       </fieldset>
-      <button type="submit" className="mt-4 h-48 rounded-[14px] bg-accent text-[14px] font-semibold leading-20 text-white transition-colors hover:bg-accent-hover">Entrar</button>
+      <button type="submit" className="mt-4 h-48 rounded-full bg-accent text-[14px] font-semibold leading-20 text-white transition-colors hover:bg-accent-hover">Entrar</button>
       <p className="text-[12px] leading-16 text-text-3">Acesso de demonstração. A autenticação real da Multilog será conectada na integração.</p>
     </form>
   );

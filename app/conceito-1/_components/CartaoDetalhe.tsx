@@ -41,17 +41,30 @@ function Item({ rotulo, children }: { rotulo: string; children: ReactNode }) {
   );
 }
 
-function Cabeca({ titulo, subtitulo, status }: { titulo: string; subtitulo: string; status?: { nome: string; cor: string } }) {
+function Cabeca({ titulo, subtitulo, status }: { titulo: string; subtitulo?: string; status?: { nome: string; cor: string } }) {
   return (
     <div className="flex items-start justify-between gap-12 px-16 pt-16">
       <div className="min-w-0">
         {status && <span className="inline-flex h-24 items-center gap-8 rounded-[12px] bg-card px-8 text-[12px] font-semibold leading-16 text-text shadow-card"><Ponto cor={status.cor} />{status.nome}</span>}
         <h3 className="mt-8 truncate text-[20px] font-semibold leading-28 tracking-[-0.01em] text-text">{titulo}</h3>
-        <p className="truncate text-[13px] leading-20 text-text-2">{subtitulo}</p>
+        {subtitulo && <p className="truncate text-[13px] leading-20 text-text-2">{subtitulo}</p>}
       </div>
-      <button type="button" aria-label="Fechar" onClick={() => useUi.getState().selecionar(null)} className="flex size-32 shrink-0 items-center justify-center rounded-[10px] bg-card text-text shadow-card hover:bg-card-muted"><X size={16} /></button>
+      <button type="button" aria-label="Fechar" onClick={() => useUi.getState().selecionar(null)} className="flex size-32 shrink-0 items-center justify-center rounded-full bg-card text-text shadow-card hover:bg-card-muted"><X size={16} /></button>
     </div>
   );
+}
+
+const ESTILO_ACAO = {
+  saida: "bg-dark text-on-dark hover:opacity-90",
+  principal: "bg-accent text-white hover:bg-accent-hover",
+  secundaria: "bg-card text-text shadow-card hover:bg-card-muted",
+};
+const tom = (a: Acao, principal: boolean): keyof typeof ESTILO_ACAO =>
+  a === "liberarSaida" || a === "registrarSaida" ? "saida" : principal ? "principal" : "secundaria";
+
+/** rodapé fixo do cartão: as ações ficam fora da rolagem e separadas das informações */
+function Rodape({ children }: { children: ReactNode }) {
+  return <div className="flex shrink-0 flex-col gap-8 border-t border-line/70 p-16">{children}</div>;
 }
 
 function Acoes({ vagaId }: { vagaId: string }) {
@@ -62,34 +75,35 @@ function Acoes({ vagaId }: { vagaId: string }) {
   if (!e) return null;
   const acoes = acoesPermitidas(e.status).filter((a) => ACOES_OPERADOR[a]) as Acao[];
   if (e.status === "saida") acoes.push("registrarSaida");
+  // a primeira ação do fluxo é a principal; bloquear/desbloquear nunca é destaque
+  const principal = acoes.find((a) => a !== "bloquear" && a !== "desbloquear");
   const executar = (a: Acao) => {
     if (!pode(perfil, a)) return setMsg(motivoSemPermissao(perfil));
     const r = usePatio.getState().acaoVaga(vagaId, a);
     setMsg(r.ok ? null : r.motivo ?? "Não foi possível executar");
   };
+  if (!acoes.length && e.status !== "livre") return null;
   return (
-    <div className="flex flex-col gap-8">
+    <Rodape>
       {e.status === "livre" && (
         <form className="flex gap-8" onSubmit={(ev) => { ev.preventDefault(); if (!pode(perfil, "atribuirEntrada")) return setMsg(motivoSemPermissao(perfil)); const r = usePatio.getState().atribuirEntrada(vagaId, placa.trim() || undefined); setMsg(r.ok ? null : r.motivo ?? ""); setPlaca(""); }}>
           <input value={placa} onChange={(ev) => setPlaca(ev.target.value.toUpperCase().slice(0, 7))} placeholder="Placa (opcional)" aria-label="Placa do caminhão"
-            className="h-40 min-w-0 flex-1 rounded-[12px] bg-card px-12 text-[13px] leading-20 text-text uppercase shadow-card outline-none placeholder:normal-case placeholder:text-text-3 focus-visible:ring-2 focus-visible:ring-accent" />
+            className="h-48 min-w-0 flex-1 rounded-[12px] bg-card px-12 text-[13px] leading-20 text-text uppercase shadow-card outline-none placeholder:normal-case placeholder:text-text-3 focus-visible:ring-2 focus-visible:ring-accent" />
           <button type="submit" disabled={!pode(perfil, "atribuirEntrada")} title={pode(perfil, "atribuirEntrada") ? undefined : motivoSemPermissao(perfil)}
-            className="h-40 rounded-[12px] bg-accent px-16 text-[13px] font-semibold leading-20 text-white hover:bg-accent-hover disabled:opacity-40">Registrar entrada</button>
+            className="h-48 rounded-full bg-accent px-16 text-[14px] font-semibold leading-20 text-white hover:bg-accent-hover disabled:opacity-40">Registrar entrada</button>
         </form>
       )}
-      <div className="flex flex-wrap gap-8">
-        {[...new Set(acoes)].map((a) => {
-          const permitido = pode(perfil, a);
-          return (
-            <button key={a} type="button" onClick={() => executar(a)} disabled={!permitido} title={permitido ? undefined : motivoSemPermissao(perfil)}
-              className={cx("h-40 rounded-[12px] px-16 text-[13px] font-semibold leading-20 disabled:opacity-40", a === "liberarSaida" || a === "registrarSaida" ? "bg-dark text-on-dark" : "bg-card text-text shadow-card hover:bg-card-muted")}>
-              {ACOES_OPERADOR[a]}
-            </button>
-          );
-        })}
-      </div>
+      {[...new Set(acoes)].map((a) => {
+        const permitido = pode(perfil, a);
+        return (
+          <button key={a} type="button" onClick={() => executar(a)} disabled={!permitido} title={permitido ? undefined : motivoSemPermissao(perfil)}
+            className={cx("h-48 w-full rounded-full px-16 text-[14px] font-semibold leading-20 transition-colors disabled:opacity-40", ESTILO_ACAO[tom(a, a === principal)])}>
+            {ACOES_OPERADOR[a]}
+          </button>
+        );
+      })}
       {msg && <p role="alert" className="text-[12px] leading-16 text-st-ocupada">{msg}</p>}
-    </div>
+    </Rodape>
   );
 }
 
@@ -159,11 +173,10 @@ function DetalheVaga({ id }: { id: string }) {
         )}
         {cobre && (
           <button type="button" onClick={() => { useUi.getState().exibirCamera(cobre.camera.numero); useUi.getState().setSensor(cobre.sensor); }}
-            className="flex h-40 items-center justify-center gap-8 rounded-[12px] bg-card text-[13px] font-semibold leading-20 text-text shadow-card hover:bg-card-muted">
+            className="flex h-40 items-center justify-center gap-8 rounded-full bg-card text-[13px] font-semibold leading-20 text-text shadow-card hover:bg-card-muted">
             <Video size={16} />Ver câmera que cobre a vaga · {cobre.camera.codigo}
           </button>
         )}
-        {!modoTv && <Acoes key={`${id}-${e.status}`} vagaId={id} />}
       </div>
     </>
   );
@@ -173,15 +186,13 @@ function DetalheGate({ numero }: { numero: number }) {
   const g = usePatio((s) => s.gates.find((x) => x.numero === numero));
   const todos = usePatio((s) => s.eventos);
   const eventos = todos.filter((e) => e.gate === numero).slice(0, 6);
-  const { perfil } = useSessao();
   if (!g) return null;
-  const permitido = pode(perfil, "alternarGate");
   return (
     <>
       <Cabeca titulo={`Gate ${numero}`} subtitulo={`${g.sentido === "entrada" ? "Entrada" : g.sentido === "saida" ? "Saída" : "Reversível"} · ${g.operacao === "importacao" ? "Importação" : "Exportação"} · balança`} status={{ nome: g.aberto ? "Aberto" : "Fechado", cor: g.aberto ? "var(--st-livre)" : "var(--st-bloqueada)" }} />
       <div className="flex flex-col gap-8 p-16">
         <Cartao className="p-16 text-[13px] leading-20 text-text-2">
-          Câmeras dos gates (pág. 11): frontal (placa, cor e modelo), traseira (placa e lacre), teto (avarias), face (motorista) e guarita. 35 câmeras para as 6 pistas.
+          Câmeras dos gates: frontal (placa, cor e modelo), traseira (placa e lacre), teto (avarias), face (motorista) e guarita. 35 câmeras para as 6 pistas.
         </Cartao>
         <Cartao className="p-16">
           <h4 className="text-[13px] font-semibold leading-20 text-text">Passagens recentes</h4>
@@ -189,10 +200,21 @@ function DetalheGate({ numero }: { numero: number }) {
             {eventos.length ? eventos.map((e) => <li key={e.id} className="flex justify-between text-[13px] leading-20 text-text-2"><span className="tnum font-semibold text-text">{e.placa ?? "Gate"}</span><span>{e.texto}</span><span className="tnum">{horaCurta(e.hora)}</span></li>) : <li className="text-[13px] leading-20 text-text-3">Sem passagens recentes</li>}
           </ul>
         </Cartao>
-        <button type="button" disabled={!permitido} title={permitido ? undefined : motivoSemPermissao(perfil)} onClick={() => usePatio.getState().alternarGate(numero)}
-          className="h-40 rounded-[12px] bg-dark text-[13px] font-semibold leading-20 text-on-dark disabled:opacity-40">{g.aberto ? "Fechar gate" : "Abrir gate"}</button>
       </div>
     </>
+  );
+}
+
+function AcoesGate({ numero }: { numero: number }) {
+  const aberto = usePatio((s) => s.gates.find((x) => x.numero === numero)?.aberto);
+  const { perfil } = useSessao();
+  if (aberto === undefined) return null;
+  const permitido = pode(perfil, "alternarGate");
+  return (
+    <Rodape>
+      <button type="button" disabled={!permitido} title={permitido ? undefined : motivoSemPermissao(perfil)} onClick={() => usePatio.getState().alternarGate(numero)}
+        className={cx("h-48 w-full rounded-full text-[14px] font-semibold leading-20 transition-colors disabled:opacity-40", ESTILO_ACAO.principal)}>{aberto ? "Fechar gate" : "Abrir gate"}</button>
+    </Rodape>
   );
 }
 
@@ -202,14 +224,14 @@ function DetalhePredio({ id }: { id: string }) {
   const internas = camerasInternas.filter((c) => b.paginas?.includes(c.pagina) && (b.id !== "apoio-motoristas-sala"));
   return (
     <>
-      <Cabeca titulo={b.nome} subtitulo={`${b.paginas?.length ? `Planta pág. ${b.paginas.join(", ")}` : "Sem planta no PDF"}${b.confianca ? " · localização provável" : ""}`} />
+      <Cabeca titulo={b.nome} subtitulo={b.confianca ? "Localização provável" : undefined} />
       <div className="flex flex-col gap-8 p-16">
         <Cartao className="p-16">
           <h4 className="text-[13px] font-semibold leading-20 text-text">Câmeras internas · {internas.length}</h4>
           <div className="mt-8 flex flex-wrap gap-4">
             {internas.map((c) => (
               <button key={c.numero} type="button" onClick={() => useUi.getState().exibirCamera(c.numero)}
-                className="tnum h-28 rounded-[8px] bg-chip px-8 text-[12px] font-semibold leading-16 text-text hover:bg-accent-soft">{c.codigo}</button>
+                className="tnum h-28 rounded-full bg-chip px-8 text-[12px] font-semibold leading-16 text-text hover:bg-accent-soft">{c.codigo}</button>
             ))}
           </div>
         </Cartao>
@@ -220,6 +242,8 @@ function DetalhePredio({ id }: { id: string }) {
 
 export function CartaoDetalhe({ className }: { className?: string }) {
   const selecao = useUi((s) => s.selecao);
+  const modoTv = useUi((s) => s.modoTv);
+  const statusVaga = usePatio((s) => (selecao?.tipo === "vaga" ? s.vagas[selecao.id]?.status : undefined));
   if (!selecao || selecao.tipo === "setor" || selecao.tipo === "camera") return null;
   return (
     <Painel className={cx("flex flex-col overflow-hidden", className)} aria-label="Detalhes da seleção">
@@ -228,6 +252,8 @@ export function CartaoDetalhe({ className }: { className?: string }) {
         {selecao.tipo === "gate" && <DetalheGate numero={selecao.numero} />}
         {selecao.tipo === "predio" && <DetalhePredio id={selecao.id} />}
       </AreaRolagem>
+      {!modoTv && selecao.tipo === "vaga" && <Acoes key={`${selecao.id}-${statusVaga}`} vagaId={selecao.id} />}
+      {selecao.tipo === "gate" && <AcoesGate numero={selecao.numero} />}
     </Painel>
   );
 }

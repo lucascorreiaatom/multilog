@@ -15,7 +15,7 @@ export const PALETA = {
     faixaAmarela: "#e8c45a",
     concreto: "#d9dce0",
     meioFio: "#eceef1",
-    canteiro: "#8cbf68",
+    canteiro: "#6f8f4e", // verde-oliva: não confundir com o verde de vaga livre
     predio: "#eef0f3",
     predioSombra: "#dfe3e8",
     telhado: "#cfd5dd",
@@ -44,7 +44,7 @@ export const PALETA = {
     faixaAmarela: "#b9984a",
     concreto: "#4a4f58",
     meioFio: "#5a606a",
-    canteiro: "#2c4530",
+    canteiro: "#2f3d26",
     predio: "#5c6370",
     predioSombra: "#4a505c",
     telhado: "#3d434d",
@@ -87,5 +87,7 @@ export const PALETA_FOCO: { claro: Paleta; escuro: Paleta } = {
 
 /** cores neutras dos caminhões no Modo foco */
 export const CAMINHAO_FOCO = { claro: { cavalo: "#ffffff", carga: "#f1f3f6" }, escuro: { cavalo: "#6a717c", carga: "#565d68" } };
+/** cores padrão da frota fora do Modo foco: todos os caminhões iguais */
+export const CAMINHAO_PADRAO = { claro: { cavalo: "#f4f5f7", carga: "#dfe3e8" }, escuro: { cavalo: "#9a9ea6", carga: "#7d828b" } };
 
 export type Paleta = typeof PALETA.dia;

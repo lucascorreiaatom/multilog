@@ -103,14 +103,3 @@ export const todasCameras: Camera[] = [...camerasExternas, ...camerasInternas].s
 
 /** numerações do PDF sem localização em nenhuma planta */
 export const camerasNaoMapeadas = faixas([[70, 106]]);
-
-/** pendências encontradas na digitalização do PDF */
-export const PENDENCIAS = [
-  { id: "lentes", texto: "A legenda da pág. 6 soma 164 lentes nas câmeras 1 a 69; o texto do PDF diz 198." },
-  { id: "simbolo-14", texto: "Símbolo azul sem número logo abaixo da câmera 14 (pág. 6)." },
-  { id: "faixa-70-106", texto: "Câmeras 70 a 106 não aparecem em nenhuma planta do PDF." },
-  { id: "dup-149", texto: "Número 149 aparece duas vezes na pág. 7." },
-  { id: "dup-216", texto: "Número 216 aparece duas vezes na pág. 10." },
-  { id: "pag9", texto: "Pág. 9 informa 14 câmeras, mas a planta mostra 18." },
-  { id: "container", texto: "Pátio Container: o PDF mostra a grade de contêineres, sem vagas de caminhão marcadas." },
-];

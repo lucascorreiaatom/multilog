@@ -1,6 +1,6 @@
 "use client";
 // Card AO VIVO (Imagem 1): vídeo renderizado da câmera selecionada sobreposto ao mapa (SoW), sem mosaico.
-import { ChevronLeft, ChevronRight, Crosshair, Maximize2, Minimize2, VideoOff } from "lucide-react";
+import { ChevronLeft, ChevronRight, LocateFixed, Maximize2, Minimize2, VideoOff, X } from "lucide-react";
 import { useEffect, useRef } from "react";
 import { todasCameras, type Camera } from "@/lib/cameras/catalogo";
 import { MODELOS } from "@/lib/cameras/modelos";
@@ -9,7 +9,6 @@ import { useRelogio } from "@/lib/relogio";
 import { usePatio } from "@/lib/store/patio";
 import { useUi } from "@/lib/store/ui";
 import { alvoTransmissao } from "@/scene/cameras/Transmissao";
-import { BotaoRecolher } from "./Recolher";
 import { BotaoIcone, Chip, Painel, Ponto, cx } from "./ui";
 
 
@@ -25,7 +24,6 @@ export function CardCamera({ className }: { className?: string }) {
   const cam = todasCameras.find((c) => c.numero === numeroAtivo) ?? todasCameras[0];
   const mod = MODELOS[cam.modelo];
   const online = !offline.includes(cam.numero);
-  const recolhido = useUi((s) => s.blocos.camera === "recolhido");
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const arrasto = useRef<{ x: number; y: number; pan: number; tilt: number } | null>(null);
 
@@ -33,7 +31,7 @@ export function CardCamera({ className }: { className?: string }) {
     const el = canvasRef.current;
     alvoTransmissao.el = cam.tipo === "externa" ? el : null;
     return () => { if (alvoTransmissao.el === el) alvoTransmissao.el = null; };
-  }, [cam.tipo, ampliada, recolhido]);
+  }, [cam.tipo, ampliada]);
 
   const idx = todasCameras.findIndex((c) => c.numero === cam.numero);
   const ir = (d: number) => {
@@ -42,26 +40,13 @@ export function CardCamera({ className }: { className?: string }) {
   };
   const ptzAtivo = mod.projecao === "ptz";
 
-  if (recolhido) {
-    return (
-      <Painel className={cx("flex h-56 w-[320px] items-center gap-12 pr-8 pl-16", className)} aria-label={`Câmera ${cam.codigo}`}>
-        <Ponto cor={online ? "#e5484d" : "#8a92a2"} redondo />
-        <span className="min-w-0 flex-1">
-          <span className="block text-[13px] font-semibold leading-20 text-text">{cam.codigo} · {online ? "AO VIVO" : "SEM SINAL"}</span>
-          <span className="block truncate text-[12px] leading-16 text-text-2">{nomeLocal(cam)}</span>
-        </span>
-        <BotaoRecolher bloco="camera" nome="câmera ao vivo" />
-      </Painel>
-    );
-  }
-
   return (
     <Painel
-      className={cx("flex gap-16 p-12", ampliada ? "w-[min(960px,calc(100vw-32px))] flex-col gap-12" : "h-[232px] w-[648px] max-xl:w-[min(648px,calc(100vw-112px))]", className)}
+      className={cx("flex gap-16 p-12", ampliada ? "w-full max-w-[960px] flex-col gap-16 p-16" : "h-[232px] w-full max-w-[688px]", className)}
       aria-label={`Câmera ${cam.codigo}`}
     >
       <div
-        className={cx("relative shrink-0 overflow-hidden rounded-[16px] bg-[#1b2230]", ampliada ? "aspect-video max-h-[calc(100vh-240px)] w-full" : "h-[208px] w-[370px]")}
+        className={cx("relative overflow-hidden rounded-[16px] bg-[#1b2230]", ampliada ? "aspect-video shrink-0 max-h-[calc(100vh-240px)] w-full" : "h-[208px] w-[370px] min-w-[300px] shrink")}
         onPointerDown={(e) => { if (!ptzAtivo) return; (e.target as HTMLElement).setPointerCapture(e.pointerId); arrasto.current = { x: e.clientX, y: e.clientY, pan: ptz.pan, tilt: ptz.tilt }; }}
         onPointerMove={(e) => { const a = arrasto.current; if (!a) return; const k = 0.004 / ptz.zoom; useUi.getState().setPtz({ pan: a.pan + (e.clientX - a.x) * k, tilt: Math.max(-1.2, Math.min(0.2, a.tilt - (e.clientY - a.y) * k)) }); }}
         onPointerUp={() => { arrasto.current = null; }}
@@ -82,7 +67,7 @@ export function CardCamera({ className }: { className?: string }) {
           <span className="flex gap-8">
             <Chip tom="escuro">{cam.codigo}</Chip>
             <button type="button" aria-label={ampliada ? "Reduzir imagem" : "Ampliar imagem"} title={ampliada ? "Reduzir imagem" : "Ampliar imagem"} onClick={() => useUi.getState().setAmpliada(!ampliada)}
-              className="pointer-events-auto flex size-28 items-center justify-center rounded-[10px] bg-[rgb(25_32_50/0.72)] text-white backdrop-blur-[8px] hover:bg-[rgb(25_32_50/0.9)]">
+              className="pointer-events-auto flex size-28 items-center justify-center rounded-full bg-[rgb(25_32_50/0.72)] text-white backdrop-blur-[8px] hover:bg-[rgb(25_32_50/0.9)]">
               {ampliada ? <Minimize2 size={14} /> : <Maximize2 size={14} />}
             </button>
           </span>
@@ -95,41 +80,63 @@ export function CardCamera({ className }: { className?: string }) {
         )}
       </div>
 
-      <div className={cx("flex min-w-0 flex-1", ampliada ? "flex-row flex-wrap items-center justify-between gap-12 px-4 pb-4" : "flex-col py-4 pr-4")}>
+      <div className={cx("flex min-w-0 flex-1", ampliada ? "flex-row flex-wrap items-center justify-between gap-16 px-4" : "min-w-[150px] flex-col py-4 pr-4")}>
         <div className="min-w-0">
           <div className="flex items-center gap-8">
-            <p className="min-w-0 flex-1 truncate text-[13px] leading-20 text-text-2">{cam.tipo === "externa" ? "Câmera externa" : `Planta pág. ${cam.pagina}`} · {mod.nome}</p>
-            {!ampliada && <span className="-my-8 -mr-4"><BotaoRecolher bloco="camera" nome="câmera ao vivo" /></span>}
+            <p className="min-w-0 flex-1 truncate text-[13px] leading-20 text-text-2">{cam.tipo === "externa" ? "Câmera externa" : "Câmera interna"} · {mod.nome}</p>
+            {!ampliada && <span className="-my-8 -mr-4"><BotaoFechar /></span>}
           </div>
-          <h3 className="mt-4 truncate text-[20px] font-semibold leading-28 tracking-[-0.01em] text-text">{nomeLocal(cam)}</h3>
-          <p className="mt-8 flex items-center gap-8 text-[13px] leading-20 text-text-2">
-            <Ponto cor={online ? "var(--live)" : "var(--st-bloqueada)"} redondo />
-            {online ? "Online" : "Offline · sem sinal"}
-          </p>
+          <div className="mt-4 flex min-w-0 items-center gap-12">
+            <h3 className="min-w-0 truncate text-[20px] font-semibold leading-28 tracking-[-0.01em] text-text">{nomeLocal(cam)}</h3>
+            <span className="flex shrink-0 items-center gap-8 text-[13px] leading-20 text-text-2" title={online ? "Online" : "Offline · sem sinal"}>
+              <Ponto cor={online ? "var(--live)" : "var(--st-bloqueada)"} redondo pulso={online} />
+              {/* no card compacto o título ocupa a largura; o rótulo fica só no ampliado */}
+              <span className={cx(!ampliada && "sr-only")}>{online ? "Online" : "Offline · sem sinal"}</span>
+            </span>
+          </div>
           {mod.sensores > 1 && (
             <div className="mt-8 flex gap-4" role="tablist" aria-label="Sensores">
               {Array.from({ length: mod.sensores }, (_, i) => (
                 <button key={i} type="button" role="tab" aria-selected={sensor === i} onClick={() => useUi.getState().setSensor(i)}
-                  aria-label={`Sensor ${i + 1}`} className={cx("h-28 w-40 rounded-[8px] text-[12px] font-semibold leading-16", sensor === i ? "bg-dark text-on-dark" : "bg-chip text-text-2 hover:text-text")}>
+                  aria-label={`Sensor ${i + 1}`} className={cx("h-28 w-40 rounded-full text-[12px] font-semibold leading-16", sensor === i ? "bg-dark text-on-dark" : "bg-chip text-text-2 hover:text-text")}>
                   S{i + 1}
                 </button>
               ))}
             </div>
           )}
         </div>
-        <div className={cx("flex items-center gap-8", !ampliada && "mt-auto")}>
-          <BotaoIcone rotulo="Câmera anterior" onClick={() => ir(-1)}><ChevronLeft size={20} /></BotaoIcone>
-          <BotaoIcone rotulo="Próxima câmera" onClick={() => ir(1)}><ChevronRight size={20} /></BotaoIcone>
-          <button
-            type="button"
+        <div className={cx("flex gap-8", ampliada ? "items-center" : "mt-auto items-center")}>
+          <BotaoIcone rotulo="Câmera anterior" className={cx(ampliada && "size-40!")} onClick={() => ir(-1)}><ChevronLeft size={20} /></BotaoIcone>
+          <BotaoIcone rotulo="Próxima câmera" className={cx(ampliada && "size-40!")} onClick={() => ir(1)}><ChevronRight size={20} /></BotaoIcone>
+          {/* só ícone: o texto disputava espaço com as setas e truncava no card estreito */}
+          <BotaoIcone
+            rotulo={cam.tipo === "externa" ? "Localizar no mapa" : "Câmera interna: sem posição no mapa"}
+            ativo
             disabled={cam.tipo !== "externa"}
+            className={cx("ml-auto hover:bg-accent-hover", ampliada && "size-40!")}
             onClick={() => useUi.getState().focar({ tipo: "camera", numero: cam.numero })}
-            className="inline-flex h-48 flex-1 items-center justify-center gap-8 whitespace-nowrap rounded-[14px] bg-accent px-16 text-[14px] font-semibold leading-20 text-white transition-colors hover:bg-accent-hover disabled:opacity-40"
           >
-            <Crosshair size={18} />Focar no mapa
-          </button>
+            <LocateFixed size={20} />
+          </BotaoIcone>
         </div>
       </div>
     </Painel>
+  );
+}
+
+/** fecha o card e desseleciona a câmera; ele volta ao escolher uma câmera (mapa, busca, detalhe) ou pelo menu de camadas */
+function BotaoFechar() {
+  return (
+    <button type="button" aria-label="Fechar câmera ao vivo" title="Fechar"
+      onClick={() => {
+        // fechar também tira a câmera de seleção (marcador e leque deixam de destacar)
+        const ui = useUi.getState();
+        ui.setAmpliada(false);
+        ui.setBloco("camera", "oculto");
+        if (ui.selecao?.tipo === "camera") ui.selecionar(null);
+      }}
+      className="flex size-32 items-center justify-center rounded-full text-text-2 hover:bg-chip hover:text-text">
+      <X size={18} />
+    </button>
   );
 }

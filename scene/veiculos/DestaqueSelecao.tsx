@@ -9,6 +9,7 @@ import { STATUS } from "@/lib/patio/tipos";
 import { vagasPorId } from "@/lib/site";
 import { usePatio } from "@/lib/store/patio";
 import { useUi } from "@/lib/store/ui";
+import { CAMADA, sobre } from "../camadas";
 import { registrarProjetado } from "../projetor";
 import { poseAlinhada, type Pose } from "./animador";
 import { veiculosEmMovimento } from "./Caminhoes";
@@ -28,12 +29,12 @@ function Moldura({ comprimento, largura, refGrupo }: { comprimento: number; larg
       ].map(([x, z, l, w], i) => (
         <mesh key={i} position={[x, 0.12, z]} renderOrder={3}>
           <boxGeometry args={[l, 0.06, w]} />
-          <meshBasicMaterial color={COR} transparent opacity={0.95} depthWrite={false} />
+          <meshBasicMaterial color={COR} transparent opacity={0.95} depthWrite={false} {...sobre(CAMADA.sobreposicao)} />
         </mesh>
       ))}
       <mesh position-y={0.09} rotation-x={-Math.PI / 2} renderOrder={2}>
         <planeGeometry args={[comprimento, largura]} />
-        <meshBasicMaterial color={COR} transparent opacity={0.16} depthWrite={false} />
+        <meshBasicMaterial color={COR} transparent opacity={0.16} depthWrite={false} {...sobre(CAMADA.sobreposicao)} />
       </mesh>
     </group>
   );

@@ -8,16 +8,14 @@ import { NOME_PERFIL, type Sessao } from "@/lib/auth/permissoes";
 import { SimulatedSource } from "@/lib/patio/simulador";
 import { usePatio } from "@/lib/store/patio";
 import { useUi } from "@/lib/store/ui";
-import { Busca } from "./Busca";
 import { Cabecalho } from "./Cabecalho";
 import { CardCamera } from "./CardCamera";
 import { CartaoDetalhe } from "./CartaoDetalhe";
 import { ControlesMapa } from "./ControlesMapa";
-import { GatesEventos } from "./GatesEventos";
 import { SessaoProvider } from "./sessao";
 import { Sobreposicoes } from "./Sobreposicoes";
+import { PainelInfo } from "./PainelInfo";
 import { cx } from "./ui";
-import { VisaoPatio } from "./VisaoPatio";
 
 const YardCanvas = dynamic(() => import("@/scene/YardCanvas"), { ssr: false });
 
@@ -48,49 +46,70 @@ export function Conceito1({ sessao }: { sessao: Sessao }) {
         <YardCanvas />
         <Sobreposicoes />
 
-        <Cabecalho className="absolute top-16 right-16 left-16 z-10" usuario={{ nome: sessao.nome, perfil: NOME_PERFIL[sessao.perfil] }} />
+        <Cabecalho className="absolute top-16 right-16 left-16 z-30" usuario={{ nome: sessao.nome, perfil: NOME_PERFIL[sessao.perfil] }} />
 
         <button
           type="button"
           onClick={() => setPainelAberto((v) => !(v ?? window.innerWidth >= 1280))}
           aria-label={painelAberto ? "Recolher painel" : "Abrir painel"}
-          className="absolute top-88 left-16 z-20 flex size-40 items-center justify-center vidro rounded-[12px] bg-panel text-text shadow-clay xl:hidden"
+          className="absolute top-28 left-16 z-20 flex size-40 items-center justify-center vidro rounded-full bg-panel text-text shadow-clay xl:hidden"
         >
           <PanelLeft size={18} />
         </button>
 
-        {blocos.visao !== "oculto" && <VisaoPatio
+        {blocos.visao !== "oculto" && <PainelInfo
           className={cx(
-            "absolute top-88 left-16 z-10",
+            "absolute top-16 left-16 z-10",
             blocos.visao === "aberto" && "bottom-16",
-            " w-[320px] transition-transform duration-300 max-xl:top-136",
-            painelAberto !== true && "max-xl:-translate-x-[352px]",
-            painelAberto === false && "xl:-translate-x-[352px]",
+            " w-[344px] transition-transform duration-300 max-xl:top-80",
+            painelAberto !== true && "max-xl:-translate-x-[376px]",
+            painelAberto === false && "xl:-translate-x-[376px]",
           )}
         />}
 
-        {(detalhe || blocos.gates !== "oculto") && (
-          <div className={cx("absolute top-88 right-16 z-10 w-[344px] max-lg:hidden", detalhe ? "bottom-16" : blocos.gates === "aberto" && (blocos.controles === "oculto" ? "bottom-16" : "bottom-[376px]"))}>
-            {detalhe ? <CartaoDetalhe className="h-full" /> : <GatesEventos className={blocos.gates === "aberto" ? "h-full" : ""} />}
+        {detalhe && (
+          <div className="absolute top-96 right-16 bottom-16 z-10 w-[344px] max-lg:hidden">
+            <CartaoDetalhe className="h-full" />
           </div>
         )}
         {detalhe && <CartaoDetalhe className="absolute right-16 bottom-16 left-16 z-20 max-h-[60vh] lg:hidden" />}
 
-        {blocos.controles !== "oculto" && <ControlesMapa className={cx("absolute bottom-16 z-10", detalhe ? "right-[376px] max-lg:hidden" : "right-16")} />}
-
-        {blocos.camera !== "oculto" && <CardCamera
+        <ControlesMapa
           className={cx(
             "absolute bottom-16 z-10",
-            detalhe && "max-lg:hidden",
-            ampliada ? "left-1/2 -translate-x-1/2" : blocos.visao === "oculto" ? "left-16" : "left-[360px] max-xl:left-16",
+            detalhe ? "right-[376px] max-lg:hidden" : "right-16",
+            // some quando o card da câmera passaria por cima (larguras em que card + controles + detalhe não cabem lado a lado)
+            blocos.camera !== "oculto" && (ampliada ? (detalhe ? "max-[1880px]:hidden" : "max-[1160px]:hidden") : detalhe && "max-[1600px]:hidden"),
           )}
-        />}
+        />
+
+        {/* faixa livre entre o painel da esquerda e o detalhe da direita; o card centraliza nela e encolhe se faltar
+            espaço, então nunca passa por baixo das colunas laterais */}
+        {blocos.camera !== "oculto" && (
+          <div
+            className={cx(
+              "pointer-events-none absolute bottom-16 z-10 flex justify-center *:pointer-events-auto",
+              // à direita também desvia da coluna de controles do mapa (64 px) quando ela está visível
+              detalhe ? "right-[376px] max-lg:hidden min-[1600px]:right-[456px]" : ampliada ? "right-16" : "right-96",
+              ampliada && !detalhe ? "left-16"
+                : detalhe ? (blocos.visao === "oculto" || painelAberto === false ? "left-16" : "left-16 xl:left-[376px]")
+                // sem detalhe, a partir de 1440 px fica simétrico (96/96) e centralizado na tela sem encostar no painel
+                : blocos.visao === "oculto" || painelAberto === false ? "left-16 min-[1440px]:left-96" : "left-16 xl:left-[376px] min-[1440px]:left-96",
+            )}
+          >
+            <CardCamera />
+          </div>
+        )}
+
+        {/* atribuição obrigatória do caminhão 3D (CC-BY 4.0); créditos completos em public/modelos/CREDITOS.txt */}
+        <p className="pointer-events-auto absolute right-16 bottom-2 z-10 text-[10px] leading-12 text-text-2">
+          Caminhão 3D: Scania por animara777, carreta por matthew13482 (<a href="https://creativecommons.org/licenses/by/4.0/" target="_blank" rel="noreferrer" className="underline">CC-BY 4.0</a>, Sketchfab)
+        </p>
 
         <form method="post" action="/api/auth/sair" className="absolute top-[-200px] right-16 focus-within:top-80">
-          <button type="submit" className="flex h-40 items-center gap-8 vidro rounded-[12px] bg-panel px-12 text-[13px] leading-20 text-text shadow-clay"><LogOut size={16} />Sair</button>
+          <button type="submit" className="flex h-40 items-center gap-8 vidro rounded-full bg-panel px-12 text-[13px] leading-20 text-text shadow-clay"><LogOut size={16} />Sair</button>
         </form>
 
-        <Busca />
       </div>
     </SessaoProvider>
   );

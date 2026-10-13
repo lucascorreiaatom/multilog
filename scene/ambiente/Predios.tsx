@@ -7,6 +7,7 @@ import { planta } from "@/lib/site";
 import type { Predio } from "@/lib/site/tipos";
 import type { Paleta } from "../paleta";
 import { passagemGate } from "../veiculos/Caminhoes";
+import { cursorClicavel } from "../cursor";
 
 const forma = (pts: [number, number][]) => new THREE.Shape(pts.map(([x, z]) => new THREE.Vector2(x, -z)));
 
@@ -63,7 +64,7 @@ function Volume({ b, p, noite, onSelecionar }: { b: Predio; p: Paleta; noite: bo
     refNerv.current.instanceMatrix.needsUpdate = true;
   }, [nervuras, b.altura]);
   return (
-    <group onClick={(e) => { e.stopPropagation(); onSelecionar?.(b.id); }}>
+    <group onClick={(e) => { e.stopPropagation(); onSelecionar?.(b.id); }} {...cursorClicavel}>
       <mesh geometry={geoParede} castShadow receiveShadow>
         <meshStandardMaterial color={p.predio} roughness={0.75} />
       </mesh>
@@ -106,7 +107,7 @@ function Gates({ p, onSelecionar }: { p: Paleta; onSelecionar?: (id: string) => 
     });
   });
   return (
-    <group onClick={(e) => { e.stopPropagation(); onSelecionar?.("gates"); }}>
+    <group onClick={(e) => { e.stopPropagation(); onSelecionar?.("gates"); }} {...cursorClicavel}>
       {/* cobertura sobre as pistas */}
       <mesh position={[(x0 + x1) / 2, 8.4, (z0 + z1) / 2]} castShadow receiveShadow>
         <boxGeometry args={[x1 - x0 + 4, 0.7, z1 - z0]} />
@@ -163,7 +164,7 @@ function Scanner({ p, onSelecionar }: { p: Paleta; onSelecionar?: (id: string) =
   const s = planta.predios.find((x) => x.id === "scanner")!;
   const [cx, cz] = centroide(s.contorno);
   return (
-    <group position={[cx, 0, cz]} onClick={(e) => { e.stopPropagation(); onSelecionar?.("scanner"); }}>
+    <group position={[cx, 0, cz]} onClick={(e) => { e.stopPropagation(); onSelecionar?.("scanner"); }} {...cursorClicavel}>
       {/* pórtico de inspeção não invasiva */}
       {[-1, 1].map((k) => (
         <mesh key={k} position={[k * 3.6, 3.4, 0]} castShadow>
