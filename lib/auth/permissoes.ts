@@ -15,12 +15,12 @@ export interface Sessao {
   perfil: Perfil;
 }
 
-type Permissao = Acao | "alternarGate" | "atribuirEntrada" | "verDadosPessoais";
+type Permissao = Acao | "atribuirEntrada" | "verDadosPessoais";
 
 const MATRIZ: Record<Perfil, Permissao[]> = {
-  operacao: ["iniciarConferencia", "liberarSaida", "registrarSaida", "alternarGate", "atribuirEntrada"],
+  operacao: ["iniciarConferencia", "liberarSaida", "registrarSaida", "atribuirEntrada"],
   receita: ["iniciarConferencia", "liberarSaida", "verDadosPessoais"],
-  admin: ["iniciarConferencia", "liberarSaida", "registrarSaida", "alternarGate", "atribuirEntrada", "verDadosPessoais"],
+  admin: ["iniciarConferencia", "liberarSaida", "registrarSaida", "atribuirEntrada", "verDadosPessoais"],
 };
 
 export function pode(perfil: Perfil, p: Permissao): boolean {

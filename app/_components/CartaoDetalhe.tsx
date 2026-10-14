@@ -5,7 +5,7 @@ import { Camera, Clock, FileText, Flame, Truck, User, Video, X } from "lucide-re
 import type { ReactNode } from "react";
 import { camerasFila, camerasInternas } from "@/lib/cameras/catalogo";
 import { camerasQueCobrem } from "@/lib/cameras/cobertura";
-import { motivoSemPermissao, pode } from "@/lib/auth/permissoes";
+import { pode } from "@/lib/auth/permissoes";
 import { dataHora, duracao, horaCurta, pesoKg } from "@/lib/formato";
 import { useRelogio } from "@/lib/relogio";
 import { NOME_IMPLEMENTO, PERMANENCIA_MAX_H, STATUS, type Canal } from "@/lib/patio/tipos";
@@ -51,11 +51,6 @@ function Cabeca({ titulo, subtitulo, status }: { titulo: string; subtitulo?: str
       <button type="button" aria-label="Fechar" onClick={() => useUi.getState().selecionar(null)} className="flex size-40 shrink-0 items-center justify-center rounded-full bg-card text-text shadow-card hover:bg-card-muted"><X size={16} /></button>
     </div>
   );
-}
-
-/** rodapé fixo do cartão: as ações ficam fora da rolagem e separadas das informações */
-function Rodape({ children }: { children: ReactNode }) {
-  return <div className="flex shrink-0 flex-col gap-8 border-t border-line/70 p-16">{children}</div>;
 }
 
 function DetalheVaga({ id }: { id: string }) {
@@ -171,19 +166,6 @@ function DetalheGate({ numero }: { numero: number }) {
   );
 }
 
-function AcoesGate({ numero }: { numero: number }) {
-  const aberto = usePatio((s) => s.gates.find((x) => x.numero === numero)?.aberto);
-  const { perfil } = useSessao();
-  if (aberto === undefined) return null;
-  const permitido = pode(perfil, "alternarGate");
-  return (
-    <Rodape>
-      <button type="button" disabled={!permitido} title={permitido ? undefined : motivoSemPermissao(perfil)} onClick={() => usePatio.getState().alternarGate(numero)}
-        className="h-48 w-full rounded-full bg-accent text-[14px] font-semibold leading-20 text-accent-ink transition-colors hover:bg-accent-hover disabled:opacity-40">{aberto ? "Fechar gate" : "Abrir gate"}</button>
-    </Rodape>
-  );
-}
-
 function DetalhePredio({ id }: { id: string }) {
   const b = planta.predios.find((p) => p.id === id);
   if (!b) return null;
@@ -214,7 +196,6 @@ export function CartaoDetalhe({ className }: { className?: string }) {
         {selecao.tipo === "gate" && <DetalheGate numero={selecao.numero} />}
         {selecao.tipo === "predio" && <DetalhePredio id={selecao.id} />}
       </AreaRolagem>
-      {selecao.tipo === "gate" && <AcoesGate numero={selecao.numero} />}
     </Painel>
   );
 }

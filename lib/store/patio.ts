@@ -24,7 +24,6 @@ export interface PatioState {
   iniciar: (fonte: YardDataSource) => () => void;
   acaoVaga: (vagaId: string, acao: Acao) => { ok: boolean; motivo?: string };
   atribuirEntrada: (vagaId: string, placa?: string) => { ok: boolean; motivo?: string };
-  alternarGate: (numero: number) => { ok: boolean; motivo?: string };
   animacaoConcluida: (g: Gatilho, fase: "estacionou" | "deixou-vaga" | "saiu") => void;
 }
 
@@ -109,7 +108,6 @@ export const usePatio = create<PatioState>()(
     },
     acaoVaga: (vagaId, acao) => fonteAtual?.acaoVaga(vagaId, acao) ?? { ok: false, motivo: "Sem fonte de dados" },
     atribuirEntrada: (vagaId, placa) => fonteAtual?.atribuirEntrada(vagaId, placa) ?? { ok: false, motivo: "Sem fonte de dados" },
-    alternarGate: (numero) => fonteAtual?.alternarGate(numero) ?? { ok: false, motivo: "Sem fonte de dados" },
     animacaoConcluida: (g, fase) => fonteAtual?.animacaoConcluida(g, fase),
   })),
 );

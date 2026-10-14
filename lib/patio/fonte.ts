@@ -41,7 +41,6 @@ export interface YardDataSource {
   acaoVaga(vagaId: string, acao: Acao): ResultadoAcao;
   /** entrada manual: atribui uma vaga livre a um novo caminhão, disparando o gatilho de entrada */
   atribuirEntrada(vagaId: string, placa?: string): ResultadoAcao;
-  alternarGate(numero: number): ResultadoAcao;
   /** a cena informa que a animação terminou (caminhão encaixado ou fora da vaga) */
   animacaoConcluida(g: Gatilho, fase: "estacionou" | "deixou-vaga" | "saiu"): void;
 }

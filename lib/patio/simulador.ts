@@ -217,15 +217,6 @@ export class SimulatedSource implements YardDataSource {
     return { ok: true };
   }
 
-  alternarGate(numero: number): ResultadoAcao {
-    const g = this.estado.gates.find((x) => x.numero === numero);
-    if (!g) return { ok: false, motivo: "Gate inexistente" };
-    g.aberto = !g.aberto;
-    this.emitir({ tipo: "gate", gate: { ...g } });
-    this.evento({ tipo: g.aberto ? "gate-aberto" : "gate-fechado", gate: numero, texto: g.aberto ? "Gate aberto" : "Gate fechado" });
-    return { ok: true };
-  }
-
   animacaoConcluida(g: Gatilho, fase: "estacionou" | "deixou-vaga" | "saiu") {
     if (g.tipo === "entrada" && fase === "estacionou") {
       this.emAnimacao.delete(g.vagaId);
@@ -259,6 +250,5 @@ export class RecintoSource implements YardDataSource {
   parar() {}
   acaoVaga(): ResultadoAcao { return { ok: false, motivo: "Integração com o Recinto pendente" }; }
   atribuirEntrada(): ResultadoAcao { return { ok: false, motivo: "Integração com o Recinto pendente" }; }
-  alternarGate(): ResultadoAcao { return { ok: false, motivo: "Integração com o Recinto pendente" }; }
   animacaoConcluida() {}
 }
