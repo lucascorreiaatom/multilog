@@ -1,6 +1,6 @@
 "use client";
 // Qual mapa está na tela: os painéis são os mesmos nos dois conceitos e só escondem o que não existe no mapa plano
-// (girar, cobertura das câmeras, Modo foco e Modo TV).
+// (girar, cobertura das câmeras e Modo TV).
 import { createContext, useContext } from "react";
 
 export type TipoMapa = "3d" | "plano";

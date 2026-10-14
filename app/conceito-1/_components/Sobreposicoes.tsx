@@ -33,7 +33,7 @@ function MarcadorCamera({ numero, pos, ativa, offline }: { numero: number; pos: 
           title={codigo}
           onClick={() => { useUi.getState().exibirCamera(numero); useUi.getState().selecionar({ tipo: "camera", numero }); }}
           className={cx(
-            "vidro flex size-32 items-center justify-center rounded-full shadow-float transition-colors outline-none focus-visible:ring-2 focus-visible:ring-accent",
+            "vidro flutuante flex size-32 items-center justify-center rounded-full shadow-float transition-colors outline-none focus-visible:ring-2 focus-visible:ring-accent",
             ativa ? "bg-accent text-accent-ink" : "bg-card text-text hover:bg-card-muted",
           )}
         >
@@ -56,7 +56,7 @@ function Callout({ setor, predioAtivo }: { setor: SetorVagas; predioAtivo: strin
         <button
           type="button"
           onClick={() => { useUi.getState().selecionar({ tipo: "setor", id: setor }); useUi.getState().focar({ tipo: "setor", id: setor }); }}
-          className="vidro pointer-events-auto w-[240px] rounded-[16px] bg-card px-16 py-12 text-left shadow-float outline-none focus-visible:ring-2 focus-visible:ring-accent"
+          className="vidro flutuante pointer-events-auto w-[240px] rounded-[16px] bg-card px-16 py-12 text-left shadow-float outline-none focus-visible:ring-2 focus-visible:ring-accent"
         >
           {/* mesmo resumo do mapa plano: nome em linha própria (Montserrat é larga), % em destaque */}
           <span className="block truncate text-[15px] font-semibold leading-20 text-text">{NOMES_SETOR[setor]}</span>
@@ -70,7 +70,7 @@ function Callout({ setor, predioAtivo }: { setor: SetorVagas; predioAtivo: strin
             visíveis este atalho é o rótulo do armazém (o do telhado ficaria atrás do callout, repetindo o nome) */}
         {setor === "DOC" && (
           <button type="button" onClick={() => selecionarPredio("armazem")}
-            className={cx("vidro pointer-events-auto mt-4 flex h-32 w-[240px] items-center gap-8 rounded-full px-12 text-left text-[12px] font-semibold leading-16 shadow-float outline-none focus-visible:ring-2 focus-visible:ring-accent",
+            className={cx("vidro flutuante pointer-events-auto mt-4 flex h-32 w-[240px] items-center gap-8 rounded-full px-12 text-left text-[12px] font-semibold leading-16 shadow-float outline-none focus-visible:ring-2 focus-visible:ring-accent",
               predioAtivo === "armazem" ? "bg-accent text-accent-ink" : "bg-card text-text hover:bg-card-muted")}>
             <Building2 size={14} className="shrink-0" /><span className="min-w-0 flex-1 truncate">Armazém de Conferência</span><ChevronRight size={14} className={cx("shrink-0", predioAtivo === "armazem" ? "text-accent-ink/70" : "text-text-3")} />
           </button>
@@ -104,7 +104,7 @@ function RotuloPredio({ b, ativo }: { b: Predio; ativo: boolean }) {
   return (
     <div ref={ref} className="pointer-events-none absolute top-0 left-0 will-change-transform" style={{ visibility: "hidden" }}>
       <button type="button" onClick={() => selecionarPredio(b.id)} title={internas ? `${b.nome} · ${internas} câmeras internas` : b.nome}
-        className={cx("vidro pointer-events-auto absolute flex h-28 -translate-x-1/2 -translate-y-full items-center gap-4 whitespace-nowrap rounded-full px-8 text-[12px] font-semibold leading-16 shadow-float outline-none focus-visible:ring-2 focus-visible:ring-accent",
+        className={cx("vidro flutuante pointer-events-auto absolute flex h-28 -translate-x-1/2 -translate-y-full items-center gap-4 whitespace-nowrap rounded-full px-8 text-[12px] font-semibold leading-16 shadow-float outline-none focus-visible:ring-2 focus-visible:ring-accent",
           ativo ? "bg-accent text-accent-ink" : "bg-card text-text hover:bg-card-muted")}>
         <Building2 size={14} />{b.nome}
       </button>
@@ -119,6 +119,9 @@ export function Sobreposicoes() {
   const modoTv = useUi((s) => s.modoTv);
   const blocos = useUi((s) => s.blocos);
   const predioAtivo = useUi((s) => (s.selecao?.tipo === "predio" ? s.selecao.id : null));
+  // Modo foco: nenhuma caixa sobre o mapa; só as vagas (cor do status) e, ao clicar numa, o detalhe da Tela
+  const foco = useUi((s) => s.foco);
+  if (foco) return null;
   return (
     <div className="pointer-events-none absolute inset-0 overflow-hidden" aria-hidden={false}>
       {!modoTv && blocos.predios !== "oculto" && PREDIOS_ROTULADOS.filter((b) => b.id !== "armazem" || blocos.callouts === "oculto").map((b) => <RotuloPredio key={b.id} b={b} ativo={predioAtivo === b.id} />)}

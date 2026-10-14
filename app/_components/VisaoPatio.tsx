@@ -32,6 +32,7 @@ export function ConteudoPatio() {
   });
 
   return (
+    <>
     <AreaRolagem className="flex min-h-0 flex-1 flex-col gap-8 px-16 pb-16">
       <Cartao className="p-16">
         <div className="flex items-center justify-between text-[13px] leading-20 text-text-2">
@@ -93,14 +94,17 @@ export function ConteudoPatio() {
           </button>
         );
       })}
-      <div className="w-full rounded-[16px] bg-card px-16 py-12 opacity-70 shadow-card" title="O PDF mostra a grade de contêineres, sem vagas de caminhão marcadas">
-        <span className="flex items-center justify-between text-[14px] font-semibold leading-20 text-text">
-          {NOMES_SETOR.CTN}<span className="text-[12px] font-medium text-text-2">sem vagas no PDF</span>
+      <div className="w-full rounded-[16px] bg-card px-16 py-12 shadow-card">
+        <span className="flex items-center justify-between">
+          <span className="text-[14px] font-semibold leading-20 text-text">{NOMES_SETOR.CTN}</span>
+          <span className="tnum text-[13px] font-semibold leading-20 text-text">0/0</span>
         </span>
+        <span className="mt-8 block"><Barra valor={0} /></span>
       </div>
-
-      <div className="mt-12"><ListaCameras titulo="Câmeras do pátio" grupos={camerasPatioPorLocal} /></div>
     </AreaRolagem>
+    {/* câmeras fixas no rodapé do painel: sempre à vista, sem depender da rolagem */}
+    <ListaCameras fixa titulo="Câmeras do pátio" grupos={camerasPatioPorLocal} />
+    </>
   );
 }
 

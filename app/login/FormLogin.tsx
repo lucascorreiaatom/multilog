@@ -29,7 +29,7 @@ export function FormLogin() {
           </label>
         ))}
       </fieldset>
-      <button type="submit" className="mt-4 h-48 rounded-full bg-dark text-[14px] font-semibold leading-20 text-on-dark transition-opacity hover:opacity-90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent">Entrar</button>
+      <button type="submit" className="mt-4 h-48 rounded-full bg-accent text-[14px] font-semibold leading-20 text-accent-ink transition-colors hover:bg-accent-hover focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent">Entrar</button>
       <p className="text-[13px] leading-20 text-text-2">Acesso de demonstração. A autenticação real da Multilog será conectada na integração.</p>
     </form>
   );

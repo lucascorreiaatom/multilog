@@ -55,8 +55,8 @@ function Cabeca({ titulo, subtitulo, status }: { titulo: string; subtitulo?: str
 }
 
 const ESTILO_ACAO = {
-  saida: "bg-dark text-on-dark hover:opacity-90",
-  principal: "bg-dark text-on-dark hover:opacity-90",
+  saida: "bg-accent text-accent-ink hover:bg-accent-hover",
+  principal: "bg-accent text-accent-ink hover:bg-accent-hover",
   secundaria: "bg-card text-text shadow-card hover:bg-card-muted",
 };
 const tom = (a: Acao, principal: boolean): keyof typeof ESTILO_ACAO =>
@@ -90,7 +90,7 @@ function Acoes({ vagaId }: { vagaId: string }) {
           <input value={placa} onChange={(ev) => setPlaca(ev.target.value.toUpperCase().slice(0, 7))} placeholder="Placa (opcional)" aria-label="Placa do caminhão"
             className="h-48 min-w-0 flex-1 rounded-[12px] bg-card px-12 text-[13px] leading-20 text-text uppercase shadow-card outline-none placeholder:normal-case placeholder:text-text-3 focus-visible:ring-2 focus-visible:ring-accent" />
           <button type="submit" disabled={!pode(perfil, "atribuirEntrada")} title={pode(perfil, "atribuirEntrada") ? undefined : motivoSemPermissao(perfil)}
-            className="h-48 rounded-full bg-dark px-16 text-[14px] font-semibold leading-20 text-on-dark hover:opacity-90 disabled:opacity-40">Registrar entrada</button>
+            className="h-48 rounded-full bg-accent px-16 text-[14px] font-semibold leading-20 text-accent-ink hover:bg-accent-hover disabled:opacity-40">Registrar entrada</button>
         </form>
       )}
       {[...new Set(acoes)].map((a) => {
@@ -196,7 +196,7 @@ function DetalheGate({ numero }: { numero: number }) {
         {fila && (
           <button type="button" onClick={() => useUi.getState().exibirCamera(fila.numero)}
             className="flex min-h-56 items-center gap-12 rounded-[16px] bg-card px-16 py-8 text-left shadow-card outline-none hover:bg-card-muted focus-visible:ring-2 focus-visible:ring-accent">
-            <span className="flex size-40 shrink-0 items-center justify-center rounded-full bg-dark text-on-dark"><Video size={18} /></span>
+            <span className="flex size-40 shrink-0 items-center justify-center rounded-full bg-accent text-accent-ink"><Video size={18} /></span>
             <span className="min-w-0 flex-1">
               <span className="block text-[14px] font-semibold leading-20 text-text">Ver a {fila.local.split(" · ")[1]}</span>
               <span className="block text-[13px] leading-20 text-text-2">{fila.codigo} · posição aproximada</span>

@@ -119,6 +119,9 @@ function RotuloPredio({ b }: { b: Predio }) {
 
 export function Sobreposicoes() {
   const blocos = useUi((s) => s.blocos);
+  // Modo foco (igual ao 3D): nenhuma caixa sobre o mapa; só as vagas pela cor do status e, ao clicar numa, o detalhe
+  const foco = useUi((s) => s.foco);
+  if (foco) return null;
   return (
     <div className="pointer-events-none absolute inset-0 overflow-hidden">
       {blocos.predios !== "oculto" && ROTULADOS.map((b) => <RotuloPredio key={b.id} b={b} />)}
@@ -126,7 +129,7 @@ export function Sobreposicoes() {
       {blocos.callouts !== "oculto" && (
         // rótulo curto, deslocado para não cruzar o resumo das Docas; o detalhe fica na dica
         <Ancora chave="setor-CTN" p={CENTRO_CONTAINER} dx={-56}>
-          <span className="block whitespace-nowrap rounded-full bg-panel px-12 py-4 text-[13px] font-semibold leading-20 text-text shadow-card" title="O PDF mostra a grade de contêineres, sem vagas de caminhão marcadas">
+          <span className="block whitespace-nowrap rounded-full bg-panel px-12 py-4 text-[13px] font-semibold leading-20 text-text shadow-card">
             {NOMES_SETOR.CTN}
           </span>
         </Ancora>

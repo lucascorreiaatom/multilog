@@ -50,10 +50,11 @@ void main(){
   gl_FragColor = vec4(cor, 1.0);
 }`;
 
-export function Transmissao({ noite, offline }: { noite: boolean; offline: number[] }) {
+/** leve (modo desempenho): vídeo sem MSAA e panorâmica com cubo de 512² (o grão e a vinheta de CFTV disfarçam) */
+export function Transmissao({ noite, offline, leve }: { noite: boolean; offline: number[]; leve: boolean }) {
   const { gl, scene, size } = useThree();
-  const fbo = useMemo(() => new THREE.WebGLRenderTarget(480, 270, { samples: 4 }), []);
-  const cuboRT = useMemo(() => new THREE.WebGLCubeRenderTarget(1024), []);
+  const fbo = useMemo(() => new THREE.WebGLRenderTarget(480, 270, { samples: leve ? 0 : 4 }), [leve]);
+  const cuboRT = useMemo(() => new THREE.WebGLCubeRenderTarget(leve ? 512 : 1024), [leve]);
   const cuboCam = useMemo(() => new THREE.CubeCamera(1, 1800, cuboRT), [cuboRT]);
   const pov = useMemo(() => new THREE.PerspectiveCamera(50, 16 / 9, 0.5, 2400), []);
   const quad = useMemo(() => {
@@ -68,13 +69,18 @@ export function Transmissao({ noite, offline }: { noite: boolean; offline: numbe
     return { s, mat };
   }, [fbo, cuboRT]);
   const ortho = useMemo(() => new THREE.OrthographicCamera(-1, 1, 1, -1, 0, 1), []);
-  const ultimo = useRef(0);
+  const ultimo = useRef(-1);
+  const posicao = useMemo(() => new THREE.Vector3(), []);
 
   useEffect(() => () => { fbo.dispose(); cuboRT.dispose(); }, [fbo, cuboRT]);
 
   useFrame((estado) => {
     const el = alvoTransmissao.el;
     if (!el) return;
+    // tudo só no quadro do vídeo (12 qps): o canvas do card guarda a última imagem entre um e outro, então o quad,
+    // a cópia e a leitura dos retângulos não precisam rodar a cada quadro da cena
+    const t = estado.clock.elapsedTime;
+    if (t - ultimo.current < 1 / QPS) return;
     const ui = useUi.getState();
     const cam = camerasExternas.find((c) => c.numero === ui.cameraAtiva);
     if (!cam) return;
@@ -83,38 +89,35 @@ export function Transmissao({ noite, offline }: { noite: boolean; offline: numbe
     const r = el.getBoundingClientRect();
     const x = r.left - canvasRect.left, y = canvasRect.bottom - r.bottom;
     if (r.width < 4 || r.height < 4) return;
-    const t = estado.clock.elapsedTime;
     const panoramica = mod.projecao === "panoramica180";
+    ultimo.current = t;
 
-    if (t - ultimo.current > 1 / QPS) {
-      ultimo.current = t;
-      const pos = new THREE.Vector3(cam.posicao[0], cam.altura - 0.4, cam.posicao[1]);
-      const sombra = gl.shadowMap.autoUpdate;
-      gl.shadowMap.autoUpdate = false;
-      if (panoramica) {
-        cuboCam.position.copy(pos);
-        cuboCam.update(gl, scene);
-      } else {
-        let rumo = cam.rumo + ((mod.direcoes[ui.sensor] ?? 0) * Math.PI) / 180;
-        let incl = cam.inclinacao;
-        let fov = mod.fovV;
-        if (mod.projecao === "ptz") { rumo += ui.ptz.pan; incl += ui.ptz.tilt; fov = mod.fovV / ui.ptz.zoom; }
-        pov.fov = Math.max(1.2, fov);
-        pov.aspect = r.width / r.height;
-        pov.updateProjectionMatrix();
-        // textura na resolução real do recorte (limitada): 480×270 fixos ficavam borrados no card ampliado
-        const k = Math.min(gl.getPixelRatio(), 1600 / r.width);
-        const fw = Math.round(r.width * k), fh = Math.round(r.height * k);
-        if (fbo.width !== fw || fbo.height !== fh) fbo.setSize(fw, fh);
-        pov.position.copy(pos);
-        pov.lookAt(pos.x + Math.cos(rumo) * Math.cos(incl), pos.y + Math.sin(incl), pos.z + Math.sin(rumo) * Math.cos(incl));
-        gl.setRenderTarget(fbo);
-        gl.clear();
-        gl.render(scene, pov);
-        gl.setRenderTarget(null);
-      }
-      gl.shadowMap.autoUpdate = sombra;
+    const pos = posicao.set(cam.posicao[0], cam.altura - 0.4, cam.posicao[1]);
+    const sombra = gl.shadowMap.autoUpdate;
+    gl.shadowMap.autoUpdate = false;
+    if (panoramica) {
+      cuboCam.position.copy(pos);
+      cuboCam.update(gl, scene);
+    } else {
+      let rumo = cam.rumo + ((mod.direcoes[ui.sensor] ?? 0) * Math.PI) / 180;
+      let incl = cam.inclinacao;
+      let fov = mod.fovV;
+      if (mod.projecao === "ptz") { rumo += ui.ptz.pan; incl += ui.ptz.tilt; fov = mod.fovV / ui.ptz.zoom; }
+      pov.fov = Math.max(1.2, fov);
+      pov.aspect = r.width / r.height;
+      pov.updateProjectionMatrix();
+      // textura na resolução real do recorte (limitada): 480×270 fixos ficavam borrados no card ampliado
+      const k = Math.min(gl.getPixelRatio(), 1600 / r.width);
+      const fw = Math.round(r.width * k), fh = Math.round(r.height * k);
+      if (fbo.width !== fw || fbo.height !== fh) fbo.setSize(fw, fh);
+      pov.position.copy(pos);
+      pov.lookAt(pos.x + Math.cos(rumo) * Math.cos(incl), pos.y + Math.sin(incl), pos.z + Math.sin(rumo) * Math.cos(incl));
+      gl.setRenderTarget(fbo);
+      gl.clear();
+      gl.render(scene, pov);
+      gl.setRenderTarget(null);
     }
+    gl.shadowMap.autoUpdate = sombra;
 
     const u = quad.mat.uniforms;
     u.uModo.value = panoramica ? 1 : 0;

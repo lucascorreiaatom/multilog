@@ -54,7 +54,7 @@ export function CardCamera({ className, Video }: { className?: string; Video?: V
           <span className="flex gap-8">
             <Chip tom="escuro">{cam.codigo}</Chip>
             <button type="button" aria-label={ampliada ? "Reduzir imagem" : "Ampliar imagem"} title={ampliada ? "Reduzir imagem" : "Ampliar imagem"} onClick={() => useUi.getState().setAmpliada(!ampliada)}
-              className="pointer-events-auto flex size-32 items-center justify-center rounded-full bg-[rgb(17_41_75/0.72)] text-white backdrop-blur-[8px] hover:bg-[rgb(17_41_75/0.9)]">
+              className="pointer-events-auto flex size-32 items-center justify-center rounded-full bg-[rgb(17_41_75/0.72)] text-white backdrop-blur-[8px] flutuante hover:bg-[rgb(17_41_75/0.9)]">
               {ampliada ? <Minimize2 size={14} /> : <Maximize2 size={14} />}
             </button>
           </span>
@@ -85,7 +85,7 @@ export function CardCamera({ className, Video }: { className?: string; Video?: V
             <div className="mt-8 flex gap-4" role="tablist" aria-label="Sensores">
               {Array.from({ length: mod.sensores }, (_, i) => (
                 <button key={i} type="button" role="tab" aria-selected={sensor === i} onClick={() => useUi.getState().setSensor(i)}
-                  aria-label={`Sensor ${i + 1}`} className={cx("h-28 w-40 rounded-full text-[12px] font-semibold leading-16", sensor === i ? "bg-dark text-on-dark" : "bg-chip text-text-2 hover:text-text")}>
+                  aria-label={`Sensor ${i + 1}`} className={cx("h-28 w-40 rounded-full text-[12px] font-semibold leading-16", sensor === i ? "bg-accent text-accent-ink" : "bg-chip text-text-2 hover:text-text")}>
                   S{i + 1}
                 </button>
               ))}

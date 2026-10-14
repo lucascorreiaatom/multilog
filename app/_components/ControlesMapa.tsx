@@ -16,7 +16,7 @@ export function ControlesMapa({ className }: { className?: string }) {
       {!plano && <BotaoIcone rotulo="Girar à esquerda" onClick={() => ui().comandar("girar-esq")}><RotateCcw size={20} /></BotaoIcone>}
       {!plano && <BotaoIcone rotulo="Girar à direita" onClick={() => ui().comandar("girar-dir")}><RotateCw size={20} /></BotaoIcone>}
       <MenuCamadas />
-      <BotaoIcone rotulo="Visão geral" escuro onClick={() => { ui().selecionar(null); ui().focar({ tipo: "home" }); }}><House size={20} /></BotaoIcone>
+      <BotaoIcone rotulo="Visão geral" principal onClick={() => { ui().selecionar(null); ui().focar({ tipo: "home" }); }}><House size={20} /></BotaoIcone>
     </Painel>
   );
 }

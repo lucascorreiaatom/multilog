@@ -1,10 +1,10 @@
 "use client";
 // Canvas único da cena do pátio (WebGL2): entorno, pátio, prédios, caminhões, câmeras e transmissão AO VIVO.
 import { CameraControls } from "@react-three/drei";
-import { Canvas, useFrame, useThree } from "@react-three/fiber";
+import { Canvas, events as eventosPadrao, useFrame, useThree, type RootStore } from "@react-three/fiber";
 import { EffectComposer, N8AO, SMAA, ToneMapping } from "@react-three/postprocessing";
 import { ToneMappingMode } from "postprocessing";
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useRef } from "react";
 import * as THREE from "three";
 import { camerasExternas } from "@/lib/cameras/catalogo";
 import { centroSetor, planta, vagasPorId } from "@/lib/site";
@@ -109,62 +109,27 @@ function RenderSimples() {
   return null;
 }
 
-/** níveis de qualidade, do mais leve ao máximo; o monitor desce/sobe um degrau por vez conforme o FPS */
-const NIVEIS = [
-  { nome: "baixa", dpr: 1, msaa: 2, ao: false, sombra: false },
-  { nome: "media", dpr: 1, msaa: 4, ao: false, sombra: false },
-  { nome: "alta", dpr: 1.25, msaa: 4, ao: true, sombra: false },
-  { nome: "maxima", dpr: 1.5, msaa: 4, ao: true, sombra: true },
-] as const;
-const NIVEL_MAX = NIVEIS.length - 1;
-/** teto do ajuste automático: a sombra (nível máximo) só com ?qualidade=3; as máquinas do cliente são básicas */
-const NIVEL_AUTO = 2;
-/** abaixo disto o quadro está lento (mínimo combinado na reunião de 13/10) */
-const QPS_MIN = 45;
+/** níveis de qualidade. "alta" é o visual completo (modo alta); "desempenho" é o modo para GPU integrada
+ *  (lib/grafico.ts); "maxima" acrescenta a sombra projetada e só entra por ?qualidade=maxima.
+ *  O nível é fixo durante a sessão: trocar de nível realoca o composer e o AO e travava a cena no meio do uso. */
+const NIVEIS = {
+  desempenho: { dpr: 1, msaa: 2, ao: "meia", sombra: false },
+  alta: { dpr: 1.25, msaa: 4, ao: "cheia", sombra: false },
+  maxima: { dpr: 1.5, msaa: 4, ao: "cheia", sombra: true },
+} as const;
+type Nivel = keyof typeof NIVEIS;
 
-/** ?qualidade=0..3 fixa o nível e desliga o ajuste automático */
+/** ?qualidade=desempenho|alta|maxima força o nível, acima do modo gráfico */
 const QUALIDADE_FIXA = (() => {
   if (typeof window === "undefined") return null;
   const q = new URLSearchParams(window.location.search).get("qualidade");
-  return q === null || q === "" ? null : THREE.MathUtils.clamp(Math.round(Number(q)) || 0, 0, NIVEL_MAX);
+  return q !== null && q in NIVEIS ? (q as Nivel) : null;
 })();
-
-/** mede o FPS em janelas de 1 s e ajusta o nível: desce com 3 janelas seguidas lentas, sobe com 5 janelas no limite
- *  da tela. Se depois de descer voltar a subir e descer de novo (oscilação), trava no nível mais baixo. */
-function MonitorQualidade({ nivel, setNivel }: { nivel: number; setNivel: (n: number) => void }) {
-  const st = useRef({ espera: 3, janela: 0, quadros: 0, fps: [] as number[], tela: 0, teto: NIVEL_AUTO, subiu: false });
-  useEffect(() => {
-    // após trocar de nível, as primeiras janelas incluem recompilação de shaders e realocação de buffers
-    st.current.espera = 1.5; st.current.janela = 0; st.current.quadros = 0; st.current.fps = [];
-  }, [nivel]);
-  useFrame((_, dt) => {
-    const s = st.current;
-    if (dt > 0.5) { s.janela = 0; s.quadros = 0; return; } // aba em segundo plano ou travada isolada (carga de modelo)
-    if (s.espera > 0) { s.espera -= dt; return; }
-    s.janela += dt; s.quadros++;
-    if (s.janela < 1) return;
-    const fps = s.quadros / s.janela;
-    s.janela = 0; s.quadros = 0;
-    s.tela = Math.min(Math.max(s.tela, fps), 240);
-    s.fps = [...s.fps.slice(-4), fps];
-    // limite absoluto: relativo ao melhor quadro visto, uma máquina que nunca passa de 26 qps nunca seria "lenta"
-    const lento = QPS_MIN;
-    if (nivel > 0 && s.fps.length >= 3 && s.fps.slice(-3).every((f) => f < lento)) {
-      if (s.subiu) s.teto = nivel - 1; // subiu e não aguentou: não tenta mais esse nível
-      s.subiu = false;
-      setNivel(nivel - 1);
-    } else if (nivel < s.teto && s.fps.length >= 5 && s.fps.every((f) => f >= s.tela * 0.92)) {
-      s.subiu = true;
-      setNivel(nivel + 1);
-    }
-  });
-  return null;
-}
 
 /** medição: ?perf=1 expõe em window.__cenaInfo os totais do último quadro (todas as passadas) */
 const PERF = typeof window !== "undefined" && new URLSearchParams(window.location.search).has("perf");
 
-function InfoCena({ nivel }: { nivel: number }) {
+function InfoCena({ nivel }: { nivel: Nivel }) {
   const gl = useThree((s) => s.gl);
   const info = useRef({ calls: 0, triangles: 0, geometries: 0, textures: 0 });
   useEffect(() => {
@@ -173,7 +138,7 @@ function InfoCena({ nivel }: { nivel: number }) {
     const dbg = ctx.getExtension("WEBGL_debug_renderer_info");
     const renderer = dbg ? ctx.getParameter(dbg.UNMASKED_RENDERER_WEBGL) : "";
     const t = setInterval(() => {
-      (window as unknown as { __cenaInfo: unknown }).__cenaInfo = { ...info.current, dpr: gl.getPixelRatio(), renderer, qualidade: NIVEIS[nivel].nome };
+      (window as unknown as { __cenaInfo: unknown }).__cenaInfo = { ...info.current, dpr: gl.getPixelRatio(), renderer, qualidade: nivel };
     }, 500);
     return () => { clearInterval(t); gl.info.autoReset = true; };
   }, [gl, nivel]);
@@ -190,7 +155,9 @@ function ProjetorDom() {
   return null;
 }
 
-/** sombra projetada só no nível máximo: a passada de sombra redesenha a cena inteira (caminhões inclusive) */
+/** sombra projetada só no nível máximo: a passada de sombra redesenha a cena inteira (caminhões inclusive).
+ *  Noite é tema escuro operacional: a cor fria da paleta diz "noite", a intensidade continua alta para o status ler;
+ *  sem sombra à noite (a da lua seria invisível e custa uma passada). */
 function Luzes({ noite, sombra, foco }: { noite: boolean; sombra: boolean; foco: boolean }) {
   const p = foco ? PALETA_FOCO[noite ? "escuro" : "claro"] : noite ? PALETA.noite : PALETA.dia;
   const sol = useRef<THREE.DirectionalLight>(null!);
@@ -204,19 +171,43 @@ function Luzes({ noite, sombra, foco }: { noite: boolean; sombra: boolean; foco:
   }, []);
   return (
     <>
-      <hemisphereLight args={[p.hemisferioCeu, p.hemisferioChao, noite ? 0.35 : foco ? 1.6 : 1.25]} />
+      <hemisphereLight args={[p.hemisferioCeu, p.hemisferioChao, noite ? 1.1 : foco ? 1.6 : 1.25]} />
       <directionalLight
         ref={sol}
         position={[-320, 520, -380]}
-        intensity={noite ? 0.35 : foco ? 1.9 : 2.4}
+        intensity={noite ? 1.0 : foco ? 1.9 : 2.4}
         color={p.sol}
-        castShadow={sombra}
+        castShadow={sombra && !noite}
         shadow-bias={-0.0004}
         shadow-normalBias={0.6}
       />
-      <ambientLight intensity={noite ? 0.12 : foco ? 0.45 : 0.25} />
+      <ambientLight intensity={noite ? 0.3 : foco ? 0.45 : 0.25} />
     </>
   );
+}
+
+/** eventos 3D sem raycast desperdiçado: a cena só tem clique e cursor de hover, então
+ *  - nada de raycast no pointermove com botão apertado (arrasto da câmera) nem na roda do mouse;
+ *  - o hover junta os pointermove de um quadro num raycast só (mouses de 1000 Hz mandam vários por quadro).
+ *  Clique continua igual: o R3F decide pelo pointerdown/pointerup, que não passam por aqui. */
+function eventosLeves(store: RootStore) {
+  const base = eventosPadrao(store);
+  const h = base.handlers!;
+  let pendente: Event | null = null;
+  let agendado = false;
+  const mover = (e: Event) => {
+    if ((e as PointerEvent).buttons) return;
+    pendente = e;
+    if (agendado) return;
+    agendado = true;
+    requestAnimationFrame(() => {
+      agendado = false;
+      const ev = pendente;
+      pendente = null;
+      if (ev) h.onPointerMove(ev);
+    });
+  };
+  return { ...base, handlers: { ...h, onPointerMove: mover, onWheel: () => {} } };
 }
 
 /** depuração de desempenho: ?sem=ao,sombra,caminhoes,mata,feed,pos */
@@ -230,7 +221,7 @@ function SemEventos() {
   return null;
 }
 
-function Cena({ sombra }: { sombra: boolean }) {
+function Cena({ sombra, leve }: { sombra: boolean; leve: boolean }) {
   const tema = useUi((s) => s.tema);
   const foco = useUi((s) => s.foco);
   const noite = tema === "escuro";
@@ -241,8 +232,9 @@ function Cena({ sombra }: { sombra: boolean }) {
   const { scene } = useThree();
   useEffect(() => {
     scene.background = new THREE.Color(p.ceu);
-    scene.fog = new THREE.Fog(p.neblina, 1100, 2900);
-  }, [scene, p.ceu, p.neblina]);
+    // à noite a neblina vem mais perto e dissolve o entorno distante no céu
+    scene.fog = noite ? new THREE.Fog(p.neblina, 800, 2200) : new THREE.Fog(p.neblina, 1100, 2900);
+  }, [scene, p.ceu, p.neblina, noite]);
   return (
     <>
       <Luzes noite={noite} foco={foco} sombra={sombra && !SEM.has("sombra")} />
@@ -253,7 +245,7 @@ function Cena({ sombra }: { sombra: boolean }) {
       <DestaqueSelecao />
       <CamerasExternas p={p} />
       <Cobertura />
-      {!SEM.has("feed") && <Transmissao noite={noite} offline={offline} />}
+      {!SEM.has("feed") && <Transmissao noite={noite} offline={offline} leve={leve} />}
       <ProjetorDom />
     </>
   );
@@ -263,7 +255,8 @@ export default function YardCanvas() {
   const foco = useUi((s) => s.foco);
   const noiteUi = useUi((s) => s.tema === "escuro");
   const dprForcado = typeof window !== "undefined" ? Number(new URLSearchParams(window.location.search).get("dpr")) || 0 : 0;
-  const [nivel, setNivel] = useState(QUALIDADE_FIXA ?? NIVEL_AUTO);
+  const grafico = useUi((s) => s.grafico);
+  const nivel: Nivel = QUALIDADE_FIXA ?? grafico;
   const q = NIVEIS[nivel];
   const dpr = useMemo<[number, number]>(() => (dprForcado ? [dprForcado, dprForcado] : [1, q.dpr]), [dprForcado, q.dpr]);
   return (
@@ -272,13 +265,12 @@ export default function YardCanvas() {
       dpr={dpr}
       gl={{ antialias: false, powerPreference: "high-performance", stencil: false }}
       camera={{ position: [...VISTA_HOME.pos], fov: 30, near: 2, far: 6000 }}
+      events={eventosLeves}
       onPointerMissed={() => useUi.getState().selecionar(null)}
       style={{ position: "absolute", inset: 0 }}
       data-testid="cena-3d"
     >
-      {/* começa no nível alto (sem sombra) e rebaixa se o FPS não aguentar (máquinas fracas) */}
-      {QUALIDADE_FIXA === null && <MonitorQualidade nivel={nivel} setNivel={setNivel} />}
-      <Cena sombra={q.sombra} />
+      <Cena sombra={q.sombra} leve={nivel === "desempenho"} />
       <Rig />
       <PlanoProximo />
       {PERF && <InfoCena nivel={nivel} />}
@@ -286,9 +278,9 @@ export default function YardCanvas() {
       {SEM.has("pos") && <RenderSimples />}
       {/* MSAA 4x: faixas das vagas (0,14 m) e vãos entre vagas ficam abaixo de 1 px; só com SMAA viram pontilhado e piscam */}
       {!SEM.has("pos") && <EffectComposer multisampling={q.msaa} enableNormalPass={false}>
-        {!SEM.has("ao") && q.ao ? <N8AO aoRadius={7} distanceFalloff={1.2} intensity={2.4} quality="medium" /> : <></>}
+        {!SEM.has("ao") && q.ao ? <N8AO aoRadius={7} distanceFalloff={1.2} intensity={noiteUi ? 1.5 : 2.4} quality="medium" halfRes={q.ao === "meia"} /> : <></>}
         <SMAA />
-        <ToneMapping mode={foco && !noiteUi ? ToneMappingMode.NEUTRAL : ToneMappingMode.AGX} />
+        <ToneMapping mode={foco || noiteUi ? ToneMappingMode.NEUTRAL : ToneMappingMode.AGX} />
       </EffectComposer>}
     </Canvas>
   );

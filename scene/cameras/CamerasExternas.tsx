@@ -31,7 +31,7 @@ export function CamerasExternas({ p }: { p: Paleta }) {
       </instancedMesh>
       <instancedMesh ref={domo} args={[undefined, undefined, n]} castShadow>
         <sphereGeometry args={[0.45, 16, 10, 0, Math.PI * 2, 0, Math.PI / 1.6]} />
-        <meshStandardMaterial color="#f4f5f7" roughness={0.3} />
+        <meshStandardMaterial color={p.domo} roughness={0.3} />
       </instancedMesh>
     </group>
   );

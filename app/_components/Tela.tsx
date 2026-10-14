@@ -8,6 +8,7 @@
 import { LogOut, PanelLeft } from "lucide-react";
 import { useEffect, useState, type ReactNode } from "react";
 import { NOME_PERFIL, type Sessao } from "@/lib/auth/permissoes";
+import { modoGraficoInicial } from "@/lib/grafico";
 import { SimulatedSource } from "@/lib/patio/simulador";
 import { usePatio } from "@/lib/store/patio";
 import { useUi } from "@/lib/store/ui";
@@ -33,22 +34,29 @@ export function Tela({ sessao, tipo, mapa, Video, rodape, testId }: {
   const ampliada = useUi((s) => s.cameraAmpliada);
   const modoTv = useUi((s) => s.modoTv);
   const blocos = useUi((s) => s.blocos);
+  // Modo foco tira os painéis da frente do mapa (3D e plano): fica o cabeçalho e, ao clicar numa vaga, o detalhe
+  const foco = useUi((s) => s.foco);
+  const cameraNoFoco = useUi((s) => s.cameraNoFoco);
   /** null: padrão por largura (aberto no desktop, recolhido no tablet via CSS) */
   const [painelAberto, setPainelAberto] = useState<boolean | null>(null);
 
   useEffect(() => {
     const p = new URLSearchParams(window.location.search);
     const tema = document.documentElement.dataset.theme === "dark" ? "escuro" : "claro";
-    // Modo foco e Modo TV só existem no 3D
-    let foco = tipo === "3d" && p.get("visual") === "foco";
-    try { foco = foco || (tipo === "3d" && localStorage.getItem("foco") === "1"); } catch {}
+    // Modo foco vale nos dois conceitos; Modo TV só existe no 3D
+    let foco = p.get("visual") === "foco";
+    try { foco = foco || localStorage.getItem("foco") === "1"; } catch {}
     useUi.setState({ tema, foco, modoTv: tipo === "3d" && p.get("modo") === "tv", selecao: null });
     useUi.getState().carregarBlocos();
     // superfícies opacas e sem desfoque no mapa plano (inclusive popovers, que ficam fora desta árvore)
     document.documentElement.classList.toggle("plano", tipo === "plano");
+    // modo gráfico só pesa no 3D; sem salvar, para o padrão (desempenho) não virar escolha do usuário
+    const grafico = tipo === "3d" ? modoGraficoInicial() : "alta";
+    document.documentElement.classList.toggle("desempenho", grafico === "desempenho");
+    useUi.setState({ grafico });
     const fixture = p.get("fixture");
     const parar = usePatio.getState().iniciar(new SimulatedSource({ congelado: fixture !== null }));
-    return () => { parar(); document.documentElement.classList.remove("plano"); };
+    return () => { parar(); document.documentElement.classList.remove("plano", "desempenho"); };
   }, [tipo]);
 
   const detalhe = !!selecao && selecao.tipo !== "setor" && selecao.tipo !== "camera";
@@ -61,16 +69,16 @@ export function Tela({ sessao, tipo, mapa, Video, rodape, testId }: {
 
           <Cabecalho className="absolute top-16 right-16 left-16 z-30" usuario={{ nome: sessao.nome, perfil: NOME_PERFIL[sessao.perfil] }} />
 
-          <button
+          {!foco && <button
             type="button"
             onClick={() => setPainelAberto((v) => !(v ?? window.innerWidth >= 1280))}
             aria-label={painelAberto ? "Recolher painel" : "Abrir painel"}
             className="absolute top-28 left-16 z-20 flex size-40 items-center justify-center vidro rounded-full bg-panel text-text shadow-clay xl:hidden"
           >
             <PanelLeft size={18} />
-          </button>
+          </button>}
 
-          {blocos.visao !== "oculto" && <PainelInfo
+          {!foco && blocos.visao !== "oculto" && <PainelInfo
             data-ocupa="esq"
             className={cx(
               "absolute top-16 left-16 z-10",
@@ -88,29 +96,29 @@ export function Tela({ sessao, tipo, mapa, Video, rodape, testId }: {
           )}
           {detalhe && <CartaoDetalhe className="absolute right-16 bottom-16 left-16 z-20 max-h-[60vh] lg:hidden" />}
 
-          <ControlesMapa
+          {!foco && <ControlesMapa
             className={cx(
               "absolute bottom-16 z-10",
               detalhe ? "right-[376px] max-lg:hidden" : "right-16",
               // some quando o card da câmera passaria por cima (larguras em que card + controles + detalhe não cabem lado a lado)
               blocos.camera !== "oculto" && (ampliada ? (detalhe ? "max-[1880px]:hidden" : "max-[1160px]:hidden") : detalhe && "max-[1600px]:hidden"),
             )}
-          />
+          />}
 
           {/* faixa livre entre o painel da esquerda e o detalhe da direita; o card centraliza nela e encolhe se faltar
               espaço, então nunca passa por baixo das colunas laterais */}
-          {blocos.camera !== "oculto" && (
+          {(!foco || cameraNoFoco) && blocos.camera !== "oculto" && (
             <div
               data-ocupa="base"
               className={cx(
                 "pointer-events-none absolute bottom-16 z-10 flex justify-center *:pointer-events-auto",
                 // à direita também desvia da coluna de controles do mapa (64 px) quando ela está visível
-                detalhe ? "right-[376px] max-lg:hidden min-[1600px]:right-[456px]" : ampliada ? "right-16" : "right-96",
+                detalhe ? cx("right-[376px] max-lg:hidden", !foco && "min-[1600px]:right-[456px]") : ampliada ? "right-16" : "right-96",
                 ampliada && !detalhe ? "left-16"
-                  : detalhe ? (blocos.visao === "oculto" || painelAberto === false ? "left-16" : "left-16 xl:left-[376px]")
+                  : detalhe ? (foco || blocos.visao === "oculto" || painelAberto === false ? "left-16" : "left-16 xl:left-[376px]")
                   // sem detalhe, as margens são sempre simétricas para o card ficar centralizado na tela; entre xl e 1440 px,
                   // com o painel aberto, os dois lados recuam 376 px e o card encolhe em vez de passar por baixo do painel
-                  : blocos.visao === "oculto" || painelAberto === false ? "left-96"
+                  : foco || blocos.visao === "oculto" || painelAberto === false ? "left-96"
                   : "left-96 xl:left-[376px] xl:right-[376px] min-[1440px]:left-96 min-[1440px]:right-96",
               )}
             >

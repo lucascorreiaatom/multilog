@@ -30,7 +30,7 @@ export function Predios({ p, noite, onSelecionar }: { p: Paleta; noite: boolean;
       {planta.predios.filter((b) => b.tipo !== "cobertura" && b.tipo !== "scanner").map((b) => (
         <Volume key={b.id} b={b} p={p} noite={noite} onSelecionar={onSelecionar} />
       ))}
-      <Gates p={p} onSelecionar={onSelecionar} />
+      <Gates p={p} noite={noite} onSelecionar={onSelecionar} />
       <Scanner p={p} onSelecionar={onSelecionar} />
       <Reservatorio p={p} />
       <PortasDocas p={p} />
@@ -89,7 +89,7 @@ function Volume({ b, p, noite, onSelecionar }: { b: Predio; p: Paleta; noite: bo
   );
 }
 
-function Gates({ p, onSelecionar }: { p: Paleta; onSelecionar?: (id: string) => void }) {
+function Gates({ p, noite, onSelecionar }: { p: Paleta; noite: boolean; onSelecionar?: (id: string) => void }) {
   const g = planta.predios.find((x) => x.id === "gates")!;
   const xs = g.contorno.map((q) => q[0]), zs = g.contorno.map((q) => q[1]);
   const [x0, x1, z0, z1] = [Math.min(...xs), Math.max(...xs), Math.min(...zs), Math.max(...zs)];
@@ -143,11 +143,11 @@ function Gates({ p, onSelecionar }: { p: Paleta; onSelecionar?: (id: string) => 
               )}
             </group>
           )}
-          {/* cancela na saída da balança */}
+          {/* cancela na saída da balança; à noite levemente acesa para o estado do gate ler */}
           <group position={[pi.x - largura / 2 + 0.9, 1.1, pi.zSul - 6]} ref={(r) => { bracos.current[i] = r; }}>
             <mesh position={[largura / 2 - 0.6, 0, 0]} castShadow>
               <boxGeometry args={[largura - 1.2, 0.14, 0.14]} />
-              <meshStandardMaterial color="#d8453a" roughness={0.5} />
+              <meshStandardMaterial color={p.cancela} roughness={0.5} emissive={noite ? p.cancela : "#000000"} emissiveIntensity={noite ? 0.45 : 0} />
             </mesh>
           </group>
           <mesh position={[pi.x - largura / 2 + 0.9, 0.55, pi.zSul - 6]} castShadow>

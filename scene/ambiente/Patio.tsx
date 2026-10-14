@@ -13,11 +13,23 @@ import { useDetalheChao } from "../materiais/chao";
 import type { Paleta } from "../paleta";
 import { cursorClicavel } from "../cursor";
 
-/** cores do piso por status (tons de tinta de piso, mais sóbrios que os da interface) */
+/** cores do piso por status. Dia: tons de tinta de piso, mais sóbrios que os da interface.
+ *  Noite: iguais aos --st-* do tema escuro (app/globals.css) para piso e legenda baterem; mantenha os dois juntos */
 export const COR_PISO: Record<"dia" | "noite", Record<StatusVaga, string>> = {
   dia: { livre: "#5fae74", ocupada: "#cf5a52", conferencia: "#6656c0", saida: "#e3a34a", reservada: "#c8649f", vistoria: "#3cb2c4", bloqueada: "#6e7480" },
-  noite: { livre: "#3f8a55", ocupada: "#a8443e", conferencia: "#4d3f9c", saida: "#b8823a", reservada: "#a04a80", vistoria: "#2c8e9c", bloqueada: "#4a505b" },
+  noite: { livre: "#4fb874", ocupada: "#e5605b", conferencia: "#8b7ef0", saida: "#eba84a", reservada: "#df7bbd", vistoria: "#34bccf", bloqueada: "#8a92a2" },
 };
+
+/** autoiluminação da tinta das vagas (0 de dia): à noite o status lê em qualquer ângulo sem acender o resto da cena.
+ *  Uniform compartilhado: trocar o tema não recompila o shader */
+const uBrilhoVaga = { value: 0 };
+function pisoVaga(shader: THREE.WebGLProgramParametersWithUniforms) {
+  ocultavel(shader);
+  shader.uniforms.uBrilhoVaga = uBrilhoVaga;
+  shader.fragmentShader = shader.fragmentShader
+    .replace("#include <common>", "#include <common>\nuniform float uBrilhoVaga;")
+    .replace("#include <emissivemap_fragment>", "#include <emissivemap_fragment>\ntotalEmissiveRadiance += diffuseColor.rgb * uBrilhoVaga;");
+}
 
 const forma = (pts: [number, number][]) => new THREE.Shape(pts.map(([x, z]) => new THREE.Vector2(x, -z)));
 
@@ -121,6 +133,7 @@ function PinturaVagas({ p, noite }: { p: Paleta; noite: boolean }) {
 
   useLayoutEffect(() => {
     const cores = COR_PISO[noite ? "noite" : "dia"];
+    uBrilhoVaga.value = noite ? 0.4 : 0;
     const c = new THREE.Color();
     // fora do filtro de status a vaga some (piso e faixas), no shader: só reescreve as flags
     const flag = (m: THREE.InstancedMesh, k: number) => (m.geometry.getAttribute("aOculto") as THREE.InstancedBufferAttribute | undefined) ?? atributoFiltro(m.geometry, "aOculto", k);
@@ -165,7 +178,7 @@ function PinturaVagas({ p, noite }: { p: Paleta; noite: boolean }) {
         }}
       >
         <boxGeometry args={[1, 0.02, 1]} />
-        <meshStandardMaterial roughness={0.85} {...sobre(CAMADA.pisoVaga)} onBeforeCompile={ocultavel} />
+        <meshStandardMaterial roughness={0.85} {...sobre(CAMADA.pisoVaga)} onBeforeCompile={pisoVaga} />
       </instancedMesh>
       <instancedMesh ref={linhas} args={[undefined, undefined, n * 2]} receiveShadow>
         <boxGeometry args={[1, 0.02, 1]} />
@@ -222,30 +235,18 @@ function Cerca({ p }: { p: Paleta }) {
   );
 }
 
+/** postes: à noite só a cabeça acende (cor quente, discreta); sem poças de luz no chão, que brigavam com o status */
 function PostesLuz({ p, noite }: { p: Paleta; noite: boolean }) {
   const haste = useRef<THREE.InstancedMesh>(null!);
   const cabeca = useRef<THREE.InstancedMesh>(null!);
-  const poca = useRef<THREE.InstancedMesh>(null!);
   const n = planta.postes.length;
   useLayoutEffect(() => {
     const m = new THREE.Matrix4();
     planta.postes.forEach(([x, z], i) => {
       m.makeTranslation(x, 7, z); haste.current.setMatrixAt(i, m);
       m.makeTranslation(x, 14.1, z); cabeca.current.setMatrixAt(i, m);
-      m.makeTranslation(x, 0.07, z); poca.current.setMatrixAt(i, m);
     });
-    for (const r of [haste, cabeca, poca]) r.current.instanceMatrix.needsUpdate = true;
-  }, []);
-  const textura = useMemo(() => {
-    if (typeof document === "undefined") return null;
-    const c = document.createElement("canvas");
-    c.width = c.height = 128;
-    const g = c.getContext("2d")!;
-    const grad = g.createRadialGradient(64, 64, 0, 64, 64, 64);
-    grad.addColorStop(0, "rgba(255,226,170,0.55)");
-    grad.addColorStop(1, "rgba(255,226,170,0)");
-    g.fillStyle = grad; g.fillRect(0, 0, 128, 128);
-    return new THREE.CanvasTexture(c);
+    for (const r of [haste, cabeca]) r.current.instanceMatrix.needsUpdate = true;
   }, []);
   return (
     <group>
@@ -255,11 +256,7 @@ function PostesLuz({ p, noite }: { p: Paleta; noite: boolean }) {
       </instancedMesh>
       <instancedMesh ref={cabeca} args={[undefined, undefined, n]}>
         <boxGeometry args={[1.6, 0.25, 0.7]} />
-        <meshStandardMaterial color={noite ? "#ffe2aa" : p.poste} emissive={noite ? "#ffd38a" : "#000000"} emissiveIntensity={noite ? 2.2 : 0} roughness={0.4} />
-      </instancedMesh>
-      <instancedMesh ref={poca} args={[undefined, undefined, n]} visible={noite}>
-        <cylinderGeometry args={[16, 16, 0.01, 24]} />
-        <meshBasicMaterial map={textura} transparent depthWrite={false} blending={THREE.AdditiveBlending} />
+        <meshStandardMaterial color={noite ? "#ffe2aa" : p.poste} emissive={noite ? "#ffd38a" : "#000000"} emissiveIntensity={noite ? 0.8 : 0} roughness={0.4} />
       </instancedMesh>
     </group>
   );

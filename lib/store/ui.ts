@@ -2,6 +2,7 @@
 // Estado da interface: seleção, câmera em exibição, camadas e modo de exibição.
 import { create } from "zustand";
 import { subscribeWithSelector } from "zustand/middleware";
+import type { ModoGrafico } from "../grafico";
 import type { StatusVaga } from "../patio/tipos";
 import type { SetorVagas } from "../site";
 
@@ -52,6 +53,10 @@ export interface UiState {
   tema: "claro" | "escuro";
   /** Modo foco: cena quase monocromática, só o essencial em cor */
   foco: boolean;
+  /** no Modo foco o card AO VIVO só aparece quando pedido (ex.: "Ver câmera" no detalhe), até mudar a seleção */
+  cameraNoFoco: boolean;
+  /** qualidade do 3D: visual completo ou leve para GPU integrada (lib/grafico.ts) */
+  grafico: ModoGrafico;
   /** status visíveis no mapa (vazio = todos); vagas fora do filtro ficam neutras e sem caminhão */
   filtroStatus: StatusVaga[];
   abaInfo: AbaInfo;
@@ -75,6 +80,7 @@ export interface UiState {
   setTour: (v: boolean) => void;
   setTema: (t: "claro" | "escuro") => void;
   setFoco: (v: boolean) => void;
+  setGrafico: (g: ModoGrafico) => void;
 }
 
 /** o painel Pátio/Gates foi recolhido pela câmera ampliada (e não pelo usuário) */
@@ -102,6 +108,8 @@ export const useUi = create<UiState>()(
     tour: false,
     tema: "claro",
     foco: false,
+    cameraNoFoco: false,
+    grafico: "desempenho",
     filtroStatus: [],
     abaInfo: "patio",
     setAbaInfo: (abaInfo) => set({ abaInfo }),
@@ -112,13 +120,13 @@ export const useUi = create<UiState>()(
     limparFiltro: () => set({ filtroStatus: [] }),
     alvo: { alvo: { tipo: "home" }, seq: 0 },
     comando: null,
-    selecionar: (selecao) => set({ selecao }),
+    selecionar: (selecao) => set({ selecao, cameraNoFoco: false }),
     focar: (alvo) => set({ alvo: { alvo, seq: get().alvo.seq + 1 } }),
     comandar: (tipo) => set({ comando: { tipo, seq: (get().comando?.seq ?? 0) + 1 } }),
     exibirCamera: (numero) => {
       // escolher uma câmera reabre o card se ele estiver fechado
       if (get().blocos.camera !== "aberto") get().setBloco("camera", "aberto");
-      set({ cameraAtiva: numero, sensor: 0, ptz: { pan: 0, tilt: 0, zoom: 1 } });
+      set({ cameraAtiva: numero, sensor: 0, ptz: { pan: 0, tilt: 0, zoom: 1 }, cameraNoFoco: true });
     },
     setSensor: (sensor) => set({ sensor }),
     setPtz: (p) => set({ ptz: { ...get().ptz, ...p } }),
@@ -140,7 +148,12 @@ export const useUi = create<UiState>()(
     setTour: (tour) => set({ tour }),
     setFoco: (foco) => {
       try { localStorage.setItem("foco", foco ? "1" : "0"); } catch {}
-      set({ foco });
+      set({ foco, cameraNoFoco: false });
+    },
+    setGrafico: (grafico) => {
+      try { localStorage.setItem("grafico", grafico); } catch {}
+      document.documentElement.classList.toggle("desempenho", grafico === "desempenho");
+      set({ grafico });
     },
     setTema: (tema) => {
       try { localStorage.setItem("tema", tema); } catch {}

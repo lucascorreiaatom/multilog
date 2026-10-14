@@ -1,9 +1,11 @@
 // Captura de tela de uma rota com GPU (ANGLE/Metal), para validação visual da cena.
-// Uso: node scripts/captura.mjs <url> <saida.png> [largura] [altura] [esperaMs]
+// Uso: [TEMA=escuro] node scripts/captura.mjs <url> <saida.png> [largura] [altura] [esperaMs]
 import { chromium } from "@playwright/test";
 const [, , url, out, w = "1440", h = "900", espera = "9000"] = process.argv;
 const browser = await chromium.launch({ args: ["--use-angle=metal", "--enable-gpu", "--ignore-gpu-blocklist", "--enable-unsafe-webgpu"] });
 const page = await browser.newPage({ viewport: { width: +w, height: +h }, deviceScaleFactor: 1 });
+// TEMA=escuro: sem localStorage.tema, o layout segue o prefers-color-scheme
+if (process.env.TEMA === "escuro") await page.emulateMedia({ colorScheme: "dark" });
 const logs = [];
 page.on("console", (m) => { if (m.type() === "error" || m.type() === "warning") logs.push(`${m.type()}: ${m.text()}`); });
 page.on("pageerror", (e) => logs.push(`pageerror: ${e.message}`));

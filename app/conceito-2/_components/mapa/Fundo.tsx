@@ -7,6 +7,7 @@ import type { Vec2 } from "@/lib/site/tipos";
 
 const pts = (lista: Vec2[]) => lista.map((q) => paraTela(q).map((n) => n.toFixed(2)).join(",")).join(" ");
 
+const CERCA = pts(planta.cerca);
 const Y_RODOVIA = paraTela(planta.vias.nos["rod-gate"])[1];
 const PISTAS = planta.pistasGate;
 const xsPista = PISTAS.map((g) => paraTela([g.x, 0])[0]);
@@ -28,7 +29,8 @@ export const Fundo = memo(function Fundo() {
       <rect x={ACESSO.x0} y={paraTela([0, PISTAS[0].zNorte])[1]} width={ACESSO.x1 - ACESSO.x0} height={Y_RODOVIA - paraTela([0, PISTAS[0].zNorte])[1]} className="fill-[var(--mapa-via)]" />
 
       {/* recinto: piso dentro da cerca, concreto da área de Cargas Perigosas e do Scanner */}
-      <polygon points={pts(planta.cerca)} className="fill-[var(--mapa-piso)] stroke-[var(--mapa-cerca)]" strokeWidth={1.2} vectorEffect="non-scaling-stroke" />
+      <clipPath id="mapa-recinto"><polygon points={CERCA} /></clipPath>
+      <polygon points={CERCA} className="fill-[var(--mapa-piso)]" />
       <polygon points={pts(planta.areaCPG)} className="fill-[var(--mapa-concreto)]" />
       <polygon points={pts(planta.scannerPlataforma)} className="fill-[var(--mapa-concreto)]" />
 
@@ -43,8 +45,8 @@ export const Fundo = memo(function Fundo() {
         );
       })}
 
-      {/* canteiros centrais entre as fileiras de vagas */}
-      <g className="stroke-[var(--mapa-canteiro)]" strokeLinecap="round" fill="none">
+      {/* canteiros entre as fileiras de vagas, recortados pela cerca: o de borda (colado à cerca norte) não vaza do terreno */}
+      <g className="stroke-[var(--mapa-canteiro)]" strokeLinecap="round" fill="none" clipPath="url(#mapa-recinto)">
         {planta.canteiros.map((c, i) => { const k = capsula(c.a, c.b, c.largura); return <path key={i} d={k.d} strokeWidth={k.w} />; })}
       </g>
 
@@ -59,6 +61,9 @@ export const Fundo = memo(function Fundo() {
           return <rect key={i} x={x - w / 2} y={y - h / 2} width={w} height={h} vectorEffect="non-scaling-stroke" />;
         })}
       </g>
+
+      {/* linha da cerca por cima dos canteiros, para a borda do recinto ficar fechada */}
+      <polygon points={CERCA} className="fill-none stroke-[var(--mapa-cerca)]" strokeWidth={1.2} vectorEffect="non-scaling-stroke" />
 
       {/* coberturas leves (estacionamento de carros) */}
       {planta.coberturasLeves.map((c, i) => <polygon key={i} points={pts(c)} className="fill-[var(--mapa-predio)] stroke-[var(--mapa-predio-borda)] opacity-70" strokeWidth={1} strokeDasharray="4 3" vectorEffect="non-scaling-stroke" />)}

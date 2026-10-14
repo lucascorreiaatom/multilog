@@ -30,16 +30,32 @@ export interface PatioState {
 
 const setorDaVaga = new Map(planta.vagas.map((v) => [v.id, v.setor as SetorVagas]));
 
-function contar(vagas: Record<string, EstadoVaga>) {
+export function contar(vagas: Record<string, EstadoVaga>) {
   const contagem = vazia();
   const porSetor = Object.fromEntries(SETORES_VAGAS.map((s) => [s, vazia()])) as Record<SetorVagas, Contagem>;
   for (const [id, e] of Object.entries(vagas)) {
     const s = setorDaVaga.get(id)!;
     contagem[e.status]++; contagem.total++;
     porSetor[s][e.status]++; porSetor[s].total++;
-    if (e.status !== "livre" && e.status !== "bloqueada") { contagem.emUso++; porSetor[s].emUso++; }
+    if (emUso(e.status)) { contagem.emUso++; porSetor[s].emUso++; }
   }
   return { contagem, porSetor };
+}
+
+const emUso = (st: StatusVaga) => st !== "livre" && st !== "bloqueada";
+
+/** troca de status de uma vaga sem recontar as 1.022: só o setor da vaga ganha objeto novo, então quem assina outro
+ *  setor (callouts, resumos) não re-renderiza; sem troca de status, nada muda */
+export function recontar(estado: Pick<PatioState, "contagem" | "porSetor">, id: string, de: StatusVaga | undefined, para: StatusVaga) {
+  if (de === para) return {};
+  const ajustar = (c: Contagem) => {
+    const n = { ...c };
+    if (de) { n[de]--; if (emUso(de)) n.emUso--; } else n.total++;
+    n[para]++; if (emUso(para)) n.emUso++;
+    return n;
+  };
+  const s = setorDaVaga.get(id)!;
+  return { contagem: ajustar(estado.contagem), porSetor: { ...estado.porSetor, [s]: ajustar(estado.porSetor[s]) } };
 }
 
 let fonteAtual: YardDataSource | null = null;
@@ -76,8 +92,8 @@ export const usePatio = create<PatioState>()(
       const desassinar = fonte.assinar((m: Mudanca) => {
         switch (m.tipo) {
           case "vaga": {
-            const vagas = { ...get().vagas, [m.vagaId]: m.estado };
-            set({ vagas, ...contar(vagas) });
+            const atual = get();
+            set({ vagas: { ...atual.vagas, [m.vagaId]: m.estado }, ...recontar(atual, m.vagaId, atual.vagas[m.vagaId]?.status, m.estado.status) });
             break;
           }
           case "ocupante": set({ ocupantes: { ...get().ocupantes, [m.ocupante.id]: m.ocupante } }); break;

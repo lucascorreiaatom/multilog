@@ -2,8 +2,9 @@
 
 /*
   Paleta do Brand Book Multilog 2025 (pág. 15): navy #11294B, azul royal #002F67, azul #4E91ED,
-  ciano #00FFFF, cinza #909CA6 e branco. Ações sólidas usam navy (--dark); o acento azul fica em
-  seleção, foco e estados ativos, sempre com texto branco (--accent-ink). Ciano só sobre superfícies navy.
+  ciano #00FFFF, cinza #909CA6 e branco. Como no livro (menu lateral, iconografia, pág. 33), navy é cor de área
+  e o azul é a cor de interação: ações sólidas, seleção e estados ativos usam --accent com texto branco
+  (--accent-ink). Navy (--dark) fica para superfícies e etiquetas informativas. Ciano só sobre superfícies navy.
   Tokens do Conceito 1 (clay). Medidas derivadas da Imagem 1 (captura de 2000 px de uma tela de 1440 px, escala 1,389) e
   encaixadas no grid de 4 px. Ex.: painel esquerdo 449 px na imagem = 323 px, adotado 320;
   vídeo AO VIVO 515 x 292 = 371 x 210, adotado 370 x 208 (16:9).
@@ -146,6 +147,20 @@ body {
     radial-gradient(60% 70% at 100% 100%, rgb(0 255 255 / 0.26), transparent 70%);
 }
 
+/* modo desempenho do 3D (lib/grafico.ts): as superfícies que andam com a cena (marcadores, callouts, nomes de
+   prédio) perdem o desfoque e ficam quase opacas. O desfoque sobre o canvas, que repinta todo quadro, era o maior
+   custo da GPU integrada; parada, a diferença visual é mínima */
+html.desempenho .flutuante {
+  --card: rgb(255 255 255 / 0.94);
+  --card-muted: rgb(255 255 255 / 0.98);
+  -webkit-backdrop-filter: none;
+  backdrop-filter: none;
+}
+html.desempenho[data-theme="dark"] .flutuante {
+  --card: rgb(24 52 92 / 0.94);
+  --card-muted: rgb(32 62 106 / 0.98);
+}
+
 /* depuração de desempenho (?sem=vidro): sem desfoque atrás das superfícies */
 .sem-vidro * {
   -webkit-backdrop-filter: none !important;
@@ -274,7 +289,8 @@ html.plano .vidro {
 
 .mapa-plano { cursor: grab; }
 .mapa-plano[data-arrastando] { cursor: grabbing; }
-.mapa-plano svg { transform-origin: 0 0; }
+/* o desenho fica sempre na própria camada: o gesto só recompõe (motor.ts); só o svg do mapa, não os ícones */
+.mapa-plano > svg { will-change: transform; }
 .mapa-plano .vaga, .mapa-plano .predio { cursor: pointer; }
 .mapa-plano .vaga .piso { stroke: var(--mapa-piso); stroke-width: 1; vector-effect: non-scaling-stroke; }
 .mapa-plano .st-livre .piso { fill: var(--st-livre); }
@@ -285,8 +301,8 @@ html.plano .vidro {
 .mapa-plano .st-vistoria .piso { fill: var(--st-vistoria); }
 .mapa-plano .st-bloqueada .piso { fill: var(--st-bloqueada); }
 /* visão geral sem filtro: duas cores só (livre e em uso), como no resumo dos setores; as cores de cada status
-   aparecem ao aproximar ou ao filtrar pela legenda */
-.mapa-plano[data-lod="geral"]:not([data-filtro]) .vaga:not(.st-livre):not(.st-bloqueada) .piso { fill: var(--mapa-vaga-uso); }
+   aparecem ao aproximar, ao filtrar pela legenda ou no Modo foco (que não tem resumos e mostra o status, como no 3D) */
+.mapa-plano[data-lod="geral"]:not([data-filtro]):not([data-foco]) .vaga:not(.st-livre):not(.st-bloqueada) .piso { fill: var(--mapa-vaga-uso); }
 /* fora do filtro: a vaga fica neutra e sem caminhão, como no 3D */
 .mapa-plano .vaga[data-fora] .piso { fill: var(--mapa-vaga-neutra); }
 .mapa-plano .vaga[data-fora] .caminhao,

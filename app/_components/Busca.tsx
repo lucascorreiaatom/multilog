@@ -60,23 +60,23 @@ export function Busca() {
   }, [aberta]);
 
   return (
-    <div ref={raiz} className="relative h-48">
+    <div ref={raiz} className="relative h-40">
       <Command shouldFilter={false} label="Buscar no pátio" onKeyDown={(e) => { if (e.key === "Escape") { e.preventDefault(); fechar(); } }}>
-        <div className={cx("vidro flex h-48 items-center overflow-hidden rounded-full shadow-card transition-[width,background-color] duration-300 ease-[cubic-bezier(0.22,1,0.36,1)] max-md:transition-none",
-          aberta ? "w-[360px] max-md:w-[calc(100vw-32px)] bg-card" : "w-48 bg-card hover:bg-card-muted")}>
+        <div className={cx("vidro flex h-40 items-center overflow-hidden rounded-full shadow-card transition-[width,background-color] duration-300 ease-[cubic-bezier(0.22,1,0.36,1)] max-md:transition-none",
+          aberta ? "w-[360px] max-md:w-[calc(100vw-32px)] bg-card" : "w-40 bg-card hover:bg-card-muted")}>
           <button type="button" aria-label="Buscar placa, vaga, câmera ou prédio" title="Buscar ( / )" aria-expanded={aberta}
             onClick={() => (aberta ? campo.current?.focus() : useUi.getState().setBusca(true))}
-            className="flex size-48 shrink-0 items-center justify-center rounded-full text-text">
+            className="flex size-40 shrink-0 items-center justify-center rounded-full text-text">
             <Search size={18} />
           </button>
           <Command.Input ref={campo} value={q} onValueChange={setQ} tabIndex={aberta ? 0 : -1} aria-hidden={!aberta}
             placeholder="Placa, vaga, câmera, gate, setor ou prédio"
-            className={cx("h-48 min-w-0 flex-1 bg-transparent pr-16 text-[14px] leading-20 text-text outline-none placeholder:text-text-3 transition-opacity duration-200",
+            className={cx("h-40 min-w-0 flex-1 bg-transparent pr-16 text-[14px] leading-20 text-text outline-none placeholder:text-text-3 transition-opacity duration-200",
               aberta ? "opacity-100 delay-100" : "pointer-events-none opacity-0")} />
         </div>
         {aberta && q.length > 0 && (
           // fundo fora da lista: o esmaecimento da rolagem (máscara) não pode deixar o painel transparente
-          <div className="animar-entrada absolute top-56 left-0 z-50 w-[400px] max-w-[calc(100vw-32px)] overflow-hidden rounded-[20px] bg-panel shadow-float vidro">
+          <div className="animar-entrada absolute top-48 left-0 z-50 w-[400px] max-w-[calc(100vw-32px)] overflow-hidden rounded-[20px] bg-panel shadow-float vidro">
             <Command.List ref={rolagem} className="rolagem max-h-[420px] overflow-y-auto px-8 pb-8">
               <Command.Empty className="px-8 py-16 text-[13px] leading-20 text-text-3">{termo.length < 2 ? "Digite ao menos 2 caracteres" : "Nada encontrado"}</Command.Empty>
               {limite > 0 && (

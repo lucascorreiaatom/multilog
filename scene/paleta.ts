@@ -26,38 +26,43 @@ export const PALETA = {
     poste: "#8d949f",
     container: ["#2f6db5", "#c4472f", "#2d8a63", "#d48a1e", "#7f8895", "#1f3d6b", "#a33a52", "#e1e4e8"],
     carro: ["#f4f5f7", "#2e3440", "#9aa1ab", "#c9332f", "#1f4fa3", "#dfe3e8", "#6b717d"],
+    cancela: "#d8453a",
+    domo: "#f4f5f7",
     sol: "#fff6e8",
     hemisferioCeu: "#e9f1fb",
     hemisferioChao: "#b9c4a8",
   },
   noite: {
-    ceu: "#0d1420",
-    neblina: "#0d1420",
-    grama: "#2a3d2c",
-    gramaEscura: "#223325",
-    campo: "#3a3628",
-    copa: ["#1c3322", "#21392a", "#183020", "#264030", "#162b1d"],
-    tronco: "#2a2420",
-    asfalto: "#2a2e35",
-    asfaltoRodovia: "#24272d",
+    // tema escuro operacional: entorno escuro e calmo (céu no navy da interface), pátio legível
+    ceu: "#0c1726",
+    neblina: "#0c1726",
+    grama: "#1e2b26",
+    gramaEscura: "#1a2622",
+    campo: "#2a2b28",
+    copa: ["#16261f", "#192a22", "#14231c", "#1c2d25", "#12201a"],
+    tronco: "#211f1d",
+    asfalto: "#3a3f48",
+    asfaltoRodovia: "#30343b",
     faixa: "#c9ccd2",
     faixaAmarela: "#b9984a",
-    concreto: "#4a4f58",
+    concreto: "#5a606a",
     meioFio: "#5a606a",
-    canteiro: "#2f3d26",
+    canteiro: "#26302a",
     predio: "#5c6370",
     predioSombra: "#4a505c",
     telhado: "#3d434d",
-    faixaAzul: "#002f67",
+    faixaAzul: "#4a6a9e",
     vidro: "#f2d79a",
     porta: "#4a505c",
     cerca: "#5a606a",
     poste: "#5a606a",
-    container: ["#1f4677", "#7e2f20", "#1d5a41", "#8a5a14", "#4e555f", "#142846", "#6a2535", "#8f9298"],
+    container: ["#2f5d94", "#9a4433", "#2c7457", "#a87424", "#666d78", "#22406b", "#88384c", "#a4a8ae"],
     carro: ["#9a9ea6", "#1c2027", "#5d636d", "#7e2321", "#14326a", "#8a8f97", "#454a53"],
-    sol: "#9fb4d8",
-    hemisferioCeu: "#2a3a55",
-    hemisferioChao: "#1a2018",
+    cancela: "#e5605b",
+    domo: "#c9ccd2",
+    sol: "#b8c8e6",
+    hemisferioCeu: "#a3b3d1",
+    hemisferioChao: "#2c3340",
   },
 };
 
@@ -86,8 +91,8 @@ export const PALETA_FOCO: { claro: Paleta; escuro: Paleta } = {
 };
 
 /** cores neutras dos caminhões no Modo foco */
-export const CAMINHAO_FOCO = { claro: { cavalo: "#ffffff", carga: "#f1f3f6" }, escuro: { cavalo: "#6a717c", carga: "#565d68" } };
+export const CAMINHAO_FOCO = { claro: { cavalo: "#ffffff", carga: "#f1f3f6" }, escuro: { cavalo: "#8a919c", carga: "#767d88" } };
 /** cores padrão da frota fora do Modo foco: todos os caminhões iguais */
-export const CAMINHAO_PADRAO = { claro: { cavalo: "#f4f5f7", carga: "#dfe3e8" }, escuro: { cavalo: "#9a9ea6", carga: "#7d828b" } };
+export const CAMINHAO_PADRAO = { claro: { cavalo: "#f4f5f7", carga: "#dfe3e8" }, escuro: { cavalo: "#dde0e5", carga: "#c6cad1" } };
 
 export type Paleta = typeof PALETA.dia;

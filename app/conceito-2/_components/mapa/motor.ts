@@ -1,8 +1,10 @@
 // Navegação do mapa plano, fora do React: roda do mouse aproxima no cursor, arrastar move, pinça no toque, teclado
 // (+, -, setas, Home) e voos animados para os alvos do store (os mesmos do 3D: setor, vaga, gate, câmera, prédio).
 //
-// Leveza em máquina fraca: durante o gesto, o SVG inteiro é escalado como imagem (transform CSS, composto na GPU) e o
-// desenho só é refeito ao fim do gesto. Nos voos animados o desenho acompanha quadro a quadro, para não borrar.
+// Leveza em máquina fraca: durante o gesto, o SVG inteiro é escalado como imagem (transform CSS, composto na GPU), um
+// quadro por vez. O SVG é maior que a tela (SOBRA em cada lado), então arrastar e afastar mostram desenho já pronto; ele
+// é refeito no meio do gesto só quando a borda da sobra se aproxima, a escala borraria ou o nível de detalhe muda, e de
+// novo ao fim do gesto. Nos voos animados o desenho acompanha quadro a quadro, para não borrar.
 import { caixaDoAlvo, encaixar, interpolar, limitar, nivelDetalhe, zoomNoPonto, type Detalhe, type Folga, type Vista } from "@/lib/mapa/vista";
 import { vagasPorId } from "@/lib/site";
 import { useUi, type AlvoCamera3D } from "@/lib/store/ui";
@@ -28,6 +30,11 @@ export function medirFolga(raiz: HTMLElement): Folga {
   return f;
 }
 
+/** fração da largura e da altura do mapa desenhada além de cada borda */
+const SOBRA = 0.5;
+/** no gesto, refaz o desenho antes que falte sobra (fração dela que ainda resta) ou que a imagem amplie demais */
+const RESPIRO = 0.25, AMPLIACAO_MAX = 1.33;
+
 /** alvos pontuais: se já estiver mais perto, só centraliza (não afasta) */
 const PONTUAIS = new Set<AlvoCamera3D["tipo"]>(["vaga", "camera", "gate"]);
 
@@ -38,12 +45,12 @@ export function criarMotor({ raiz, svg, grupo, aoDica }: {
   /** vaga sob o cursor (ou null), com a posição na tela */
   aoDica: (d: { id: string; x: number; y: number } | null) => void;
 }) {
-  let largura = raiz.clientWidth, altura = raiz.clientHeight;
+  let largura = 0, altura = 0, sx = 0, sy = 0;
   let base: Vista = { k: 1, x: 0, y: 0 };
   let atual: Vista = base;
   let kMin = 0.5;
   let lod: Detalhe | null = null;
-  let animacao = 0, commit = 0;
+  let animacao = 0, commit = 0, quadro = 0;
   let interagiu = false;
   const reduzido = () => matchMedia("(prefers-reduced-motion: reduce)").matches;
 
@@ -51,22 +58,51 @@ export function criarMotor({ raiz, svg, grupo, aoDica }: {
   const recalcularLimites = () => { kMin = encaixar(caixaDoAlvo({ tipo: "home" }), largura, altura, { esq: 0, dir: 0, topo: 0, base: 0 }).k * 0.6; };
   const ajustar = (v: Vista) => limitar(v, largura, altura, kMin);
 
+  /** tamanho do mapa e a sobra: o SVG começa SOBRA antes da borda e a origem do transform fica no canto do mapa */
+  function medir() {
+    largura = raiz.clientWidth; altura = raiz.clientHeight;
+    sx = Math.round(largura * SOBRA); sy = Math.round(altura * SOBRA);
+    Object.assign(svg.style, {
+      left: `${-sx}px`, top: `${-sy}px`, width: `${largura + 2 * sx}px`, height: `${altura + 2 * sy}px`,
+      transformOrigin: `${sx}px ${sy}px`,
+    });
+  }
+
+  /** a imagem provisória ainda cobre o mapa com folga, sem ampliar demais nem pedir outro nível de detalhe */
+  function cobre(v: Vista, f: number, tx: number, ty: number) {
+    const mx = sx * RESPIRO, my = sy * RESPIRO;
+    return f <= AMPLIACAO_MAX && nivelDetalhe(v.k) === lod
+      && tx - sx * f <= -mx && tx + (largura + sx) * f >= largura + mx
+      && ty - sy * f <= -my && ty + (altura + sy) * f >= altura + my;
+  }
+
   function pintar(v: Vista, provisoria = false) {
     atual = v;
     if (provisoria) {
       const f = v.k / base.k, tx = v.x - base.x * f, ty = v.y - base.y * f;
-      svg.style.transform = `translate(${tx}px, ${ty}px) scale(${f})`;
       clearTimeout(commit);
-      commit = window.setTimeout(() => pintar(atual), 140);
-    } else {
-      clearTimeout(commit);
-      base = v;
-      grupo.setAttribute("transform", `matrix(${v.k} 0 0 ${v.k} ${v.x} ${v.y})`);
-      svg.style.transform = "";
+      if (cobre(v, f, tx, ty)) {
+        svg.style.transform = `translate(${tx}px, ${ty}px) scale(${f})`;
+        projetarTodos(v);
+        commit = window.setTimeout(() => pintar(atual), 140);
+        return;
+      }
     }
+    // desenho de verdade: fim do gesto, voo, ou a imagem provisória já não cobre o mapa
+    clearTimeout(commit);
+    cancelAnimationFrame(quadro); quadro = 0;
+    base = v;
+    grupo.setAttribute("transform", `matrix(${v.k} 0 0 ${v.k} ${v.x + sx} ${v.y + sy})`);
+    svg.style.transform = "";
     projetarTodos(v);
     const n = nivelDetalhe(v.k);
     if (n !== lod) { lod = n; raiz.dataset.lod = n; }
+  }
+
+  /** gesto: guarda a vista na hora (o próximo evento parte dela) e mostra uma vez por quadro */
+  function gesto(v: Vista) {
+    atual = v;
+    if (!quadro) quadro = requestAnimationFrame(() => { quadro = 0; pintar(atual, true); });
   }
 
   function voar(destino: Vista, ms = 560) {
@@ -134,7 +170,7 @@ export function criarMotor({ raiz, svg, grupo, aoDica }: {
     const p = posicao(e);
     // trackpad (pixels) aproxima aos poucos; roda (linhas) em degraus
     const fator = Math.exp(-e.deltaY * (e.deltaMode === 1 ? 0.06 : e.ctrlKey ? 0.012 : 0.0022));
-    pintar(ajustar(zoomNoPonto(atual, fator, p.x, p.y, kMin)), true);
+    gesto(ajustar(zoomNoPonto(atual, fator, p.x, p.y, kMin)));
     aoDica(null);
   }
 
@@ -160,12 +196,12 @@ export function criarMotor({ raiz, svg, grupo, aoDica }: {
     if (pinca && ponteiros.size >= 2) {
       const { d, c } = dois();
       const v = zoomNoPonto(pinca.v, d / pinca.d, pinca.c.x, pinca.c.y, kMin);
-      pintar(ajustar({ ...v, x: v.x + c.x - pinca.c.x, y: v.y + c.y - pinca.c.y }), true);
+      gesto(ajustar({ ...v, x: v.x + c.x - pinca.c.x, y: v.y + c.y - pinca.c.y }));
     } else if (arrasto) {
       const p = posicao(e), dx = p.x - arrasto.x, dy = p.y - arrasto.y;
       if (!arrasto.moveu && Math.hypot(dx, dy) < 5) return;
       if (!arrasto.moveu) { arrasto.moveu = true; interagiu = true; raiz.dataset.arrastando = ""; aoDica(null); }
-      pintar(ajustar({ ...arrasto.v, x: arrasto.v.x + dx, y: arrasto.v.y + dy }), true);
+      gesto(ajustar({ ...arrasto.v, x: arrasto.v.x + dx, y: arrasto.v.y + dy }));
     }
   }
 
@@ -213,11 +249,12 @@ export function criarMotor({ raiz, svg, grupo, aoDica }: {
   const aoSair = () => aoDica(null);
 
   const tamanho = new ResizeObserver(() => {
-    largura = raiz.clientWidth; altura = raiz.clientHeight;
+    medir();
     recalcularLimites();
     pintar(interagiu ? ajustar(atual) : inicio());
   });
 
+  medir();
   recalcularLimites();
   pintar(inicio());
   tamanho.observe(raiz);
@@ -237,6 +274,7 @@ export function criarMotor({ raiz, svg, grupo, aoDica }: {
 
   return () => {
     cancelAnimationFrame(animacao);
+    cancelAnimationFrame(quadro);
     clearTimeout(commit);
     tamanho.disconnect();
     raiz.removeEventListener("wheel", aoRoda);

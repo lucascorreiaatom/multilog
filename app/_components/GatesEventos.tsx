@@ -1,20 +1,18 @@
 "use client";
-// Aba "Gates" do painel de informações: gates com sentido e operação (SoW) e eventos recentes.
+// Aba "Gates" do painel de informações: gates com sentido e operação (SoW) e câmeras dos gates.
+// Os eventos recentes ficam no sino do cabeçalho (Atividade), à vista em qualquer aba.
 import { ArrowDown, ArrowDownUp, ArrowUp } from "lucide-react";
-import { hora } from "@/lib/formato";
-import { STATUS } from "@/lib/patio/tipos";
 import { usePatio } from "@/lib/store/patio";
 import { useUi } from "@/lib/store/ui";
 import { camerasGates } from "@/lib/cameras/catalogo";
 import { ListaCameras } from "./ListaCameras";
-import { AreaRolagem, Ponto, cx } from "./ui";
+import { AreaRolagem, cx } from "./ui";
 
 const SENTIDO = { entrada: "Entrada", saida: "Saída", reversivel: "Reversível" } as const;
 const OPERACAO = { importacao: "Importação", exportacao: "Exportação" } as const;
 
 export function ConteudoGates() {
   const gates = usePatio((s) => s.gates);
-  const eventos = usePatio((s) => s.eventos);
   const selecao = useUi((s) => s.selecao);
   return (
     <AreaRolagem className="flex min-h-0 flex-1 flex-col px-16 pb-16">
@@ -42,26 +40,9 @@ export function ConteudoGates() {
           );
         })}
       </ul>
-      {/* filas dos gates: requisito destacado pelo cliente; a lista já vem aberta nesta aba */}
-      <div className="mt-20"><ListaCameras titulo="Câmeras dos gates" grupos={camerasGates} abertaInicial /></div>
-      <h3 className="mt-20 mb-8 text-[16px] font-semibold leading-24 text-text">Eventos recentes</h3>
-      <ul className="flex flex-col" aria-live="polite">
-        {eventos.slice(0, 14).map((e) => (
-          <li key={e.id}>
-            <button
-              type="button"
-              disabled={!e.vagaId}
-              onClick={() => { if (e.vagaId) { useUi.getState().selecionar({ tipo: "vaga", id: e.vagaId }); useUi.getState().focar({ tipo: "vaga", id: e.vagaId }); } }}
-              className="grid h-32 w-full grid-cols-[16px_88px_1fr_auto] items-center rounded-[8px] px-4 text-left hover:bg-chip disabled:hover:bg-transparent"
-            >
-              <Ponto cor={e.status ? STATUS[e.status].cor : "var(--text-3)"} redondo />
-              <span className="truncate text-[13px] font-semibold leading-20 text-text">{e.vagaId ?? (e.gate ? `Gate ${e.gate}` : "Sistema")}</span>
-              <span className="truncate text-[13px] leading-20 text-text-2">{e.texto}</span>
-              <span className="tnum pl-8 text-[12px] leading-16 text-text-2">{hora(e.hora)}</span>
-            </button>
-          </li>
-        ))}
-      </ul>
+      {/* filas dos gates: requisito destacado pelo cliente; aberta nesta aba e logo abaixo dos gates, à vista sem rolar.
+          Não vai para o rodapé fixo: aberta, ela espremeria a lista de gates */}
+      <div className="mt-16"><ListaCameras titulo="Câmeras dos gates" grupos={camerasGates} abertaInicial /></div>
     </AreaRolagem>
   );
 }
