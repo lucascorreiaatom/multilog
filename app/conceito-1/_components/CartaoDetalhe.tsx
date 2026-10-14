@@ -56,7 +56,7 @@ function Cabeca({ titulo, subtitulo, status }: { titulo: string; subtitulo?: str
 
 const ESTILO_ACAO = {
   saida: "bg-dark text-on-dark hover:opacity-90",
-  principal: "bg-accent text-white hover:bg-accent-hover",
+  principal: "bg-dark text-on-dark hover:opacity-90",
   secundaria: "bg-card text-text shadow-card hover:bg-card-muted",
 };
 const tom = (a: Acao, principal: boolean): keyof typeof ESTILO_ACAO =>
@@ -90,7 +90,7 @@ function Acoes({ vagaId }: { vagaId: string }) {
           <input value={placa} onChange={(ev) => setPlaca(ev.target.value.toUpperCase().slice(0, 7))} placeholder="Placa (opcional)" aria-label="Placa do caminhão"
             className="h-48 min-w-0 flex-1 rounded-[12px] bg-card px-12 text-[13px] leading-20 text-text uppercase shadow-card outline-none placeholder:normal-case placeholder:text-text-3 focus-visible:ring-2 focus-visible:ring-accent" />
           <button type="submit" disabled={!pode(perfil, "atribuirEntrada")} title={pode(perfil, "atribuirEntrada") ? undefined : motivoSemPermissao(perfil)}
-            className="h-48 rounded-full bg-accent px-16 text-[14px] font-semibold leading-20 text-white hover:bg-accent-hover disabled:opacity-40">Registrar entrada</button>
+            className="h-48 rounded-full bg-dark px-16 text-[14px] font-semibold leading-20 text-on-dark hover:opacity-90 disabled:opacity-40">Registrar entrada</button>
         </form>
       )}
       {[...new Set(acoes)].map((a) => {
@@ -225,16 +225,14 @@ function DetalhePredio({ id }: { id: string }) {
   return (
     <>
       <Cabeca titulo={b.nome} subtitulo={b.confianca ? "Localização provável" : undefined} />
-      <div className="flex flex-col gap-8 p-16">
-        <Cartao className="p-16">
-          <h4 className="text-[13px] font-semibold leading-20 text-text">Câmeras internas · {internas.length}</h4>
-          <div className="mt-8 flex flex-wrap gap-4">
-            {internas.map((c) => (
-              <button key={c.numero} type="button" onClick={() => useUi.getState().exibirCamera(c.numero)}
-                className="tnum h-28 rounded-full bg-chip px-8 text-[12px] font-semibold leading-16 text-text hover:bg-accent-soft">{c.codigo}</button>
-            ))}
-          </div>
-        </Cartao>
+      <div className="p-16">
+        <h4 className="text-[13px] font-semibold leading-20 text-text">Câmeras internas · {internas.length}</h4>
+        <div className="mt-8 flex flex-wrap gap-4">
+          {internas.map((c) => (
+            <button key={c.numero} type="button" onClick={() => useUi.getState().exibirCamera(c.numero)}
+              className="tnum h-28 rounded-full bg-chip px-8 text-[12px] font-semibold leading-16 text-text hover:bg-accent-soft">{c.codigo}</button>
+          ))}
+        </div>
       </div>
     </>
   );

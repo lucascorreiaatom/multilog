@@ -1,5 +1,5 @@
 "use client";
-// Destaque da vaga/caminhão selecionado: contorno laranja no chão em volta do cavalo e da carreta
+// Destaque da vaga/caminhão selecionado: contorno azul (acento da marca) no chão em volta do cavalo e da carreta
 // (segue o caminhão em movimento, com a articulação) e etiqueta com placa e status.
 import { useFrame } from "@react-three/fiber";
 import { useEffect, useMemo, useRef } from "react";
@@ -14,7 +14,8 @@ import { registrarProjetado } from "../projetor";
 import { poseAlinhada, type Pose } from "./animador";
 import { veiculosEmMovimento } from "./Caminhoes";
 
-const COR = "#e0683a";
+/** azul #4E91ED do Brand Book: mesmo acento da seleção na interface */
+const COR = "#4e91ed";
 
 /** moldura retangular (4 barras finas) com origem no centro */
 function Moldura({ comprimento, largura, refGrupo }: { comprimento: number; largura: number; refGrupo: React.RefObject<THREE.Group | null> }) {

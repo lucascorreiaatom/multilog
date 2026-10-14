@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { Suspense } from "react";
+import { Logo } from "../_components/Logo";
 import { FormLogin } from "./FormLogin";
 
 export const metadata: Metadata = {
@@ -8,15 +9,10 @@ export const metadata: Metadata = {
 
 export default function Login() {
   return (
-    <main className="flex h-full items-center justify-center bg-bg p-16">
-      <div className="w-full max-w-[400px] rounded-[24px] bg-panel p-24 shadow-clay">
-        <div className="flex items-center gap-12">
-          <span className="flex size-40 items-center justify-center rounded-[12px] bg-dark text-[16px] font-bold leading-24 text-on-dark">M</span>
-          <span>
-            <span className="block text-[12px] leading-16 text-text-3">Portal Multilog</span>
-            <span className="block text-[16px] font-semibold leading-24 text-text">Pátio Foz do Iguaçu</span>
-          </span>
-        </div>
+    <main className="gradiente-marca flex h-full items-center justify-center p-16">
+      <div className="vidro w-full max-w-[400px] rounded-[24px] bg-card-muted p-24 shadow-clay">
+        <Logo altura={28} />
+        <span className="mt-16 block text-[16px] font-semibold leading-24 text-text">Pátio Foz do Iguaçu</span>
         <Suspense fallback={<div className="h-[288px]" />}>
           <FormLogin />
         </Suspense>

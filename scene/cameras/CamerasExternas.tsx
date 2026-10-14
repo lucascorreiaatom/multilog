@@ -66,7 +66,7 @@ export function Cobertura() {
           <group key={c.numero} position={[c.posicao[0], 0.12, c.posicao[1]]}>
             {fatias.map((g, i) => (
               <mesh key={i} geometry={g} renderOrder={2}>
-                <meshBasicMaterial color={destaque ? "#e0683a" : "#4a72e8"} transparent opacity={destaque ? (i === sensor || fatias.length === 1 ? 0.26 : 0.12) : 0.08} depthWrite={false} {...sobre(CAMADA.sobreposicao)} />
+                <meshBasicMaterial color={destaque ? "#4e91ed" : "#909ca6"} transparent opacity={destaque ? (i === sensor || fatias.length === 1 ? 0.26 : 0.12) : 0.08} depthWrite={false} {...sobre(CAMADA.sobreposicao)} />
               </mesh>
             ))}
           </group>

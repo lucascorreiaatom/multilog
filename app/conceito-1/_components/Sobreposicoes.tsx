@@ -34,7 +34,7 @@ function MarcadorCamera({ numero, pos, ativa, offline }: { numero: number; pos: 
           onClick={() => { useUi.getState().exibirCamera(numero); useUi.getState().selecionar({ tipo: "camera", numero }); }}
           className={cx(
             "vidro flex size-32 items-center justify-center rounded-full shadow-float transition-colors outline-none focus-visible:ring-2 focus-visible:ring-accent",
-            ativa ? "bg-accent text-white" : "bg-card text-text hover:bg-card-muted",
+            ativa ? "bg-accent text-accent-ink" : "bg-card text-text hover:bg-card-muted",
           )}
         >
           {offline ? <VideoOff size={16} className={ativa ? "" : "text-st-bloqueada"} /> : <Video size={16} />}
@@ -70,8 +70,8 @@ function Callout({ setor, predioAtivo }: { setor: SetorVagas; predioAtivo: strin
         {setor === "DOC" && (
           <button type="button" onClick={() => selecionarPredio("armazem")}
             className={cx("vidro pointer-events-auto mt-4 flex h-32 w-[216px] items-center gap-8 rounded-full px-12 text-left text-[12px] font-semibold leading-16 shadow-float outline-none focus-visible:ring-2 focus-visible:ring-accent",
-              predioAtivo === "armazem" ? "bg-accent text-white" : "bg-card text-text hover:bg-card-muted")}>
-            <Building2 size={14} className="shrink-0" /><span className="min-w-0 flex-1 truncate">Armazém de Conferência</span><ChevronRight size={14} className={cx("shrink-0", predioAtivo === "armazem" ? "text-white/70" : "text-text-3")} />
+              predioAtivo === "armazem" ? "bg-accent text-accent-ink" : "bg-card text-text hover:bg-card-muted")}>
+            <Building2 size={14} className="shrink-0" /><span className="min-w-0 flex-1 truncate">Armazém de Conferência</span><ChevronRight size={14} className={cx("shrink-0", predioAtivo === "armazem" ? "text-accent-ink/70" : "text-text-3")} />
           </button>
         )}
         <span className="h-40 w-2 bg-accent/70" />
@@ -104,7 +104,7 @@ function RotuloPredio({ b, ativo }: { b: Predio; ativo: boolean }) {
     <div ref={ref} className="pointer-events-none absolute top-0 left-0 will-change-transform" style={{ visibility: "hidden" }}>
       <button type="button" onClick={() => selecionarPredio(b.id)} title={internas ? `${b.nome} · ${internas} câmeras internas` : b.nome}
         className={cx("vidro pointer-events-auto absolute flex h-28 -translate-x-1/2 -translate-y-full items-center gap-4 whitespace-nowrap rounded-full px-8 text-[12px] font-semibold leading-16 shadow-float outline-none focus-visible:ring-2 focus-visible:ring-accent",
-          ativo ? "bg-accent text-white" : "bg-card text-text hover:bg-card-muted")}>
+          ativo ? "bg-accent text-accent-ink" : "bg-card text-text hover:bg-card-muted")}>
         <Building2 size={14} />{b.nome}
       </button>
     </div>

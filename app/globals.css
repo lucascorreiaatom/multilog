@@ -1,68 +1,77 @@
 @import "tailwindcss";
 
 /*
-  Tokens do Conceito 1 (clay). Medidas derivadas da Imagem 1 (captura de 2000 px de uma tela de 1440 px,
-  escala 1,389) e encaixadas no grid de 4 px. Ex.: painel esquerdo 449 px na imagem = 323 px, adotado 320;
+  Paleta do Brand Book Multilog 2025 (pág. 15): navy #11294B, azul royal #002F67, azul #4E91ED,
+  ciano #00FFFF, cinza #909CA6 e branco. Ações sólidas usam navy (--dark); o acento azul fica em
+  seleção, foco e estados ativos, sempre com texto branco (--accent-ink). Ciano só sobre superfícies navy.
+  Tokens do Conceito 1 (clay). Medidas derivadas da Imagem 1 (captura de 2000 px de uma tela de 1440 px, escala 1,389) e
+  encaixadas no grid de 4 px. Ex.: painel esquerdo 449 px na imagem = 323 px, adotado 320;
   vídeo AO VIVO 515 x 292 = 371 x 210, adotado 370 x 208 (16:9).
 */
 :root {
-  --bg: #e4e7eb;
+  --bg: #e3e8ef;
   /* superfícies em vidro (glassmorphism): translúcidas para não esconder o pátio 3D; o blur vem de .vidro */
-  --panel: rgb(244 245 247 / 0.6);
+  --panel: rgb(244 246 250 / 0.6);
   --card: rgb(255 255 255 / 0.56);
   --card-muted: rgb(255 255 255 / 0.78);
-  --line: #e6e8ec;
-  --text: #192032;
-  --text-2: #4a5263;
-  --text-3: #7c8495;
-  --accent: #c45126;
-  --accent-hover: #b0471f;
-  --accent-soft: #fbe9e1;
-  --dark: #192032;
+  --line: #dfe4ec;
+  --text: #11294b;
+  --text-2: #445671;
+  --text-3: #6f7c8c;
+  --accent: #4e91ed;
+  --accent-hover: #3a7ddb;
+  --accent-soft: #e3eefd;
+  --accent-ink: #ffffff;
+  --dark: #11294b;
   --on-dark: #ffffff;
-  --chip: rgb(25 32 50 / 0.06);
+  --chip: rgb(17 41 75 / 0.06);
+  --logo: #11294b;
 
-  /* status de vaga */
+  /* status de vaga: funcionais, separados da marca. Conferência em índigo (derivado do #4E3A93)
+     e reservada em magenta, para não colidir com o azul #4E91ED do acento */
   --st-livre: #3a9a5b;
   --st-ocupada: #cf4440;
-  --st-conferencia: #4a72e8;
+  --st-conferencia: #5a47b8;
   --st-saida: #e0962f;
-  --st-reservada: #8a5cd6;
+  --st-reservada: #c2549e;
   --st-vistoria: #1aa3b8;
   --st-bloqueada: #5c6370;
   --live: #3a9a5b;
 
-  --shadow-clay: 0 1px 2px rgb(25 32 50 / 0.04), 0 8px 24px rgb(25 32 50 / 0.1), inset 0 1px 0 rgb(255 255 255 / 0.9), inset 0 0 0 1px rgb(255 255 255 / 0.5);
-  --shadow-card: 0 1px 2px rgb(25 32 50 / 0.04), 0 2px 8px rgb(25 32 50 / 0.04), inset 0 0 0 1px rgb(255 255 255 / 0.6);
-  --shadow-float: 0 2px 4px rgb(25 32 50 / 0.06), 0 12px 32px rgb(25 32 50 / 0.12);
+  --shadow-clay: 0 1px 2px rgb(17 41 75 / 0.04), 0 8px 24px rgb(17 41 75 / 0.1), inset 0 1px 0 rgb(255 255 255 / 0.9), inset 0 0 0 1px rgb(255 255 255 / 0.5);
+  --shadow-card: 0 1px 2px rgb(17 41 75 / 0.04), 0 2px 8px rgb(17 41 75 / 0.04), inset 0 0 0 1px rgb(255 255 255 / 0.6);
+  --shadow-float: 0 2px 4px rgb(17 41 75 / 0.06), 0 12px 32px rgb(17 41 75 / 0.12);
 }
 
+/* escuro: família navy da marca no lugar do neutro */
 :root[data-theme="dark"] {
-  --bg: #0f131c;
-  --panel: rgb(23 28 39 / 0.6);
-  --card: rgb(30 36 49 / 0.56);
-  --card-muted: rgb(40 47 62 / 0.72);
-  --line: #2a3140;
-  --text: #eef0f4;
-  --text-2: #b7bdc9;
-  --text-3: #8a92a2;
-  --accent: #e0683a;
-  --accent-hover: #ec7a4d;
-  --accent-soft: #3a2219;
-  --dark: #eef0f4;
-  --on-dark: #192032;
+  --bg: #0a1628;
+  --panel: rgb(17 41 75 / 0.6);
+  --card: rgb(24 52 92 / 0.5);
+  --card-muted: rgb(32 62 106 / 0.68);
+  --line: #233a5c;
+  --text: #eef3fa;
+  --text-2: #b4c1d3;
+  --text-3: #909ca6;
+  --accent: #4e91ed;
+  --accent-hover: #6fa6f2;
+  --accent-soft: #1a3a66;
+  --accent-ink: #ffffff;
+  --dark: #eef3fa;
+  --on-dark: #11294b;
   --chip: rgb(255 255 255 / 0.07);
+  --logo: #ffffff;
   --st-livre: #4fb874;
   --st-ocupada: #e5605b;
-  --st-conferencia: #6a8ff0;
+  --st-conferencia: #8b7ef0;
   --st-saida: #eba84a;
-  --st-reservada: #a47de6;
+  --st-reservada: #df7bbd;
   --st-vistoria: #34bccf;
   --st-bloqueada: #8a92a2;
   --live: #4fb874;
-  --shadow-clay: 0 1px 2px rgb(0 0 0 / 0.3), 0 8px 24px rgb(0 0 0 / 0.35), inset 0 1px 0 rgb(255 255 255 / 0.08), inset 0 0 0 1px rgb(255 255 255 / 0.06);
-  --shadow-card: 0 1px 2px rgb(0 0 0 / 0.25), inset 0 0 0 1px rgb(255 255 255 / 0.05);
-  --shadow-float: 0 2px 4px rgb(0 0 0 / 0.3), 0 12px 32px rgb(0 0 0 / 0.4);
+  --shadow-clay: 0 1px 2px rgb(0 0 0 / 0.3), 0 8px 24px rgb(2 10 24 / 0.4), inset 0 1px 0 rgb(255 255 255 / 0.08), inset 0 0 0 1px rgb(255 255 255 / 0.06);
+  --shadow-card: 0 1px 2px rgb(2 10 24 / 0.3), inset 0 0 0 1px rgb(255 255 255 / 0.05);
+  --shadow-float: 0 2px 4px rgb(2 10 24 / 0.3), 0 12px 32px rgb(2 10 24 / 0.45);
 }
 
 @theme {
@@ -71,7 +80,7 @@
 }
 
 @theme inline {
-  --font-sans: var(--font-inter), ui-sans-serif, system-ui, sans-serif;
+  --font-sans: var(--font-montserrat), "Segoe UI", ui-sans-serif, system-ui, sans-serif;
   --color-bg: var(--bg);
   --color-panel: var(--panel);
   --color-card: var(--card);
@@ -83,6 +92,8 @@
   --color-accent: var(--accent);
   --color-accent-hover: var(--accent-hover);
   --color-accent-soft: var(--accent-soft);
+  --color-accent-ink: var(--accent-ink);
+  --color-logo: var(--logo);
   --color-dark: var(--dark);
   --color-on-dark: var(--on-dark);
   --color-chip: var(--chip);
@@ -120,9 +131,18 @@ body {
   backdrop-filter: blur(24px) saturate(160%);
 }
 
-/* realce-acento: laranja leve e esfumaçado sobre o fundo do cartão (status selecionado no filtro) */
+/* realce-acento: azul da marca leve e esfumaçado sobre o fundo do cartão (status selecionado no filtro) */
 .realce-acento {
-  background-image: radial-gradient(130% 160% at 0% 0%, color-mix(in srgb, var(--accent) 12%, transparent), color-mix(in srgb, var(--accent) 2%, transparent) 75%);
+  background-image: radial-gradient(130% 160% at 0% 0%, color-mix(in srgb, var(--accent) 14%, transparent), color-mix(in srgb, var(--accent) 2%, transparent) 75%);
+}
+
+/* gradiente-marca: navy com brilho ciano nos cantos (capa do Brand Book). Só em telas de marca
+   (login e início); o manual pede uso com moderação */
+.gradiente-marca {
+  background-color: #11294b;
+  background-image:
+    radial-gradient(60% 70% at 0% 0%, rgb(0 255 255 / 0.32), transparent 70%),
+    radial-gradient(60% 70% at 100% 100%, rgb(0 255 255 / 0.26), transparent 70%);
 }
 
 /* depuração de desempenho (?sem=vidro): sem desfoque atrás das superfícies */

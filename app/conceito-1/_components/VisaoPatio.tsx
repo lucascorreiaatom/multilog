@@ -175,7 +175,7 @@ function SegmentoBarra({ s, contagem, porSetor, ativo, apagado }: { s: StatusVag
         </button>
       </Tooltip.Trigger>
       <Tooltip.Portal>
-        <Tooltip.Content side="right" align="center" sideOffset={afastamento} collisionPadding={16} className="animar-entrada z-50 w-[280px] rounded-[16px] bg-card p-16 shadow-float vidro">
+        <Tooltip.Content side="right" align="center" sideOffset={afastamento} collisionPadding={16} className="animar-entrada z-50 w-[280px] rounded-[16px] bg-card-muted p-16 shadow-float vidro">
           <DetalheStatus s={s} contagem={contagem} porSetor={porSetor} />
         </Tooltip.Content>
       </Tooltip.Portal>

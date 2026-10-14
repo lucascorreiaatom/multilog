@@ -93,8 +93,10 @@ export function Conceito1({ sessao }: { sessao: Sessao }) {
               detalhe ? "right-[376px] max-lg:hidden min-[1600px]:right-[456px]" : ampliada ? "right-16" : "right-96",
               ampliada && !detalhe ? "left-16"
                 : detalhe ? (blocos.visao === "oculto" || painelAberto === false ? "left-16" : "left-16 xl:left-[376px]")
-                // sem detalhe, a partir de 1440 px fica simétrico (96/96) e centralizado na tela sem encostar no painel
-                : blocos.visao === "oculto" || painelAberto === false ? "left-16 min-[1440px]:left-96" : "left-16 xl:left-[376px] min-[1440px]:left-96",
+                // sem detalhe, as margens são sempre simétricas para o card ficar centralizado na tela; entre xl e 1440 px,
+                // com o painel aberto, os dois lados recuam 376 px e o card encolhe em vez de passar por baixo do painel
+                : blocos.visao === "oculto" || painelAberto === false ? "left-96"
+                : "left-96 xl:left-[376px] xl:right-[376px] min-[1440px]:left-96 min-[1440px]:right-96",
             )}
           >
             <CardCamera />

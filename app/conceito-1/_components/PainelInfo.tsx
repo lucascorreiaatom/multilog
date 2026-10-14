@@ -1,5 +1,6 @@
 "use client";
 // Painel de informações (esquerda): abas "Pátio" e "Gates" no mesmo bloco, uma de cada vez.
+import { Logo } from "@/app/_components/Logo";
 import { useUi, type AbaInfo } from "@/lib/store/ui";
 import { ConteudoGates } from "./GatesEventos";
 import { BotaoRecolher } from "./Recolher";
@@ -33,7 +34,8 @@ export function PainelInfo({ className }: { className?: string }) {
             </button>
           ))}
         </div>
-        <span className="ml-auto" />
+        {/* logo sobre o painel em vidro, nunca direto sobre o canvas 3D (regra do Brand Book) */}
+        <Logo altura={16} className="ml-auto mr-4" />
         <BotaoRecolher bloco="visao" nome="painel de informações" />
       </div>
       {!recolhido && (

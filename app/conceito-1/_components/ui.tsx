@@ -29,8 +29,8 @@ export function Chip({ children, className, tom = "neutro" }: { children: ReactN
   const tons = {
     neutro: "bg-chip text-text",
     card: "bg-card text-text shadow-card",
-    escuro: "bg-[rgb(25_32_50/0.72)] text-white backdrop-blur-[8px]",
-    acento: "bg-accent text-white",
+    escuro: "bg-[rgb(17_41_75/0.72)] text-white backdrop-blur-[8px]",
+    acento: "bg-accent text-accent-ink",
   };
   return <span className={cx("inline-flex h-28 items-center gap-8 rounded-[14px] px-12 text-[12px] font-semibold leading-16", tons[tom], className)}>{children}</span>;
 }
@@ -43,7 +43,7 @@ export function BotaoIcone({ children, className, rotulo, ativo, escuro, ...rest
       title={rotulo}
       className={cx(
         "inline-flex size-48 items-center justify-center rounded-full transition-colors outline-none focus-visible:ring-2 focus-visible:ring-accent disabled:opacity-40",
-        escuro ? "bg-dark text-on-dark hover:opacity-90" : ativo ? "bg-accent text-white" : "bg-card text-text shadow-card hover:bg-card-muted",
+        escuro ? "bg-dark text-on-dark hover:opacity-90" : ativo ? "bg-accent text-accent-ink" : "bg-card text-text shadow-card hover:bg-card-muted",
         className,
       )}
       {...rest}

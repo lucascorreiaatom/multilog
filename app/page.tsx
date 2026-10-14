@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { Logo } from "./_components/Logo";
 
 const conceitos = [
   { href: "/conceito-1", nome: "Conceito 1", descricao: "Painéis clay sobre o pátio 3D, câmeras e vagas em tempo real" },
@@ -6,10 +7,10 @@ const conceitos = [
 
 export default function Inicio() {
   return (
-    <main className="flex h-full items-center justify-center p-16">
-      <div className="w-full max-w-[480px] rounded-[24px] bg-panel p-24 shadow-clay">
-        <p className="text-[12px] leading-16 text-text-3">Portal Multilog</p>
-        <h1 className="mt-4 text-[20px] font-semibold leading-28 text-text">Pátio Foz do Iguaçu</h1>
+    <main className="gradiente-marca flex h-full items-center justify-center p-16">
+      <div className="vidro w-full max-w-[480px] rounded-[24px] bg-card-muted p-24 shadow-clay">
+        <Logo altura={28} />
+        <h1 className="mt-16 text-[20px] font-semibold leading-28 text-text">Pátio Foz do Iguaçu</h1>
         <ul className="mt-16 flex flex-col gap-8">
           {conceitos.map((c) => (
             <li key={c.href}>

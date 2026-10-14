@@ -16,8 +16,8 @@ import { cursorClicavel } from "../cursor";
 
 /** cores do piso por status (tons de tinta de piso, mais sóbrios que os da interface) */
 export const COR_PISO: Record<"dia" | "noite", Record<StatusVaga, string>> = {
-  dia: { livre: "#5fae74", ocupada: "#cf5a52", conferencia: "#5b7fe0", saida: "#e3a34a", reservada: "#9a76dc", vistoria: "#3cb2c4", bloqueada: "#6e7480" },
-  noite: { livre: "#3f8a55", ocupada: "#a8443e", conferencia: "#4561b8", saida: "#b8823a", reservada: "#7a5cb4", vistoria: "#2c8e9c", bloqueada: "#4a505b" },
+  dia: { livre: "#5fae74", ocupada: "#cf5a52", conferencia: "#6656c0", saida: "#e3a34a", reservada: "#c8649f", vistoria: "#3cb2c4", bloqueada: "#6e7480" },
+  noite: { livre: "#3f8a55", ocupada: "#a8443e", conferencia: "#4d3f9c", saida: "#b8823a", reservada: "#a04a80", vistoria: "#2c8e9c", bloqueada: "#4a505b" },
 };
 
 const forma = (pts: [number, number][]) => new THREE.Shape(pts.map(([x, z]) => new THREE.Vector2(x, -z)));

@@ -46,7 +46,7 @@ export function CardCamera({ className }: { className?: string }) {
       aria-label={`Câmera ${cam.codigo}`}
     >
       <div
-        className={cx("relative overflow-hidden rounded-[16px] bg-[#1b2230]", ampliada ? "aspect-video shrink-0 max-h-[calc(100vh-240px)] w-full" : "h-[208px] w-[370px] min-w-[300px] shrink")}
+        className={cx("relative overflow-hidden rounded-[16px] bg-[#0d1f3a]", ampliada ? "aspect-video shrink-0 max-h-[calc(100vh-240px)] w-full" : "h-[208px] w-[370px] min-w-[300px] shrink")}
         onPointerDown={(e) => { if (!ptzAtivo) return; (e.target as HTMLElement).setPointerCapture(e.pointerId); arrasto.current = { x: e.clientX, y: e.clientY, pan: ptz.pan, tilt: ptz.tilt }; }}
         onPointerMove={(e) => { const a = arrasto.current; if (!a) return; const k = 0.004 / ptz.zoom; useUi.getState().setPtz({ pan: a.pan + (e.clientX - a.x) * k, tilt: Math.max(-1.2, Math.min(0.2, a.tilt - (e.clientY - a.y) * k)) }); }}
         onPointerUp={() => { arrasto.current = null; }}
@@ -67,7 +67,7 @@ export function CardCamera({ className }: { className?: string }) {
           <span className="flex gap-8">
             <Chip tom="escuro">{cam.codigo}</Chip>
             <button type="button" aria-label={ampliada ? "Reduzir imagem" : "Ampliar imagem"} title={ampliada ? "Reduzir imagem" : "Ampliar imagem"} onClick={() => useUi.getState().setAmpliada(!ampliada)}
-              className="pointer-events-auto flex size-28 items-center justify-center rounded-full bg-[rgb(25_32_50/0.72)] text-white backdrop-blur-[8px] hover:bg-[rgb(25_32_50/0.9)]">
+              className="pointer-events-auto flex size-28 items-center justify-center rounded-full bg-[rgb(17_41_75/0.72)] text-white backdrop-blur-[8px] hover:bg-[rgb(17_41_75/0.9)]">
               {ampliada ? <Minimize2 size={14} /> : <Maximize2 size={14} />}
             </button>
           </span>

@@ -1,5 +1,5 @@
 // Paleta da cena: modelagem limpa (vídeo de referência) com entorno colorido (Imagem 2).
-// Prédios claros com faixa azul Multilog, para não competir com o azul de "Em conferência".
+// Prédios claros com faixa no azul Multilog #002F67 (Brand Book). "Em conferência" usa índigo, sem conflito.
 export const PALETA = {
   dia: {
     ceu: "#dfe8f1",
@@ -19,7 +19,7 @@ export const PALETA = {
     predio: "#eef0f3",
     predioSombra: "#dfe3e8",
     telhado: "#cfd5dd",
-    faixaAzul: "#2f5fb3",
+    faixaAzul: "#002f67",
     vidro: "#5f7898",
     porta: "#9aa3b0",
     cerca: "#aab1bb",
@@ -48,7 +48,7 @@ export const PALETA = {
     predio: "#5c6370",
     predioSombra: "#4a505c",
     telhado: "#3d434d",
-    faixaAzul: "#2f5fb3",
+    faixaAzul: "#002f67",
     vidro: "#f2d79a",
     porta: "#4a505c",
     cerca: "#5a606a",

@@ -1,9 +1,10 @@
 import type { Metadata, Viewport } from "next";
-import { Inter } from "next/font/google";
+import { Montserrat } from "next/font/google";
 import "./globals.css";
 
-const inter = Inter({
-  variable: "--font-inter",
+// Montserrat: fonte institucional do Brand Book (pág. 12). Segoe UI entra como fallback de sistema em globals.css
+const montserrat = Montserrat({
+  variable: "--font-montserrat",
   subsets: ["latin"],
 });
 
@@ -13,7 +14,10 @@ export const metadata: Metadata = {
 };
 
 export const viewport: Viewport = {
-  themeColor: "#e4e7eb",
+  themeColor: [
+    { media: "(prefers-color-scheme: light)", color: "#e3e8ef" },
+    { media: "(prefers-color-scheme: dark)", color: "#0a1628" },
+  ],
 };
 
 // Aplica o tema salvo antes da pintura, sem flash (guia preventing-flash-before-hydration).
@@ -21,7 +25,7 @@ const temaInicial = `try{var t=localStorage.getItem("tema");if(t!=="claro"&&t!==
 
 export default function RootLayout({ children }: LayoutProps<"/">) {
   return (
-    <html lang="pt-BR" className={`${inter.variable} h-full`} suppressHydrationWarning>
+    <html lang="pt-BR" className={`${montserrat.variable} h-full`} suppressHydrationWarning>
       <head>
         <script dangerouslySetInnerHTML={{ __html: temaInicial }} />
       </head>
