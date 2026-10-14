@@ -11,7 +11,7 @@ import type { Predio } from "@/lib/site/tipos";
 import { usePatio } from "@/lib/store/patio";
 import { useUi } from "@/lib/store/ui";
 import { registrarProjetado } from "@/scene/projetor";
-import { Barra, cx } from "./ui";
+import { Barra, cx } from "@/app/_components/ui";
 
 function useProjetado(chave: string, pos: [number, number, number], distMax?: number) {
   return useCallback((el: HTMLDivElement | null) => {
@@ -56,20 +56,21 @@ function Callout({ setor, predioAtivo }: { setor: SetorVagas; predioAtivo: strin
         <button
           type="button"
           onClick={() => { useUi.getState().selecionar({ tipo: "setor", id: setor }); useUi.getState().focar({ tipo: "setor", id: setor }); }}
-          className="vidro pointer-events-auto w-[216px] rounded-[16px] bg-card px-16 py-12 text-left shadow-float outline-none focus-visible:ring-2 focus-visible:ring-accent"
+          className="vidro pointer-events-auto w-[240px] rounded-[16px] bg-card px-16 py-12 text-left shadow-float outline-none focus-visible:ring-2 focus-visible:ring-accent"
         >
-          <span className="flex items-center justify-between text-[14px] font-semibold leading-20 text-text">
-            <span className="truncate">{NOMES_SETOR[setor]}</span>
-            <span className="tnum pl-8">{valor}%</span>
+          {/* mesmo resumo do mapa plano: nome em linha própria (Montserrat é larga), % em destaque */}
+          <span className="block truncate text-[15px] font-semibold leading-20 text-text">{NOMES_SETOR[setor]}</span>
+          <span className="mt-4 flex items-baseline justify-between gap-8">
+            <span className="tnum text-[22px] font-bold leading-28 text-text">{valor}%</span>
+            <span className="tnum text-[13px] leading-20 text-text-2">{c.emUso} de {c.total} em uso</span>
           </span>
           <span className="mt-8 block"><Barra valor={valor} /></span>
-          <span className="tnum mt-8 block text-[13px] leading-20 text-text-2">{c.emUso} de {c.total} vagas em uso</span>
         </button>
         {/* as docas são as vagas encostadas no armazém; o prédio (câmeras internas) é outra seleção. Com os callouts
             visíveis este atalho é o rótulo do armazém (o do telhado ficaria atrás do callout, repetindo o nome) */}
         {setor === "DOC" && (
           <button type="button" onClick={() => selecionarPredio("armazem")}
-            className={cx("vidro pointer-events-auto mt-4 flex h-32 w-[216px] items-center gap-8 rounded-full px-12 text-left text-[12px] font-semibold leading-16 shadow-float outline-none focus-visible:ring-2 focus-visible:ring-accent",
+            className={cx("vidro pointer-events-auto mt-4 flex h-32 w-[240px] items-center gap-8 rounded-full px-12 text-left text-[12px] font-semibold leading-16 shadow-float outline-none focus-visible:ring-2 focus-visible:ring-accent",
               predioAtivo === "armazem" ? "bg-accent text-accent-ink" : "bg-card text-text hover:bg-card-muted")}>
             <Building2 size={14} className="shrink-0" /><span className="min-w-0 flex-1 truncate">Armazém de Conferência</span><ChevronRight size={14} className={cx("shrink-0", predioAtivo === "armazem" ? "text-accent-ink/70" : "text-text-3")} />
           </button>

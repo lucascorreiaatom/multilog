@@ -5,6 +5,8 @@ import { hora } from "@/lib/formato";
 import { STATUS } from "@/lib/patio/tipos";
 import { usePatio } from "@/lib/store/patio";
 import { useUi } from "@/lib/store/ui";
+import { camerasGates } from "@/lib/cameras/catalogo";
+import { ListaCameras } from "./ListaCameras";
 import { AreaRolagem, Ponto, cx } from "./ui";
 
 const SENTIDO = { entrada: "Entrada", saida: "Saída", reversivel: "Reversível" } as const;
@@ -40,7 +42,9 @@ export function ConteudoGates() {
           );
         })}
       </ul>
-      <h3 className="mt-20 mb-8 text-[14px] font-semibold leading-20 text-text">Eventos recentes</h3>
+      {/* filas dos gates: requisito destacado pelo cliente; a lista já vem aberta nesta aba */}
+      <div className="mt-20"><ListaCameras titulo="Câmeras dos gates" grupos={camerasGates} abertaInicial /></div>
+      <h3 className="mt-20 mb-8 text-[16px] font-semibold leading-24 text-text">Eventos recentes</h3>
       <ul className="flex flex-col" aria-live="polite">
         {eventos.slice(0, 14).map((e) => (
           <li key={e.id}>
@@ -53,7 +57,7 @@ export function ConteudoGates() {
               <Ponto cor={e.status ? STATUS[e.status].cor : "var(--text-3)"} redondo />
               <span className="truncate text-[13px] font-semibold leading-20 text-text">{e.vagaId ?? (e.gate ? `Gate ${e.gate}` : "Sistema")}</span>
               <span className="truncate text-[13px] leading-20 text-text-2">{e.texto}</span>
-              <span className="tnum pl-8 text-[12px] leading-16 text-text-3">{hora(e.hora)}</span>
+              <span className="tnum pl-8 text-[12px] leading-16 text-text-2">{hora(e.hora)}</span>
             </button>
           </li>
         ))}

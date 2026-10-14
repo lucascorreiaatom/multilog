@@ -2,7 +2,8 @@ import Link from "next/link";
 import { Logo } from "./_components/Logo";
 
 const conceitos = [
-  { href: "/conceito-1", nome: "Conceito 1", descricao: "Painéis clay sobre o pátio 3D, câmeras e vagas em tempo real" },
+  { href: "/conceito-1", nome: "Conceito 1 · Pátio 3D", descricao: "Painéis sobre o pátio em 3D, câmeras com imagem e vagas em tempo real" },
+  { href: "/conceito-2", nome: "Conceito 2 · Mapa plano", descricao: "Mapa do pátio visto de cima, leve e direto, com aproximação por setor" },
 ];
 
 export default function Inicio() {

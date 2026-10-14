@@ -11,6 +11,7 @@ Inconsistências encontradas na digitalização das plantas do PDF de implantaç
 | 5 | Número **216** aparece duas vezes na pág. 10. | Sem correção. | Qual das duas é a 216 e qual é o número da outra? |
 | 6 | Pág. 9 informa **14** câmeras, mas a planta mostra **18**. | Usa a planta (18). | O total certo é 14 ou 18? |
 | 7 | **Pátio Container**: o PDF mostra a grade de contêineres, sem vagas de caminhão marcadas (a Imagem 2 fala em 36 vagas). | Modela só a grade; o setor aparece como "sem vagas no PDF". | Existem vagas de caminhão no Pátio Container? Onde e quantas? |
+| 8 | Pág. 11 lista 35 câmeras de **Gates e Balanças**, sem dizer quais olham a **fila** (requisito da imersão). | Câmeras 107 a 112 tratadas como câmeras de fila, uma por pista, sobre a balança, com "posição aproximada" (`camerasFila` em `lib/cameras/catalogo.ts`). | Quais numerações enquadram a fila de cada pista, e onde estão instaladas? |
 
 ## Outras dúvidas registradas no checkpoint
 

@@ -3,6 +3,7 @@
 import * as Popover from "@radix-ui/react-popover";
 import { Check, Layers } from "lucide-react";
 import { useUi, type Bloco } from "@/lib/store/ui";
+import { useTipoMapa } from "./conceito";
 import { BotaoIcone, cx } from "./ui";
 
 type Item = { id: Bloco | "cobertura"; nome: string };
@@ -29,6 +30,9 @@ const BLOCOS = GRUPOS.flatMap((g) => g.itens.map((i) => i.id)).filter((id): id i
 export function MenuCamadas() {
   const blocos = useUi((s) => s.blocos);
   const cobertura = useUi((s) => s.cobertura);
+  // o mapa plano não desenha os cones de visão das câmeras
+  const plano = useTipoMapa() === "plano";
+  const grupos = GRUPOS.map((g) => ({ ...g, itens: g.itens.filter((i) => !(plano && i.id === "cobertura")) }));
   const ligado = (id: Item["id"]) => (id === "cobertura" ? cobertura : blocos[id] !== "oculto");
   const alternar = (id: Item["id"]) => {
     const ui = useUi.getState();
@@ -43,9 +47,9 @@ export function MenuCamadas() {
       <Popover.Portal>
         <Popover.Content side="left" align="end" sideOffset={12} className="z-50 w-[288px] rounded-[16px] bg-panel p-8 shadow-float vidro">
           <p className="px-8 pt-4 text-[14px] font-semibold leading-20 text-text">Camadas do mapa</p>
-          {GRUPOS.map((g) => (
+          {grupos.map((g) => (
             <div key={g.titulo} className="mt-8">
-              <p className="px-8 pb-4 text-[12px] font-semibold leading-16 text-text-3">{g.titulo}</p>
+              <p className="px-8 pb-4 text-[12px] font-semibold leading-16 text-text-2">{g.titulo}</p>
               <ul className="flex flex-col gap-4">
                 {g.itens.map((i) => (
                   <li key={i.id}>
@@ -60,8 +64,8 @@ export function MenuCamadas() {
             </div>
           ))}
           <div className="mt-8 flex gap-8 px-4 pb-4">
-            <button type="button" onClick={() => BLOCOS.forEach((b) => useUi.getState().setBloco(b, "aberto"))} className="h-32 flex-1 rounded-full bg-card text-[12px] font-semibold leading-16 text-text shadow-card">Mostrar todos</button>
-            <button type="button" onClick={() => BLOCOS.forEach((b) => useUi.getState().setBloco(b, "oculto"))} className="h-32 flex-1 rounded-full bg-card text-[12px] font-semibold leading-16 text-text shadow-card">Só o mapa</button>
+            <button type="button" onClick={() => BLOCOS.forEach((b) => useUi.getState().setBloco(b, "aberto"))} className="h-40 flex-1 rounded-full bg-card text-[13px] font-semibold leading-20 text-text shadow-card hover:bg-card-muted">Mostrar todos</button>
+            <button type="button" onClick={() => BLOCOS.forEach((b) => useUi.getState().setBloco(b, "oculto"))} className="h-40 flex-1 rounded-full bg-card text-[13px] font-semibold leading-20 text-text shadow-card hover:bg-card-muted">Só o mapa</button>
           </div>
         </Popover.Content>
       </Popover.Portal>

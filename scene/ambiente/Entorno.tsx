@@ -90,13 +90,15 @@ function Mata({ p, densidade }: { p: Paleta; densidade: number }) {
     const r = criarRng(77);
     const rv = criarRng(79); // variante em sequência própria: posições e cores seguem as de antes
     const out: { x: number; z: number; s: number; c: number; v: number }[] = [];
-    const alvo = Math.round(7000 * densidade);
+    // menos detalhe (reunião de 13/10): 2.500 árvores numa faixa de mata em volta da cerca, onde a câmera olha
+    const alvo = Math.round(2500 * densidade);
     let tent = 0;
     while (out.length < alvo && tent < alvo * 12) {
       tent++;
       const x = (r() - 0.5) * 2600, z = (r() - 0.5) * 2000;
       if (dentroPoligono(x, z, planta.cerca)) continue;
-      if (distPoligono(x, z, planta.cerca) < 34) continue;
+      const dCerca = distPoligono(x, z, planta.cerca);
+      if (dCerca < 34 || dCerca > 420) continue;
       if (Math.abs(z - Z_RODOVIA) < 34) continue; // rodovia e acostamentos
       if (z < -300 && x < -560 + (z + 300) * -0.25) continue; // campo agrícola
       // clareiras suaves por ruído de baixa frequência
@@ -196,7 +198,7 @@ function Trafego({ p }: { p: Paleta }) {
     const r = criarRng(9);
     const rv = criarRng(10); // variante em sequência própria: faixas, velocidades e cores seguem as de antes
     const ocupacao = modelos.map(() => 0);
-    return Array.from({ length: 34 }, (_, i) => {
+    return Array.from({ length: 12 }, (_, i) => {
       const sentido = i % 2 === 0 ? 1 : -1;
       const faixa = sentido > 0 ? (r() < 0.5 ? 6 : 12.5) : r() < 0.5 ? -6 : -12.5;
       const base = { x: (r() - 0.5) * 3000, z: Z_RODOVIA + faixa, v: (16 + r() * 8) * sentido, cor: p.carro[Math.floor(r() * p.carro.length)] };

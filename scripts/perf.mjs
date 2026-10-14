@@ -14,10 +14,11 @@ const erros = [];
 page.on("pageerror", (e) => erros.push(e.message));
 await page.goto(url, { waitUntil: "networkidle", timeout: 120000 });
 if (page.url().includes("/login")) {
-  await Promise.all([page.waitForURL(/conceito-1/, { timeout: 120000 }), page.click('button[type="submit"]')]);
+  await Promise.all([page.waitForURL(/conceito-\d/, { timeout: 120000 }), page.click('button[type="submit"]')]);
   if (new URL(url).search) await page.goto(url, { waitUntil: "networkidle", timeout: 120000 });
 }
-await page.waitForSelector('[data-testid="cena-3d"] canvas', { timeout: 120000 });
+// SELETOR: o que indica a cena pronta (padrão: canvas do 3D; no Conceito 2 use [data-testid="mapa-2d"])
+await page.waitForSelector(process.env.SELETOR || '[data-testid="cena-3d"] canvas', { timeout: 120000 });
 await page.waitForTimeout(8000);
 
 const cdp = await page.context().newCDPSession(page);

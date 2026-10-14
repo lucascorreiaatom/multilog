@@ -11,13 +11,14 @@
 :root {
   --bg: #e3e8ef;
   /* superfícies em vidro (glassmorphism): translúcidas para não esconder o pátio 3D; o blur vem de .vidro */
-  --panel: rgb(244 246 250 / 0.6);
-  --card: rgb(255 255 255 / 0.56);
-  --card-muted: rgb(255 255 255 / 0.78);
+  /* opacidade alta o bastante para o texto não sumir sobre o pátio colorido (legibilidade, pedido da reunião) */
+  --panel: rgb(244 246 250 / 0.8);
+  --card: rgb(255 255 255 / 0.68);
+  --card-muted: rgb(255 255 255 / 0.86);
   --line: #dfe4ec;
   --text: #11294b;
   --text-2: #445671;
-  --text-3: #6f7c8c;
+  --text-3: #5d6a7c; /* 4,5:1 sobre o cartão claro */
   --accent: #4e91ed;
   --accent-hover: #3a7ddb;
   --accent-soft: #e3eefd;
@@ -46,9 +47,9 @@
 /* escuro: família navy da marca no lugar do neutro */
 :root[data-theme="dark"] {
   --bg: #0a1628;
-  --panel: rgb(17 41 75 / 0.6);
-  --card: rgb(24 52 92 / 0.5);
-  --card-muted: rgb(32 62 106 / 0.68);
+  --panel: rgb(17 41 75 / 0.8);
+  --card: rgb(24 52 92 / 0.64);
+  --card-muted: rgb(32 62 106 / 0.8);
   --line: #233a5c;
   --text: #eef3fa;
   --text-2: #b4c1d3;
@@ -221,3 +222,93 @@ body {
 @media (prefers-reduced-motion: reduce) {
   .animar-entrada { animation: none; }
 }
+
+/*
+  Conceito 2 · mapa plano. Visual de maquete: recinto branco, entorno e vias em cinza-azulado claro, prédios brancos
+  com contorno azul da marca. As cores fortes ficam só para os status das vagas.
+*/
+:root {
+  --mapa-fora: #e6ebf2;
+  --mapa-piso: #fbfcfe;
+  --mapa-concreto: #eef2f7;
+  --mapa-via: #d9e0ea;
+  --mapa-canteiro: #e3eae6;
+  --mapa-container: #e9eef5;
+  --mapa-cerca: #b4bfcc;
+  --mapa-predio: #ffffff;
+  --mapa-predio-borda: rgb(0 47 103 / 0.45);
+  --mapa-sombra: rgb(17 41 75 / 0.1);
+  --mapa-vaga-neutra: #dfe5ed;
+  --mapa-vaga-uso: #8db4ea;
+}
+:root[data-theme="dark"] {
+  --mapa-fora: #0a1628;
+  --mapa-piso: #0f2039;
+  --mapa-concreto: #132745;
+  --mapa-via: #1a2f50;
+  --mapa-canteiro: #15293f;
+  --mapa-container: #162c4c;
+  --mapa-cerca: #2d4568;
+  --mapa-predio: #1c365c;
+  --mapa-predio-borda: rgb(78 145 237 / 0.55);
+  --mapa-sombra: rgb(0 0 0 / 0.3);
+  --mapa-vaga-neutra: #233a5c;
+  --mapa-vaga-uso: #3b679f;
+}
+
+/* superfícies opacas e sem desfoque no Conceito 2 (o mapa é claro e o desfoque pesa em máquina fraca) */
+html.plano {
+  --panel: #ffffff;
+  --card: #f1f4f9;
+  --card-muted: #e6ecf4;
+}
+html.plano[data-theme="dark"] {
+  --panel: #11294b;
+  --card: #183559;
+  --card-muted: #1f4170;
+}
+html.plano .vidro {
+  -webkit-backdrop-filter: none;
+  backdrop-filter: none;
+}
+
+.mapa-plano { cursor: grab; }
+.mapa-plano[data-arrastando] { cursor: grabbing; }
+.mapa-plano svg { transform-origin: 0 0; }
+.mapa-plano .vaga, .mapa-plano .predio { cursor: pointer; }
+.mapa-plano .vaga .piso { stroke: var(--mapa-piso); stroke-width: 1; vector-effect: non-scaling-stroke; }
+.mapa-plano .st-livre .piso { fill: var(--st-livre); }
+.mapa-plano .st-ocupada .piso { fill: var(--st-ocupada); }
+.mapa-plano .st-conferencia .piso { fill: var(--st-conferencia); }
+.mapa-plano .st-saida .piso { fill: var(--st-saida); }
+.mapa-plano .st-reservada .piso { fill: var(--st-reservada); }
+.mapa-plano .st-vistoria .piso { fill: var(--st-vistoria); }
+.mapa-plano .st-bloqueada .piso { fill: var(--st-bloqueada); }
+/* visão geral sem filtro: duas cores só (livre e em uso), como no resumo dos setores; as cores de cada status
+   aparecem ao aproximar ou ao filtrar pela legenda */
+.mapa-plano[data-lod="geral"]:not([data-filtro]) .vaga:not(.st-livre):not(.st-bloqueada) .piso { fill: var(--mapa-vaga-uso); }
+/* fora do filtro: a vaga fica neutra e sem caminhão, como no 3D */
+.mapa-plano .vaga[data-fora] .piso { fill: var(--mapa-vaga-neutra); }
+.mapa-plano .vaga[data-fora] .caminhao,
+.mapa-plano .vaga[data-fora] .numero { display: none; }
+.mapa-plano .vaga:hover .piso { stroke: var(--text); stroke-width: 2; }
+.mapa-plano .caminhao { fill: rgb(17 41 75 / 0.32); pointer-events: none; }
+.mapa-plano .numero {
+  font-size: 2.2px;
+  font-weight: 700;
+  text-anchor: middle;
+  dominant-baseline: central;
+  fill: #ffffff;
+  paint-order: stroke;
+  stroke: rgb(17 41 75 / 0.45);
+  stroke-width: 0.3px;
+  pointer-events: none;
+}
+.mapa-plano .anel-vaga { fill: none; stroke: var(--accent); stroke-width: 4; stroke-linejoin: round; filter: drop-shadow(0 0 3px var(--panel)); pointer-events: none; }
+.mapa-plano .predio:hover { fill: var(--accent-soft); }
+
+/* nível de detalhe pela escala (data-lod no mapa): geral, setor, vaga */
+.mapa-plano:not([data-lod="geral"]) .lod-geral,
+.mapa-plano[data-lod="vaga"] .lod-longe,
+.mapa-plano[data-lod="geral"] .lod-perto,
+.mapa-plano:not([data-lod="vaga"]) .lod-vaga { display: none; }

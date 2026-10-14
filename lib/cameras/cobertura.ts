@@ -8,6 +8,8 @@ export const ALCANCE: Record<string, number> = { "Q6225-LE": 140, "P1487-LE": 70
 export function camerasQueCobrem(p: Vec2): { camera: CameraExterna; sensor: number; distancia: number }[] {
   const out: { camera: CameraExterna; sensor: number; distancia: number }[] = [];
   for (const c of camerasExternas) {
+    // câmeras de fila têm posição estimada: não afirmar que cobrem uma vaga
+    if (c.aproximada) continue;
     const dx = p[0] - c.posicao[0], dz = p[1] - c.posicao[1];
     const d = Math.hypot(dx, dz);
     if (d > (ALCANCE[c.modelo] ?? 60)) continue;

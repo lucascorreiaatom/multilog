@@ -1,6 +1,6 @@
 "use client";
 // Pavimento, canteiros, pintura das vagas (cor do status), cerca, postes, veículos leves e Pátio Container.
-import { Suspense, useLayoutEffect, useMemo, useRef } from "react";
+import { useLayoutEffect, useMemo, useRef } from "react";
 import * as THREE from "three";
 import { criarRng } from "@/lib/patio/ficticio";
 import type { StatusVaga } from "@/lib/patio/tipos";
@@ -11,7 +11,6 @@ import { CAMADA, sobre } from "../camadas";
 import { atributoFiltro, ocultavel } from "../filtroStatus";
 import { useDetalheChao } from "../materiais/chao";
 import type { Paleta } from "../paleta";
-import { CarrosInstanciados, useModelosCarro, type CarroParado } from "../veiculos/carrosModelo";
 import { cursorClicavel } from "../cursor";
 
 /** cores do piso por status (tons de tinta de piso, mais sóbrios que os da interface) */
@@ -266,30 +265,10 @@ function PostesLuz({ p, noite }: { p: Paleta; noite: boolean }) {
   );
 }
 
-/** carros nas vagas leves: modelos do KayKit (hatch, sedã, perua) tingidos com a paleta */
-function CarrosEstacionados({ p }: { p: Paleta }) {
-  const modelos = useModelosCarro();
-  const lotes = useMemo(() => {
-    const r = criarRng(31);
-    const rv = criarRng(32); // sorteio da variante em sequência própria: vagas ocupadas e cores seguem as de antes
-    const lista = planta.vagasLeves.filter(() => r() < 0.72).map((v) => ({ ...v, cor: p.carro[Math.floor(r() * p.carro.length)], vira: r() < 0.5 }));
-    const lotes: CarroParado[][] = modelos.map(() => []);
-    for (const v of lista) {
-      lotes[Math.floor(rv() * modelos.length)].push({
-        x: v.centro[0], z: v.centro[1], giro: (v.giro ? 0 : Math.PI / 2) + (v.vira ? Math.PI : 0), cor: v.cor, escala: 0.95,
-      });
-    }
-    return lotes;
-  }, [p.carro, modelos]);
-  return <>{modelos.map((pecas, k) => <CarrosInstanciados key={k} pecas={pecas} itens={lotes[k]} />)}</>;
-}
-
+/** estacionamento de carros: só as coberturas (os carros saíram na redução de detalhe; as vagas leves não têm status) */
 function VeiculosLeves({ p }: { p: Paleta }) {
   return (
     <group>
-      <Suspense fallback={null}>
-        <CarrosEstacionados p={p} />
-      </Suspense>
       {planta.coberturasLeves.map((c, i) => {
         const xs = c.map((q) => q[0]), zs = c.map((q) => q[1]);
         const cx = (Math.min(...xs) + Math.max(...xs)) / 2, cz = (Math.min(...zs) + Math.max(...zs)) / 2;

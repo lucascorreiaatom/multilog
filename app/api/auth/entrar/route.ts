@@ -8,7 +8,10 @@ export async function POST(req: NextRequest) {
   const perfil = String(form.get("perfil") ?? "admin") as Perfil;
   const entrada = Object.entries(USUARIOS_DEMO).find(([, u]) => u.perfil === perfil) ?? Object.entries(USUARIOS_DEMO)[2];
   const [email, u] = entrada;
-  const res = NextResponse.redirect(new URL("/conceito-1", req.url), 303);
+  // volta à página que pediu o login; só caminhos internos dos conceitos (nada de redirecionamento aberto)
+  const volta = String(form.get("volta") ?? "");
+  const destino = /^\/conceito-\d+(\/[\w-]*)*$/.test(volta) ? volta : "/conceito-1";
+  const res = NextResponse.redirect(new URL(destino, req.url), 303);
   res.cookies.set(COOKIE_SESSAO, selar({ usuario: email, nome: u.nome, perfil: u.perfil }), OPCOES_COOKIE);
   return res;
 }

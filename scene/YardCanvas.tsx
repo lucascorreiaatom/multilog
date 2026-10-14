@@ -114,9 +114,13 @@ const NIVEIS = [
   { nome: "baixa", dpr: 1, msaa: 2, ao: false, sombra: false },
   { nome: "media", dpr: 1, msaa: 4, ao: false, sombra: false },
   { nome: "alta", dpr: 1.25, msaa: 4, ao: true, sombra: false },
-  { nome: "maxima", dpr: 1.75, msaa: 4, ao: true, sombra: true },
+  { nome: "maxima", dpr: 1.5, msaa: 4, ao: true, sombra: true },
 ] as const;
 const NIVEL_MAX = NIVEIS.length - 1;
+/** teto do ajuste automático: a sombra (nível máximo) só com ?qualidade=3; as máquinas do cliente são básicas */
+const NIVEL_AUTO = 2;
+/** abaixo disto o quadro está lento (mínimo combinado na reunião de 13/10) */
+const QPS_MIN = 45;
 
 /** ?qualidade=0..3 fixa o nível e desliga o ajuste automático */
 const QUALIDADE_FIXA = (() => {
@@ -128,7 +132,7 @@ const QUALIDADE_FIXA = (() => {
 /** mede o FPS em janelas de 1 s e ajusta o nível: desce com 3 janelas seguidas lentas, sobe com 5 janelas no limite
  *  da tela. Se depois de descer voltar a subir e descer de novo (oscilação), trava no nível mais baixo. */
 function MonitorQualidade({ nivel, setNivel }: { nivel: number; setNivel: (n: number) => void }) {
-  const st = useRef({ espera: 3, janela: 0, quadros: 0, fps: [] as number[], tela: 0, teto: NIVEL_MAX, subiu: false });
+  const st = useRef({ espera: 3, janela: 0, quadros: 0, fps: [] as number[], tela: 0, teto: NIVEL_AUTO, subiu: false });
   useEffect(() => {
     // após trocar de nível, as primeiras janelas incluem recompilação de shaders e realocação de buffers
     st.current.espera = 1.5; st.current.janela = 0; st.current.quadros = 0; st.current.fps = [];
@@ -143,7 +147,8 @@ function MonitorQualidade({ nivel, setNivel }: { nivel: number; setNivel: (n: nu
     s.janela = 0; s.quadros = 0;
     s.tela = Math.min(Math.max(s.tela, fps), 240);
     s.fps = [...s.fps.slice(-4), fps];
-    const lento = Math.min(45, s.tela * 0.8);
+    // limite absoluto: relativo ao melhor quadro visto, uma máquina que nunca passa de 26 qps nunca seria "lenta"
+    const lento = QPS_MIN;
     if (nivel > 0 && s.fps.length >= 3 && s.fps.slice(-3).every((f) => f < lento)) {
       if (s.subiu) s.teto = nivel - 1; // subiu e não aguentou: não tenta mais esse nível
       s.subiu = false;
@@ -195,7 +200,7 @@ function Luzes({ noite, sombra, foco }: { noite: boolean; sombra: boolean; foco:
     s.shadow.camera.top = 320; s.shadow.camera.bottom = -320;
     s.shadow.camera.near = 50; s.shadow.camera.far = 1600;
     s.shadow.camera.updateProjectionMatrix();
-    s.shadow.mapSize.set(4096, 4096);
+    s.shadow.mapSize.set(2048, 2048);
   }, []);
   return (
     <>
@@ -258,7 +263,7 @@ export default function YardCanvas() {
   const foco = useUi((s) => s.foco);
   const noiteUi = useUi((s) => s.tema === "escuro");
   const dprForcado = typeof window !== "undefined" ? Number(new URLSearchParams(window.location.search).get("dpr")) || 0 : 0;
-  const [nivel, setNivel] = useState(QUALIDADE_FIXA ?? NIVEL_MAX);
+  const [nivel, setNivel] = useState(QUALIDADE_FIXA ?? NIVEL_AUTO);
   const q = NIVEIS[nivel];
   const dpr = useMemo<[number, number]>(() => (dprForcado ? [dprForcado, dprForcado] : [1, q.dpr]), [dprForcado, q.dpr]);
   return (
@@ -271,7 +276,7 @@ export default function YardCanvas() {
       style={{ position: "absolute", inset: 0 }}
       data-testid="cena-3d"
     >
-      {/* começa no máximo e só rebaixa se o FPS não aguentar (máquinas fracas) */}
+      {/* começa no nível alto (sem sombra) e rebaixa se o FPS não aguentar (máquinas fracas) */}
       {QUALIDADE_FIXA === null && <MonitorQualidade nivel={nivel} setNivel={setNivel} />}
       <Cena sombra={q.sombra} />
       <Rig />

@@ -2,14 +2,15 @@
 
 export type StatusVaga = "livre" | "reservada" | "ocupada" | "vistoria" | "conferencia" | "saida" | "bloqueada";
 
-export const STATUS: Record<StatusVaga, { nome: string; curto: string; cor: string; ordem: number }> = {
-  ocupada: { nome: "Ocupada", curto: "Ocupada", cor: "var(--st-ocupada)", ordem: 0 },
-  livre: { nome: "Livre", curto: "Livre", cor: "var(--st-livre)", ordem: 1 },
-  conferencia: { nome: "Em conferência", curto: "Conferência", cor: "var(--st-conferencia)", ordem: 2 },
-  saida: { nome: "Saída liberada", curto: "Saída liberada", cor: "var(--st-saida)", ordem: 3 },
-  reservada: { nome: "Reservada", curto: "Reservada", cor: "var(--st-reservada)", ordem: 4 },
-  vistoria: { nome: "Aguardando vistoria RFB", curto: "Vistoria RFB", cor: "var(--st-vistoria)", ordem: 5 },
-  bloqueada: { nome: "Bloqueada", curto: "Bloqueada", cor: "var(--st-bloqueada)", ordem: 6 },
+/** descricao: uma linha para a legenda e a dica da vaga (fluxo: ocupada, vistoria RFB, conferência, saída liberada) */
+export const STATUS: Record<StatusVaga, { nome: string; curto: string; cor: string; ordem: number; descricao: string }> = {
+  ocupada: { nome: "Ocupada", curto: "Ocupada", cor: "var(--st-ocupada)", ordem: 0, descricao: "Caminhão estacionado, aguardando o próximo passo" },
+  livre: { nome: "Livre", curto: "Livre", cor: "var(--st-livre)", ordem: 1, descricao: "Vaga disponível para um novo caminhão" },
+  conferencia: { nome: "Em conferência", curto: "Conferência", cor: "var(--st-conferencia)", ordem: 2, descricao: "Carga em conferência física; o caminhão ainda não pode sair" },
+  saida: { nome: "Saída liberada", curto: "Saída liberada", cor: "var(--st-saida)", ordem: 3, descricao: "Conferência concluída: o caminhão pode sair" },
+  reservada: { nome: "Reservada", curto: "Reservada", cor: "var(--st-reservada)", ordem: 4, descricao: "Vaga definida para um caminhão que acabou de entrar" },
+  vistoria: { nome: "Aguardando vistoria RFB", curto: "Vistoria RFB", cor: "var(--st-vistoria)", ordem: 5, descricao: "Na fila da vistoria da Receita Federal" },
+  bloqueada: { nome: "Bloqueada", curto: "Bloqueada", cor: "var(--st-bloqueada)", ordem: 6, descricao: "Fora de uso (manutenção ou interdição)" },
 };
 
 export const ORDEM_STATUS = (Object.keys(STATUS) as StatusVaga[]).sort((a, b) => STATUS[a].ordem - STATUS[b].ordem);

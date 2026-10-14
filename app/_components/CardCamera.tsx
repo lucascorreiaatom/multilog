@@ -1,20 +1,22 @@
 "use client";
 // Card AO VIVO (Imagem 1): vídeo renderizado da câmera selecionada sobreposto ao mapa (SoW), sem mosaico.
 import { ChevronLeft, ChevronRight, LocateFixed, Maximize2, Minimize2, VideoOff, X } from "lucide-react";
-import { useEffect, useRef } from "react";
+import { useRef, type ComponentType } from "react";
 import { todasCameras, type Camera } from "@/lib/cameras/catalogo";
 import { MODELOS } from "@/lib/cameras/modelos";
 import { dataHora } from "@/lib/formato";
 import { useRelogio } from "@/lib/relogio";
 import { usePatio } from "@/lib/store/patio";
 import { useUi } from "@/lib/store/ui";
-import { alvoTransmissao } from "@/scene/cameras/Transmissao";
 import { BotaoIcone, Chip, Painel, Ponto, cx } from "./ui";
 
 
 const nomeLocal = (c: Camera) => (c.tipo === "externa" ? c.local : `${c.local}${c.nivel ? ` · ${c.nivel}` : ""}`);
 
-export function CardCamera({ className }: { className?: string }) {
+/** vídeo da câmera: cada conceito fornece o seu (transmissão renderizada no 3D); sem ele, o card mostra o aviso da integração */
+export type VideoCamera = ComponentType<{ cam: Camera }>;
+
+export function CardCamera({ className, Video }: { className?: string; Video?: VideoCamera }) {
   const numeroAtivo = useUi((s) => s.cameraAtiva);
   const sensor = useUi((s) => s.sensor);
   const ampliada = useUi((s) => s.cameraAmpliada);
@@ -24,14 +26,7 @@ export function CardCamera({ className }: { className?: string }) {
   const cam = todasCameras.find((c) => c.numero === numeroAtivo) ?? todasCameras[0];
   const mod = MODELOS[cam.modelo];
   const online = !offline.includes(cam.numero);
-  const canvasRef = useRef<HTMLCanvasElement>(null);
   const arrasto = useRef<{ x: number; y: number; pan: number; tilt: number } | null>(null);
-
-  useEffect(() => {
-    const el = canvasRef.current;
-    alvoTransmissao.el = cam.tipo === "externa" ? el : null;
-    return () => { if (alvoTransmissao.el === el) alvoTransmissao.el = null; };
-  }, [cam.tipo, ampliada]);
 
   const idx = todasCameras.findIndex((c) => c.numero === cam.numero);
   const ir = (d: number) => {
@@ -53,21 +48,13 @@ export function CardCamera({ className }: { className?: string }) {
         onWheel={(e) => { if (!ptzAtivo) return; useUi.getState().setPtz({ zoom: Math.max(1, Math.min(mod.zoomMax ?? 1, ptz.zoom * (e.deltaY < 0 ? 1.15 : 0.87))) }); }}
         style={{ cursor: ptzAtivo ? "grab" : "default", touchAction: ptzAtivo ? "none" : "auto" }}
       >
-        {cam.tipo === "externa" ? (
-          <canvas ref={canvasRef} className="absolute inset-0 h-full w-full" aria-label={`Imagem da câmera ${cam.codigo}`} data-testid="video-camera" />
-        ) : (
-          <div className="absolute inset-0 flex flex-col items-center justify-center gap-8 px-24 text-center text-white/80">
-            <VideoOff size={24} />
-            <span className="text-[13px] font-semibold leading-20">Câmera interna · {cam.local}</span>
-            <span className="text-[12px] leading-16 text-white/60">Imagem pela integração com o CFTV da Multilog</span>
-          </div>
-        )}
+        {Video && cam.tipo === "externa" ? <Video cam={cam} /> : <SemImagem cam={cam} />}
         <div className="pointer-events-none absolute inset-x-12 top-12 flex items-start justify-between">
           <Chip tom="escuro"><Ponto cor={online ? "#e5484d" : "#8a92a2"} redondo />{online ? "AO VIVO" : "SEM SINAL"}</Chip>
           <span className="flex gap-8">
             <Chip tom="escuro">{cam.codigo}</Chip>
             <button type="button" aria-label={ampliada ? "Reduzir imagem" : "Ampliar imagem"} title={ampliada ? "Reduzir imagem" : "Ampliar imagem"} onClick={() => useUi.getState().setAmpliada(!ampliada)}
-              className="pointer-events-auto flex size-28 items-center justify-center rounded-full bg-[rgb(17_41_75/0.72)] text-white backdrop-blur-[8px] hover:bg-[rgb(17_41_75/0.9)]">
+              className="pointer-events-auto flex size-32 items-center justify-center rounded-full bg-[rgb(17_41_75/0.72)] text-white backdrop-blur-[8px] hover:bg-[rgb(17_41_75/0.9)]">
               {ampliada ? <Minimize2 size={14} /> : <Maximize2 size={14} />}
             </button>
           </span>
@@ -106,14 +93,15 @@ export function CardCamera({ className }: { className?: string }) {
           )}
         </div>
         <div className={cx("flex gap-8", ampliada ? "items-center" : "mt-auto items-center")}>
-          <BotaoIcone rotulo="Câmera anterior" className={cx(ampliada && "size-40!")} onClick={() => ir(-1)}><ChevronLeft size={20} /></BotaoIcone>
-          <BotaoIcone rotulo="Próxima câmera" className={cx(ampliada && "size-40!")} onClick={() => ir(1)}><ChevronRight size={20} /></BotaoIcone>
+          <BotaoIcone rotulo="Câmera anterior" compacto onClick={() => ir(-1)}><ChevronLeft size={20} /></BotaoIcone>
+          <BotaoIcone rotulo="Próxima câmera" compacto onClick={() => ir(1)}><ChevronRight size={20} /></BotaoIcone>
           {/* só ícone: o texto disputava espaço com as setas e truncava no card estreito */}
           <BotaoIcone
             rotulo={cam.tipo === "externa" ? "Localizar no mapa" : "Câmera interna: sem posição no mapa"}
             ativo
             disabled={cam.tipo !== "externa"}
-            className={cx("ml-auto hover:bg-accent-hover", ampliada && "size-40!")}
+            compacto
+            className="ml-auto hover:bg-accent-hover"
             onClick={() => useUi.getState().focar({ tipo: "camera", numero: cam.numero })}
           >
             <LocateFixed size={20} />
@@ -135,8 +123,19 @@ function BotaoFechar() {
         ui.setBloco("camera", "oculto");
         if (ui.selecao?.tipo === "camera") ui.selecionar(null);
       }}
-      className="flex size-32 items-center justify-center rounded-full text-text-2 hover:bg-chip hover:text-text">
+      className="flex size-40 items-center justify-center rounded-full text-text-2 hover:bg-chip hover:text-text">
       <X size={18} />
     </button>
+  );
+}
+
+/** aviso no lugar do vídeo: câmeras internas (sem cena) ou conceitos sem transmissão renderizada */
+function SemImagem({ cam }: { cam: Camera }) {
+  return (
+    <div className="absolute inset-0 flex flex-col items-center justify-center gap-8 px-24 text-center text-white/80">
+      <VideoOff size={24} />
+      <span className="text-[14px] font-semibold leading-20">{cam.tipo === "externa" ? "Câmera externa" : "Câmera interna"} · {cam.local}</span>
+      <span className="text-[13px] leading-20 text-white/70">Imagem pela integração com o CFTV da Multilog</span>
+    </div>
   );
 }

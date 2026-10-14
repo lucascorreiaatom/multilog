@@ -4,6 +4,7 @@
 import { Command } from "cmdk";
 import { Building2, DoorOpen, LayoutGrid, Search, SquareParking, Truck, Video } from "lucide-react";
 import { useEffect, useMemo, useRef, useState } from "react";
+import { cameraCombina, normalizar } from "@/lib/cameras/busca";
 import { todasCameras } from "@/lib/cameras/catalogo";
 import { MODELOS } from "@/lib/cameras/modelos";
 import { STATUS } from "@/lib/patio/tipos";
@@ -12,9 +13,7 @@ import { usePatio } from "@/lib/store/patio";
 import { useUi } from "@/lib/store/ui";
 import { cx, useRolagem } from "./ui";
 
-const grupo = "px-8 pt-12 pb-4 text-[12px] font-semibold leading-16 text-text-3 [&_[cmdk-group-heading]]:px-8 [&_[cmdk-group-heading]]:pb-4";
-/** maiúsculas sem acento, para "armazem" achar "Armazém" */
-const normalizar = (s: string) => s.normalize("NFD").replace(/\p{M}/gu, "").toUpperCase();
+const grupo = "px-8 pt-12 pb-4 text-[12px] font-semibold leading-16 text-text-2 [&_[cmdk-group-heading]]:px-8 [&_[cmdk-group-heading]]:pb-4";
 
 const item = "flex h-40 cursor-pointer items-center gap-12 rounded-[10px] px-8 text-[13px] leading-20 text-text data-[selected=true]:bg-chip";
 
@@ -104,7 +103,7 @@ export function Busca() {
                     ))}
                   </Command.Group>
                   <Command.Group heading="Câmeras" className={grupo}>
-                    {todasCameras.filter((c) => c.codigo.includes(termo) || String(c.numero) === termo.replace(/^0+/, "") || MODELOS[c.modelo].nome.toUpperCase().includes(termo) || normalizar(c.local).includes(termo)).slice(0, limite).map((c) => (
+                    {todasCameras.filter((c) => cameraCombina(c, termo)).slice(0, limite).map((c) => (
                       <Command.Item key={c.numero} value={`cam-${c.numero}`} className={item} onSelect={() => ir(() => { useUi.getState().exibirCamera(c.numero); if (c.tipo === "externa") useUi.getState().focar({ tipo: "camera", numero: c.numero }); })}>
                         <Video size={16} /><span className="tnum font-semibold">{c.codigo}</span><span className="truncate text-text-2">{c.local} · {MODELOS[c.modelo].nome}</span>
                       </Command.Item>

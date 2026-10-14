@@ -21,7 +21,7 @@ export function Cartao({ className, children, ...rest }: { className?: string; c
   );
 }
 
-export function Ponto({ cor, tamanho = 8, redondo = false, pulso = false }: { cor: string; tamanho?: number; redondo?: boolean; pulso?: boolean }) {
+export function Ponto({ cor, tamanho = 10, redondo = false, pulso = false }: { cor: string; tamanho?: number; redondo?: boolean; pulso?: boolean }) {
   return <span aria-hidden className={cx("inline-block shrink-0", pulso && "pulso-vivo")} style={{ width: tamanho, height: tamanho, background: cor, borderRadius: redondo ? tamanho : 2 }} />;
 }
 
@@ -35,14 +35,16 @@ export function Chip({ children, className, tom = "neutro" }: { children: ReactN
   return <span className={cx("inline-flex h-28 items-center gap-8 rounded-[14px] px-12 text-[12px] font-semibold leading-16", tons[tom], className)}>{children}</span>;
 }
 
-export function BotaoIcone({ children, className, rotulo, ativo, escuro, ...rest }: { children: ReactNode; rotulo: string; ativo?: boolean; escuro?: boolean } & ButtonHTMLAttributes<HTMLButtonElement>) {
+/** dois tamanhos de botão na interface: 48 px nos controles do mapa, 40 px em ações dentro de cartões e no cabeçalho */
+export function BotaoIcone({ children, className, rotulo, ativo, escuro, compacto, ...rest }: { children: ReactNode; rotulo: string; ativo?: boolean; escuro?: boolean; compacto?: boolean } & ButtonHTMLAttributes<HTMLButtonElement>) {
   return (
     <button
       type="button"
       aria-label={rotulo}
       title={rotulo}
       className={cx(
-        "inline-flex size-48 items-center justify-center rounded-full transition-colors outline-none focus-visible:ring-2 focus-visible:ring-accent disabled:opacity-40",
+        compacto ? "size-40" : "size-48",
+        "inline-flex items-center justify-center rounded-full transition-colors outline-none focus-visible:ring-2 focus-visible:ring-accent disabled:opacity-40",
         escuro ? "bg-dark text-on-dark hover:opacity-90" : ativo ? "bg-accent text-accent-ink" : "bg-card text-text shadow-card hover:bg-card-muted",
         className,
       )}

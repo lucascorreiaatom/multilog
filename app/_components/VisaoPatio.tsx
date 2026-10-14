@@ -8,6 +8,8 @@ import { ORDEM_STATUS, STATUS, type StatusVaga } from "@/lib/patio/tipos";
 import { NOMES_SETOR, SETORES_VAGAS, type SetorVagas } from "@/lib/site";
 import { usePatio } from "@/lib/store/patio";
 import { useUi } from "@/lib/store/ui";
+import { camerasPatioPorLocal } from "@/lib/cameras/catalogo";
+import { ListaCameras } from "./ListaCameras";
 import { AreaRolagem, Barra, Cartao, Ponto, cx } from "./ui";
 
 const PRINCIPAIS: StatusVaga[] = ["ocupada", "livre", "conferencia", "saida"];
@@ -72,7 +74,7 @@ export function ConteudoPatio() {
         ))}
       </div>
 
-      <h3 className="mt-12 text-[14px] font-semibold leading-20 text-text">Setores</h3>
+      <h3 className="mt-12 text-[16px] font-semibold leading-24 text-text">Setores</h3>
       {SETORES_VAGAS.map((id) => {
         const c = porSetor[id];
         const ativo = selecao?.tipo === "setor" && selecao.id === id;
@@ -93,10 +95,11 @@ export function ConteudoPatio() {
       })}
       <div className="w-full rounded-[16px] bg-card px-16 py-12 opacity-70 shadow-card" title="O PDF mostra a grade de contêineres, sem vagas de caminhão marcadas">
         <span className="flex items-center justify-between text-[14px] font-semibold leading-20 text-text">
-          {NOMES_SETOR.CTN}<span className="text-[12px] font-medium text-text-3">sem vagas no PDF</span>
+          {NOMES_SETOR.CTN}<span className="text-[12px] font-medium text-text-2">sem vagas no PDF</span>
         </span>
       </div>
 
+      <div className="mt-12"><ListaCameras titulo="Câmeras do pátio" grupos={camerasPatioPorLocal} /></div>
     </AreaRolagem>
   );
 }

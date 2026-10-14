@@ -3,7 +3,7 @@
 // LGPD: no modo TV nunca exibe dados pessoais (só placa, status e horários).
 import { Camera, Clock, FileText, Flame, Truck, User, Video, X } from "lucide-react";
 import { useState, type ReactNode } from "react";
-import { camerasInternas } from "@/lib/cameras/catalogo";
+import { camerasFila, camerasInternas } from "@/lib/cameras/catalogo";
 import { camerasQueCobrem } from "@/lib/cameras/cobertura";
 import { motivoSemPermissao, pode } from "@/lib/auth/permissoes";
 import { dataHora, duracao, horaCurta, pesoKg } from "@/lib/formato";
@@ -49,7 +49,7 @@ function Cabeca({ titulo, subtitulo, status }: { titulo: string; subtitulo?: str
         <h3 className="mt-8 truncate text-[20px] font-semibold leading-28 tracking-[-0.01em] text-text">{titulo}</h3>
         {subtitulo && <p className="truncate text-[13px] leading-20 text-text-2">{subtitulo}</p>}
       </div>
-      <button type="button" aria-label="Fechar" onClick={() => useUi.getState().selecionar(null)} className="flex size-32 shrink-0 items-center justify-center rounded-full bg-card text-text shadow-card hover:bg-card-muted"><X size={16} /></button>
+      <button type="button" aria-label="Fechar" onClick={() => useUi.getState().selecionar(null)} className="flex size-40 shrink-0 items-center justify-center rounded-full bg-card text-text shadow-card hover:bg-card-muted"><X size={16} /></button>
     </div>
   );
 }
@@ -186,11 +186,23 @@ function DetalheGate({ numero }: { numero: number }) {
   const g = usePatio((s) => s.gates.find((x) => x.numero === numero));
   const todos = usePatio((s) => s.eventos);
   const eventos = todos.filter((e) => e.gate === numero).slice(0, 6);
+  const fila = camerasFila.find((c) => c.local.startsWith(`Gate ${numero} · `));
   if (!g) return null;
   return (
     <>
       <Cabeca titulo={`Gate ${numero}`} subtitulo={`${g.sentido === "entrada" ? "Entrada" : g.sentido === "saida" ? "Saída" : "Reversível"} · ${g.operacao === "importacao" ? "Importação" : "Exportação"} · balança`} status={{ nome: g.aberto ? "Aberto" : "Fechado", cor: g.aberto ? "var(--st-livre)" : "var(--st-bloqueada)" }} />
       <div className="flex flex-col gap-8 p-16">
+        {/* ver a fila é o pedido principal do cliente para os gates: atalho direto para a câmera da pista */}
+        {fila && (
+          <button type="button" onClick={() => useUi.getState().exibirCamera(fila.numero)}
+            className="flex min-h-56 items-center gap-12 rounded-[16px] bg-card px-16 py-8 text-left shadow-card outline-none hover:bg-card-muted focus-visible:ring-2 focus-visible:ring-accent">
+            <span className="flex size-40 shrink-0 items-center justify-center rounded-full bg-dark text-on-dark"><Video size={18} /></span>
+            <span className="min-w-0 flex-1">
+              <span className="block text-[14px] font-semibold leading-20 text-text">Ver a {fila.local.split(" · ")[1]}</span>
+              <span className="block text-[13px] leading-20 text-text-2">{fila.codigo} · posição aproximada</span>
+            </span>
+          </button>
+        )}
         <Cartao className="p-16 text-[13px] leading-20 text-text-2">
           Câmeras dos gates: frontal (placa, cor e modelo), traseira (placa e lacre), teto (avarias), face (motorista) e guarita. 35 câmeras para as 6 pistas.
         </Cartao>

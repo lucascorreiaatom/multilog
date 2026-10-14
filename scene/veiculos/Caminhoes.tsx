@@ -9,7 +9,7 @@ import type { Gatilho } from "@/lib/patio/fonte";
 import { poseEstacionado, rotaEntrada, rotaSaida } from "@/lib/patio/rotas";
 import type { Implemento, StatusVaga } from "@/lib/patio/tipos";
 import { vagasPorId } from "@/lib/site";
-import { assinarGatilhos, usePatio } from "@/lib/store/patio";
+import { assinarGatilhos, concluirGatilhoSemAnimacao, usePatio } from "@/lib/store/patio";
 import { useUi } from "@/lib/store/ui";
 import { atributoFiltro, ocultavel, profundidadeOcultavel } from "../filtroStatus";
 import { CAMINHAO_FOCO, CAMINHAO_PADRAO } from "../paleta";
@@ -258,8 +258,7 @@ function Frota() {
       if (!v) return;
       // sem animação (padrão, pedido do usuário) ou aba oculta: aplica o resultado direto, caminhões não se movem
       if (!ANIMAR || (typeof document !== "undefined" && document.hidden)) {
-        usePatio.getState().animacaoConcluida(g, g.tipo === "entrada" ? "estacionou" : "deixou-vaga");
-        if (g.tipo === "saida") usePatio.getState().animacaoConcluida(g, "saiu");
+        concluirGatilhoSemAnimacao(g);
         return;
       }
       if (g.tipo === "entrada") {

@@ -14,7 +14,9 @@ export interface CameraExterna {
   rumo: number;
   inclinacao: number;
   local: string;
-  pagina: 6;
+  pagina: number;
+  /** posição estimada (o PDF não marca a câmera na planta); a lista mostra "posição aproximada" */
+  aproximada?: boolean;
 }
 
 export interface CameraInterna {
@@ -74,6 +76,25 @@ export const camerasExternas: CameraExterna[] = planta.camerasExternas.map((c) =
   };
 });
 
+/**
+ * Câmeras de fila dos gates: uma por pista, sobre a balança, olhando para onde a fila se forma (ao norte nas pistas de
+ * entrada e na reversível, ao sul nas de saída). A pág. 11 lista as câmeras de Gates e Balanças sem dizer quais olham a
+ * fila: adotamos as seis primeiras numerações (107 a 112) com posição aproximada, até a confirmação da Multilog.
+ */
+export const camerasFila: CameraExterna[] = planta.pistasGate.map((g, i) => {
+  const entrada = g.sentido !== "saida";
+  const numero = 107 + i;
+  return {
+    numero, codigo: codigoCamera(numero), tipo: "externa", modelo: "P1487-LE",
+    posicao: [g.x, g.zBalanca + (entrada ? 6 : -6)], altura: 6,
+    // rumo no plano XZ: -π/2 aponta para o norte (rodovia), π/2 para o sul
+    rumo: entrada ? -Math.PI / 2 : Math.PI / 2, inclinacao: -0.3,
+    local: `Gate ${g.numero} · fila de ${entrada ? "entrada" : "saída"}`, pagina: 11, aproximada: true,
+  };
+});
+camerasExternas.push(...camerasFila);
+const NUMEROS_FILA = new Set(camerasFila.map((c) => c.numero));
+
 // Câmeras internas por página e local (texto do PDF). Fisheye conforme legenda de cada planta.
 const faixas = (pares: [number, number][]) => pares.flatMap(([a, b]) => Array.from({ length: b - a + 1 }, (_, i) => a + i));
 const INTERNAS: { pagina: number; local: string; nivel?: string; numeros: number[]; fisheye: number[] }[] = [
@@ -93,7 +114,7 @@ const INTERNAS: { pagina: number; local: string; nivel?: string; numeros: number
 ];
 
 export const camerasInternas: CameraInterna[] = INTERNAS.flatMap((g) =>
-  g.numeros.map((n) => ({
+  g.numeros.filter((n) => !NUMEROS_FILA.has(n)).map((n) => ({
     numero: n, codigo: codigoCamera(n), tipo: "interna" as const, pagina: g.pagina, local: g.local, nivel: g.nivel,
     modelo: (g.fisheye.includes(n) ? "M4318-PLVE" : "FIXA") as ModeloId,
   })),
@@ -103,3 +124,20 @@ export const todasCameras: Camera[] = [...camerasExternas, ...camerasInternas].s
 
 /** numerações do PDF sem localização em nenhuma planta */
 export const camerasNaoMapeadas = faixas([[70, 106]]);
+
+/** câmeras externas do pátio por local (setor ou prédio mais próximo), sem as de fila dos gates; Perímetro por último */
+export const camerasPatioPorLocal: { nome: string; cameras: Camera[] }[] = (() => {
+  const grupos = new Map<string, Camera[]>();
+  for (const c of camerasExternas) {
+    if (c.aproximada) continue;
+    const nome = c.local.split(" · ")[0];
+    grupos.set(nome, [...(grupos.get(nome) ?? []), c]);
+  }
+  return [...grupos].map(([nome, cameras]) => ({ nome, cameras })).sort((a, b) => (a.nome === "Perímetro" ? 1 : b.nome === "Perímetro" ? -1 : b.cameras.length - a.cameras.length));
+})();
+
+/** câmeras dos gates: as de fila primeiro (o que o cliente quer ver), depois as demais da pág. 11 */
+export const camerasGates: { nome: string; cameras: Camera[] }[] = [
+  { nome: "Filas dos gates", cameras: camerasFila },
+  { nome: "Gates e Balanças", cameras: camerasInternas.filter((c) => c.pagina === 11) },
+];

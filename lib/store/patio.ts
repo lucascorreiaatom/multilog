@@ -45,6 +45,13 @@ function contar(vagas: Record<string, EstadoVaga>) {
 let fonteAtual: YardDataSource | null = null;
 const ouvintesGatilho = new Set<(g: Gatilho) => void>();
 
+/** sem animação (mapa plano, aba oculta ou animação desligada): aplica o resultado do gatilho na hora */
+export function concluirGatilhoSemAnimacao(g: Gatilho) {
+  const { animacaoConcluida } = usePatio.getState();
+  animacaoConcluida(g, g.tipo === "entrada" ? "estacionou" : "deixou-vaga");
+  if (g.tipo === "saida") animacaoConcluida(g, "saiu");
+}
+
 /** a cena assina os gatilhos para animar entradas e saídas */
 export function assinarGatilhos(fn: (g: Gatilho) => void) {
   ouvintesGatilho.add(fn);

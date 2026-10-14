@@ -12,7 +12,7 @@ const ABAS: { id: AbaInfo; nome: string }[] = [
   { id: "gates", nome: "Gates" },
 ];
 
-export function PainelInfo({ className }: { className?: string }) {
+export function PainelInfo({ className, ...rest }: { className?: string } & React.HTMLAttributes<HTMLDivElement>) {
   const aba = useUi((s) => s.abaInfo);
   const recolhido = useUi((s) => s.blocos.visao === "recolhido");
   const abrir = (id: AbaInfo) => {
@@ -22,7 +22,7 @@ export function PainelInfo({ className }: { className?: string }) {
   };
 
   return (
-    <Painel pill={recolhido} className={cx("flex flex-col overflow-hidden", className)} aria-label="Informações do pátio">
+    <Painel pill={recolhido} className={cx("flex flex-col overflow-hidden", className)} aria-label="Informações do pátio" {...rest}>
       <div className={cx("flex shrink-0 items-center gap-8 px-12", recolhido ? "h-64" : "h-64 pt-4")}>
         {/* abas em trilho pill: a ativa vira um chip claro sobre o trilho */}
         <div role="tablist" aria-label="Informações" className="flex h-40 items-center gap-4 rounded-full bg-chip p-4">

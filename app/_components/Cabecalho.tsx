@@ -8,6 +8,7 @@ import { PERMANENCIA_MAX_H } from "@/lib/patio/tipos";
 import { usePatio } from "@/lib/store/patio";
 import { useUi } from "@/lib/store/ui";
 import { Busca } from "./Busca";
+import { useTipoMapa } from "./conceito";
 import { Ponto, cx } from "./ui";
 
 export function Cabecalho({ className, usuario }: { className?: string; usuario: { nome: string; perfil: string } }) {
@@ -15,9 +16,11 @@ export function Cabecalho({ className, usuario }: { className?: string; usuario:
   const modoTv = useUi((s) => s.modoTv);
   const foco = useUi((s) => s.foco);
   const visao = useUi((s) => s.blocos.visao);
+  // Modo foco e Modo TV mudam a cena 3D; o mapa plano já é neutro
+  const plano = useTipoMapa() === "plano";
   const offline = usePatio((s) => s.camerasOffline);
   const ocupantes = usePatio((s) => s.ocupantes);
-    const agora = useRelogio();
+  const agora = useRelogio();
   const excedidos = agora ? Object.values(ocupantes).filter((o) => agora - o.horaEntrada > PERMANENCIA_MAX_H * 3600_000).length : 0;
   const alarmes = offline.length + (excedidos > 0 ? 1 : 0);
 
@@ -32,14 +35,18 @@ export function Cabecalho({ className, usuario }: { className?: string; usuario:
           <span aria-hidden className="h-16 w-px bg-text-3/40 max-md:hidden" />
           <span className="tnum font-medium text-text-2">{agora ? hora(agora) : "--:--:--"}</span>
         </span>
-        <button type="button" aria-label="Modo TV" title="Modo TV" aria-pressed={modoTv} onClick={() => useUi.getState().setModoTv(!modoTv)}
-          className={cx("flex size-40 max-md:hidden items-center justify-center rounded-full shadow-card", modoTv ? "bg-dark text-on-dark" : "bg-card text-text hover:bg-card-muted")}>
-          <Tv size={18} />
-        </button>
-        <button type="button" aria-label="Modo foco" title="Modo foco: cena neutra, só o essencial em cor" aria-pressed={foco} onClick={() => useUi.getState().setFoco(!foco)}
-          className={cx("flex h-40 items-center gap-8 rounded-full px-12 text-[13px] font-semibold leading-20 shadow-card", foco ? "bg-dark text-on-dark" : "bg-card text-text hover:bg-card-muted")}>
-          <Focus size={18} /><span className="max-2xl:hidden">Modo foco</span>
-        </button>
+        {!plano && (
+          <>
+          <button type="button" aria-label="Modo TV" title="Modo TV" aria-pressed={modoTv} onClick={() => useUi.getState().setModoTv(!modoTv)}
+            className={cx("flex size-40 max-md:hidden items-center justify-center rounded-full shadow-card", modoTv ? "bg-dark text-on-dark" : "bg-card text-text hover:bg-card-muted")}>
+            <Tv size={18} />
+          </button>
+          <button type="button" aria-label="Modo foco" title="Modo foco: cena neutra, só o essencial em cor" aria-pressed={foco} onClick={() => useUi.getState().setFoco(!foco)}
+            className={cx("flex h-40 items-center gap-8 rounded-full px-12 text-[13px] font-semibold leading-20 shadow-card", foco ? "bg-dark text-on-dark" : "bg-card text-text hover:bg-card-muted")}>
+            <Focus size={18} /><span className="max-2xl:hidden">Modo foco</span>
+          </button>
+          </>
+        )}
         <button type="button" aria-label={tema === "escuro" ? "Tema claro" : "Tema escuro"} title={tema === "escuro" ? "Tema claro" : "Tema escuro"}
           onClick={() => useUi.getState().setTema(tema === "escuro" ? "claro" : "escuro")}
           className="flex size-40 items-center justify-center rounded-full bg-card text-text shadow-card vidro hover:bg-card-muted">
@@ -54,7 +61,7 @@ export function Cabecalho({ className, usuario }: { className?: string; usuario:
           <span className="flex size-32 items-center justify-center rounded-full bg-chip text-[12px] font-semibold leading-16 text-text">{usuario.nome.split(" ").map((p) => p[0]).slice(0, 2).join("")}</span>
           <span className="hidden xl:block">
             <span className="block text-[13px] font-semibold leading-16 text-text">{usuario.nome}</span>
-            <span className="block text-[12px] leading-16 text-text-3">{usuario.perfil}</span>
+            <span className="block text-[12px] leading-16 text-text-2">{usuario.perfil}</span>
           </span>
         </span>
       </div>
