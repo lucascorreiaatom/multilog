@@ -4,8 +4,8 @@ import { chromium } from "@playwright/test";
 const [, , url, out, w = "1440", h = "900", espera = "9000"] = process.argv;
 const browser = await chromium.launch({ args: ["--use-angle=metal", "--enable-gpu", "--ignore-gpu-blocklist", "--enable-unsafe-webgpu"] });
 const page = await browser.newPage({ viewport: { width: +w, height: +h }, deviceScaleFactor: 1 });
-// TEMA=escuro: sem localStorage.tema, o layout segue o prefers-color-scheme
-if (process.env.TEMA === "escuro") await page.emulateMedia({ colorScheme: "dark" });
+// TEMA=escuro: grava o tema salvo (sem ele o app abre no modo dia)
+if (process.env.TEMA === "escuro") await page.addInitScript(() => localStorage.setItem("tema", "escuro"));
 const logs = [];
 page.on("console", (m) => { if (m.type() === "error" || m.type() === "warning") logs.push(`${m.type()}: ${m.text()}`); });
 page.on("pageerror", (e) => logs.push(`pageerror: ${e.message}`));

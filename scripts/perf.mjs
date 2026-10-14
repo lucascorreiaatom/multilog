@@ -10,8 +10,8 @@ if (!url) { console.error("uso: node scripts/perf.mjs <url> <rotulo> [cpu] [larg
 
 const browser = await chromium.launch({ channel: process.env.CANAL || undefined, args: ["--use-angle=metal", "--enable-gpu", "--ignore-gpu-blocklist"] });
 const page = await browser.newPage({ viewport: { width: +w, height: +h }, deviceScaleFactor: 1 });
-// TEMA=escuro: sem localStorage.tema, o layout segue o prefers-color-scheme
-if (process.env.TEMA === "escuro") await page.emulateMedia({ colorScheme: "dark" });
+// TEMA=escuro: grava o tema salvo (sem ele o app abre no modo dia)
+if (process.env.TEMA === "escuro") await page.addInitScript(() => localStorage.setItem("tema", "escuro"));
 const erros = [];
 page.on("pageerror", (e) => erros.push(e.message));
 await page.goto(url, { waitUntil: "networkidle", timeout: 120000 });

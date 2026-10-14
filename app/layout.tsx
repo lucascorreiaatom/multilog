@@ -14,14 +14,12 @@ export const metadata: Metadata = {
 };
 
 export const viewport: Viewport = {
-  themeColor: [
-    { media: "(prefers-color-scheme: light)", color: "#e3e8ef" },
-    { media: "(prefers-color-scheme: dark)", color: "#0a1628" },
-  ],
+  themeColor: "#e3e8ef",
 };
 
 // Aplica o tema salvo antes da pintura, sem flash (guia preventing-flash-before-hydration).
-const temaInicial = `try{var t=localStorage.getItem("tema");if(t!=="claro"&&t!=="escuro"){t=matchMedia("(prefers-color-scheme: dark)").matches?"escuro":"claro"}document.documentElement.dataset.theme=t==="escuro"?"dark":"light"}catch(e){}`;
+// Sem escolha salva abre no modo dia, mesmo com o sistema no escuro (o noturno é só pelo botão do cabeçalho).
+const temaInicial = `try{document.documentElement.dataset.theme=localStorage.getItem("tema")==="escuro"?"dark":"light"}catch(e){document.documentElement.dataset.theme="light"}`;
 
 export default function RootLayout({ children }: LayoutProps<"/">) {
   return (
