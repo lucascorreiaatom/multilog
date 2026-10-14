@@ -4,7 +4,7 @@
 // tablet com painéis recolhíveis.
 //
 // data-ocupa marca o que cobre o mapa (esq, dir, base): o mapa plano desconta essas faixas ao enquadrar um alvo.
-import { LogOut, PanelLeft } from "lucide-react";
+import { PanelLeft } from "lucide-react";
 import { useEffect, useState, type ReactNode } from "react";
 import { NOME_PERFIL, type Sessao } from "@/lib/auth/permissoes";
 import { modoGraficoInicial } from "@/lib/grafico";
@@ -134,10 +134,6 @@ export function Tela({ sessao, mapa, video, rodape }: {
         )}
 
         {rodape}
-
-        <form method="post" action="/api/auth/sair" className="absolute top-[-200px] right-16 focus-within:top-80">
-          <button type="submit" className="flex h-40 items-center gap-8 vidro rounded-full bg-panel px-12 text-[13px] leading-20 text-text shadow-clay"><LogOut size={16} />Sair</button>
-        </form>
       </div>
     </SessaoProvider>
   );

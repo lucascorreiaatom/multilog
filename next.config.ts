@@ -7,6 +7,8 @@ const nextConfig: NextConfig = {
   async redirects() {
     return [
       { source: "/", destination: "/mapa", permanent: false },
+      // a tela de login saiu; links antigos caem direto no mapa
+      { source: "/login", destination: "/mapa", permanent: false },
       { source: "/conceito-1", destination: "/mapa?modo=3d", permanent: false },
       { source: "/conceito-2", destination: "/mapa?modo=2d", permanent: false },
     ];
