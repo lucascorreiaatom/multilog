@@ -1,11 +1,8 @@
 "use client";
-// Qual mapa está na tela: os painéis são os mesmos nos dois conceitos e só escondem o que não existe no mapa plano
+// Qual mapa está na tela: os painéis são os mesmos no 3D e no plano e só escondem o que não existe no mapa plano
 // (girar, cobertura das câmeras e Modo TV).
-import { createContext, useContext } from "react";
+import { useUi, type TipoMapa } from "@/lib/store/ui";
 
-export type TipoMapa = "3d" | "plano";
+export type { TipoMapa };
 
-const Ctx = createContext<TipoMapa>("3d");
-
-export const MapaProvider = Ctx.Provider;
-export const useTipoMapa = () => useContext(Ctx);
+export const useTipoMapa = () => useUi((s) => s.mapa);

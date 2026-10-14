@@ -66,33 +66,7 @@ export const PALETA = {
   },
 };
 
-/** Modo foco (vídeo de referência): cena quase monocromática; só status, seleção e câmeras têm cor */
-export const PALETA_FOCO: { claro: Paleta; escuro: Paleta } = {
-  claro: {
-    ...PALETA.dia,
-    // branco de maquete (vídeo): superfícies quase brancas; volume vem da luz e do AO, não da cor
-    ceu: "#f6f7fb", neblina: "#f6f7fb", grama: "#f1f3f7", gramaEscura: "#eceff4", campo: "#f3f2ef",
-    copa: ["#e4eae6", "#dfe6e1", "#e8ede9", "#dbe3dd", "#e2e8e4"], tronco: "#d6dad4",
-    asfalto: "#e6e9ef", asfaltoRodovia: "#e0e3ea", faixa: "#ffffff", faixaAmarela: "#ffffff", concreto: "#f2f4f7",
-    meioFio: "#ffffff", canteiro: "#e9eee9", predio: "#ffffff", predioSombra: "#f0f2f6", telhado: "#f7f8fa",
-    faixaAzul: "#c3cee0", vidro: "#dfe5ee", porta: "#e7ebf0", cerca: "#d9dde4", poste: "#d2d7df",
-    container: ["#f4f5f8", "#eceef2", "#f8f9fb", "#e6e9ee"], carro: ["#ffffff", "#f0f2f5", "#e4e7ec"],
-    sol: "#ffffff", hemisferioCeu: "#ffffff", hemisferioChao: "#eef0f4",
-  },
-  escuro: {
-    ...PALETA.noite,
-    ceu: "#11151d", neblina: "#11151d", grama: "#1a1f28", gramaEscura: "#161b23", campo: "#1c2029",
-    copa: ["#232a33", "#262d36", "#20262f", "#29303a", "#242b34"], tronco: "#1d222a",
-    asfalto: "#262b34", asfaltoRodovia: "#222730", faixa: "#8a92a2", faixaAmarela: "#8a92a2", concreto: "#2e343e",
-    meioFio: "#353c47", canteiro: "#222830", predio: "#3a414c", predioSombra: "#323843", telhado: "#2c323c",
-    faixaAzul: "#4a5a78", vidro: "#4a5262", porta: "#323843", cerca: "#3c434e", poste: "#4a515c",
-    container: ["#3a404a", "#333943", "#40464f", "#2f353e"], carro: ["#4a505a", "#3c424c", "#565c66"],
-  },
-};
-
-/** cores neutras dos caminhões no Modo foco */
-export const CAMINHAO_FOCO = { claro: { cavalo: "#ffffff", carga: "#f1f3f6" }, escuro: { cavalo: "#8a919c", carga: "#767d88" } };
-/** cores padrão da frota fora do Modo foco: todos os caminhões iguais */
+/** cores padrão da frota: todos os caminhões iguais */
 export const CAMINHAO_PADRAO = { claro: { cavalo: "#f4f5f7", carga: "#dfe3e8" }, escuro: { cavalo: "#dde0e5", carga: "#c6cad1" } };
 
 export type Paleta = typeof PALETA.dia;

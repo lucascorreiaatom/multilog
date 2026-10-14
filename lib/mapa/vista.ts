@@ -1,4 +1,4 @@
-// Geometria do mapa plano (Conceito 2): coordenadas do desenho, caixa de cada alvo e a vista (escala e deslocamento).
+// Geometria do mapa plano (2D): coordenadas do desenho, caixa de cada alvo e a vista (escala e deslocamento).
 // O desenho gira a planta 180° como a vista inicial do 3D e a Imagem 2 (rodovia embaixo). A rotação é feita aqui, nos
 // dados, e não com transform no SVG: assim nenhum texto fica de cabeça para baixo.
 import { camerasExternas } from "../cameras/catalogo";

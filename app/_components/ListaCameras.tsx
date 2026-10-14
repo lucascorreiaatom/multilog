@@ -76,7 +76,7 @@ export function ListaCameras({ titulo, grupos, abertaInicial = false, fixa = fal
                             <span className="tnum text-[14px] font-semibold leading-20 text-text">{c.codigo}</span>
                             {fora && <span className="text-[12px] font-semibold leading-16 text-st-ocupada">Sem sinal</span>}
                           </span>
-                          <span className="block truncate text-[13px] leading-20 text-text-2">{c.local.startsWith(`${g.nome} · `) ? c.local.slice(g.nome.length + 3) : c.local} · {MODELOS[c.modelo].nome.replace("AXIS ", "")}</span>
+                          <span className="block truncate text-[13px] leading-20 text-text-2">{c.local.startsWith(`${g.nome} · `) ? c.local.slice(g.nome.length + 3) : c.local} · {MODELOS[c.modelo].nome.replace("AXIS ", "")}{MODELOS[c.modelo].sensores > 1 ? ` · ${MODELOS[c.modelo].sensores} visões` : ""}</span>
                           {c.tipo === "externa" && c.aproximada && <span className="block text-[12px] leading-16 text-text-2">Posição aproximada</span>}
                         </span>
                       </button>

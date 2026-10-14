@@ -1,5 +1,5 @@
 "use client";
-// Mapa plano do pátio (Conceito 2): SVG sem WebGL, leve em máquinas básicas. Visão geral com o resumo dos setores,
+// Mapa plano do pátio (2D): SVG sem WebGL, leve em máquinas básicas. Visão geral com o resumo dos setores,
 // vagas pela cor do status ao aproximar, número da vaga e caminhão de perto. A navegação fica em mapa/motor.ts.
 import { useEffect, useRef, useState } from "react";
 import { STATUS } from "@/lib/patio/tipos";
@@ -20,7 +20,6 @@ export function MapaPlano() {
   const grupo = useRef<SVGGElement>(null);
   const [dica, setDica] = useState<Dica>(null);
   const filtrando = useUi((s) => s.filtroStatus.length > 0);
-  const foco = useUi((s) => s.foco);
 
   useEffect(() => criarMotor({ raiz: raiz.current!, svg: svg.current!, grupo: grupo.current!, aoDica: setDica }), []);
   // sem animação de caminhões: entradas e saídas do simulador se completam na hora (a vaga muda de cor direto)
@@ -34,7 +33,6 @@ export function MapaPlano() {
       aria-roledescription="mapa"
       aria-label="Mapa do pátio. Teclas mais e menos aproximam e afastam, as setas movem e Home volta à visão geral."
       data-filtro={filtrando || undefined}
-      data-foco={foco || undefined}
       className="mapa-plano absolute inset-0 touch-none overflow-hidden bg-[var(--mapa-fora)] outline-none select-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-inset"
     >
       {/* tamanho só até o motor montar: depois ele desenha o SVG maior que o mapa (SOBRA em motor.ts) */}

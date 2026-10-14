@@ -15,8 +15,7 @@ export function camerasQueCobrem(p: Vec2): { camera: CameraExterna; sensor: numb
     if (d > (ALCANCE[c.modelo] ?? 60)) continue;
     const ang = Math.atan2(dz, dx);
     const mod = MODELOS[c.modelo];
-    const dirs = mod.projecao === "panoramica180" ? [0] : mod.direcoes;
-    dirs.forEach((dg, sensor) => {
+    mod.direcoes.forEach((dg, sensor) => {
       const centro = c.rumo + (dg * Math.PI) / 180;
       const diff = Math.atan2(Math.sin(ang - centro), Math.cos(ang - centro));
       if (Math.abs(diff) <= (Math.min(mod.fovH, 359) * Math.PI) / 360) out.push({ camera: c, sensor, distancia: d });

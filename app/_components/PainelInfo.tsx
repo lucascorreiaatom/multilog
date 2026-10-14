@@ -1,7 +1,9 @@
 "use client";
-// Painel de informações (esquerda): abas "Pátio" e "Gates" no mesmo bloco, uma de cada vez.
+// Painel de informações (esquerda): logo Multilog no topo (sobre a superfície do painel, nunca sobre o canvas)
+// e abas "Pátio" e "Gates" no mesmo bloco, uma de cada vez.
 import { useUi, type AbaInfo } from "@/lib/store/ui";
 import { ConteudoGates } from "./GatesEventos";
+import { Logo } from "./Logo";
 import { BotaoRecolher } from "./Recolher";
 import { Painel, cx } from "./ui";
 import { ConteudoPatio } from "./VisaoPatio";
@@ -21,20 +23,23 @@ export function PainelInfo({ className, ...rest }: { className?: string } & Reac
   };
 
   return (
-    <Painel pill={recolhido} className={cx("flex flex-col overflow-hidden", className)} aria-label="Informações do pátio" {...rest}>
-      <div className={cx("flex shrink-0 items-center gap-8 px-12", recolhido ? "h-64" : "h-64 pt-4")}>
+    <Painel className={cx("flex flex-col overflow-hidden", className)} aria-label="Informações do pátio" {...rest}>
+      {/* linha da marca: logo à esquerda e recolher à direita, na mesma altura */}
+      <div className="flex h-56 shrink-0 items-center justify-between pr-12 pl-16">
+        <Logo altura={24} />
+        <BotaoRecolher bloco="visao" nome="painel de informações" />
+      </div>
+      <div className={cx("flex shrink-0 items-start px-16", recolhido ? "h-56" : "h-48")}>
         {/* abas em trilho pill: a ativa vira um chip claro sobre o trilho */}
-        <div role="tablist" aria-label="Informações" className="flex h-40 items-center gap-4 rounded-full bg-chip p-4">
+        <div role="tablist" aria-label="Informações" className="flex h-40 flex-1 items-center gap-4 rounded-full bg-chip p-4">
           {ABAS.map((a) => (
             <button key={a.id} type="button" role="tab" id={`aba-${a.id}`} aria-selected={aba === a.id} aria-controls="painel-info" onClick={() => abrir(a.id)}
-              className={cx("h-32 rounded-full px-16 text-[14px] font-semibold leading-20 transition-colors outline-none focus-visible:ring-2 focus-visible:ring-accent",
+              className={cx("h-32 flex-1 rounded-full px-16 text-[14px] font-semibold leading-20 transition-colors outline-none focus-visible:ring-2 focus-visible:ring-accent",
                 aba === a.id ? "bg-card text-text shadow-card" : "text-text-2 hover:text-text")}>
               {a.nome}
             </button>
           ))}
         </div>
-        <span className="flex-1" />
-        <BotaoRecolher bloco="visao" nome="painel de informações" />
       </div>
       {!recolhido && (
         <>

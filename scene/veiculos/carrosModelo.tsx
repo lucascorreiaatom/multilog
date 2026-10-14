@@ -1,6 +1,6 @@
 "use client";
 // Carros de passeio com modelo (KayKit City Builder Bits, CC0, Kay Lousberg), convertidos por scripts/modelos-carros.mjs.
-// Mesmo contrato das geometrias procedurais: "corpo" é tingido pela cor da instância (paleta, Modo foco) e "neutro"
+// Mesmo contrato das geometrias procedurais: "corpo" é tingido pela cor da instância (paleta e tema) e "neutro"
 // traz pneus, vidros, frisos e lanternas em cores de vértice. Sem textura; ~800 triângulos por carro; 2 draw calls por
 // variante, qualquer que seja a quantidade de carros.
 import { useGLTF } from "@react-three/drei";

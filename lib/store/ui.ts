@@ -24,6 +24,9 @@ export type AlvoCamera3D =
   | { tipo: "predio"; id: string }
   | { tipo: "ponto"; x: number; z: number; dist: number };
 
+/** mapa em exibição: 3D (pátio modelado) ou plano (2D, visto de cima) */
+export type TipoMapa = "3d" | "plano";
+
 export type Bloco = "visao" | "gates" | "camera" | "controles" | "callouts" | "marcadores" | "predios";
 /** abas do painel de informações (esquerda) */
 export type AbaInfo = "patio" | "gates";
@@ -35,6 +38,11 @@ function blocosSalvos(): Record<Bloco, EstadoBloco> {
 }
 
 export interface UiState {
+  mapa: TipoMapa;
+  /** o mapa só monta depois de ler o endereço, para não carregar o 3D quando o pedido é o plano */
+  mapaPronto: boolean;
+  /** troca o mapa e lembra a escolha (o endereço acompanha: ?modo=2d ou 3d) */
+  setMapa: (m: TipoMapa) => void;
   /** visibilidade de cada bloco da tela (aberto, recolhido no título ou oculto) */
   blocos: Record<Bloco, EstadoBloco>;
   setBloco: (b: Bloco, e: EstadoBloco) => void;
@@ -43,6 +51,8 @@ export interface UiState {
   /** câmera exibida no card AO VIVO */
   cameraAtiva: number;
   sensor: number;
+  /** câmera multissensor: todas as visões em grade (true) ou só o sensor escolhido */
+  grade: boolean;
   /** controle PTZ da câmera em exibição (radianos e zoom óptico) */
   ptz: { pan: number; tilt: number; zoom: number };
   cameraAmpliada: boolean;
@@ -51,10 +61,6 @@ export interface UiState {
   modoTv: boolean;
   tour: boolean;
   tema: "claro" | "escuro";
-  /** Modo foco: cena quase monocromática, só o essencial em cor */
-  foco: boolean;
-  /** no Modo foco o card AO VIVO só aparece quando pedido (ex.: "Ver câmera" no detalhe), até mudar a seleção */
-  cameraNoFoco: boolean;
   /** qualidade do 3D: visual completo ou leve para GPU integrada (lib/grafico.ts) */
   grafico: ModoGrafico;
   /** status visíveis no mapa (vazio = todos); vagas fora do filtro ficam neutras e sem caminhão */
@@ -71,7 +77,9 @@ export interface UiState {
   focar: (a: AlvoCamera3D) => void;
   comandar: (tipo: "zoom-in" | "zoom-out" | "girar-esq" | "girar-dir") => void;
   exibirCamera: (numero: number) => void;
+  /** abre a visão única de um sensor */
   setSensor: (i: number) => void;
+  setGrade: (v: boolean) => void;
   setPtz: (p: Partial<{ pan: number; tilt: number; zoom: number }>) => void;
   setAmpliada: (v: boolean) => void;
   setCobertura: (v: boolean) => void;
@@ -79,7 +87,6 @@ export interface UiState {
   setModoTv: (v: boolean) => void;
   setTour: (v: boolean) => void;
   setTema: (t: "claro" | "escuro") => void;
-  setFoco: (v: boolean) => void;
   setGrafico: (g: ModoGrafico) => void;
 }
 
@@ -97,9 +104,20 @@ export const useUi = create<UiState>()(
       set({ blocos });
     },
     carregarBlocos: () => set({ blocos: blocosSalvos() }),
+    mapa: "3d",
+    mapaPronto: false,
+    setMapa: (mapa) => {
+      try { localStorage.setItem("mapa", mapa); } catch {}
+      const url = new URL(window.location.href);
+      url.searchParams.set("modo", mapa === "plano" ? "2d" : "3d");
+      window.history.replaceState(window.history.state, "", url);
+      // Modo TV e cobertura das câmeras só existem no 3D
+      set(mapa === "plano" ? { mapa, modoTv: false, cobertura: false } : { mapa });
+    },
     selecao: null,
     cameraAtiva: 5,
     sensor: 0,
+    grade: true,
     ptz: { pan: 0, tilt: 0, zoom: 1 },
     cameraAmpliada: false,
     cobertura: false,
@@ -107,8 +125,6 @@ export const useUi = create<UiState>()(
     modoTv: false,
     tour: false,
     tema: "claro",
-    foco: false,
-    cameraNoFoco: false,
     grafico: "desempenho",
     filtroStatus: [],
     abaInfo: "patio",
@@ -120,15 +136,16 @@ export const useUi = create<UiState>()(
     limparFiltro: () => set({ filtroStatus: [] }),
     alvo: { alvo: { tipo: "home" }, seq: 0 },
     comando: null,
-    selecionar: (selecao) => set({ selecao, cameraNoFoco: false }),
+    selecionar: (selecao) => set({ selecao }),
     focar: (alvo) => set({ alvo: { alvo, seq: get().alvo.seq + 1 } }),
     comandar: (tipo) => set({ comando: { tipo, seq: (get().comando?.seq ?? 0) + 1 } }),
     exibirCamera: (numero) => {
       // escolher uma câmera reabre o card se ele estiver fechado
       if (get().blocos.camera !== "aberto") get().setBloco("camera", "aberto");
-      set({ cameraAtiva: numero, sensor: 0, ptz: { pan: 0, tilt: 0, zoom: 1 }, cameraNoFoco: true });
+      set({ cameraAtiva: numero, sensor: 0, grade: true, ptz: { pan: 0, tilt: 0, zoom: 1 } });
     },
-    setSensor: (sensor) => set({ sensor }),
+    setSensor: (sensor) => set({ sensor, grade: false }),
+    setGrade: (grade) => set({ grade }),
     setPtz: (p) => set({ ptz: { ...get().ptz, ...p } }),
     setAmpliada: (cameraAmpliada) => {
       // ampliar recolhe o painel Pátio/Gates para dar espaço ao vídeo; reduzir devolve como estava.
@@ -146,10 +163,6 @@ export const useUi = create<UiState>()(
     setBusca: (busca) => set({ busca }),
     setModoTv: (modoTv) => set({ modoTv }),
     setTour: (tour) => set({ tour }),
-    setFoco: (foco) => {
-      try { localStorage.setItem("foco", foco ? "1" : "0"); } catch {}
-      set({ foco, cameraNoFoco: false });
-    },
     setGrafico: (grafico) => {
       try { localStorage.setItem("grafico", grafico); } catch {}
       document.documentElement.classList.toggle("desempenho", grafico === "desempenho");

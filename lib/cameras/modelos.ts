@@ -2,7 +2,7 @@
 
 export type ModeloId = "P3738-PLE" | "P4707-PLVE" | "P3827-PVE" | "P1487-LE" | "Q6225-LE" | "M4318-PLVE" | "FIXA";
 
-export type Projecao = "perspectiva" | "panoramica180" | "fisheye360" | "ptz";
+export type Projecao = "perspectiva" | "fisheye360" | "ptz";
 
 export interface Modelo {
   id: ModeloId;
@@ -10,7 +10,7 @@ export interface Modelo {
   resumo: string;
   sensores: number;
   projecao: Projecao;
-  /** campo de visão horizontal por sensor, em graus */
+  /** campo de visão horizontal por sensor, em graus (a transmissão deriva o vertical do formato do quadro) */
   fovH: number;
   /** campo de visão vertical por sensor, em graus */
   fovV: number;
@@ -30,8 +30,9 @@ export const MODELOS: Record<ModeloId, Modelo> = {
     sensores: 2, projecao: "perspectiva", fovH: 98, fovV: 54, direcoes: [0, 180], alturaMontagem: 8,
   },
   "P3827-PVE": {
-    id: "P3827-PVE", nome: "AXIS P3827-PVE", resumo: "Panorâmica 7 MP, 180° sem pontos cegos",
-    sensores: 1, projecao: "panoramica180", fovH: 180, fovV: 90, direcoes: [0], alturaMontagem: 6,
+    // PDF pág. 6: "panorâmica com 4 sensores" emendados em 180° x 90°; cada sensor cobre ~45° (48° com sobreposição)
+    id: "P3827-PVE", nome: "AXIS P3827-PVE", resumo: "Panorâmica 4 sensores, 180°",
+    sensores: 4, projecao: "perspectiva", fovH: 48, fovV: 90, direcoes: [-67.5, -22.5, 22.5, 67.5], alturaMontagem: 6,
   },
   "P1487-LE": {
     id: "P1487-LE", nome: "AXIS P1487-LE", resumo: "Bullet 5 MP, lente 3 a 8,5 mm",

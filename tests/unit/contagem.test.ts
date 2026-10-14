@@ -4,7 +4,7 @@ import type { EstadoVaga, StatusVaga } from "@/lib/patio/tipos";
 import { planta } from "@/lib/site";
 import { contar, recontar } from "@/lib/store/patio";
 
-const STATUS: StatusVaga[] = ["livre", "reservada", "ocupada", "vistoria", "conferencia", "saida", "bloqueada"];
+const STATUS: StatusVaga[] = ["livre", "ocupada", "conferencia", "saida"];
 
 describe("contagem incremental das vagas", () => {
   it("bate com a recontagem completa depois de muitas trocas de status", () => {

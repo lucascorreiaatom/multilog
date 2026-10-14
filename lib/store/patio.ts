@@ -9,7 +9,7 @@ import { planta, SETORES_VAGAS, type SetorVagas } from "../site";
 
 type Contagem = Record<StatusVaga, number> & { total: number; emUso: number };
 
-const vazia = (): Contagem => ({ livre: 0, reservada: 0, ocupada: 0, vistoria: 0, conferencia: 0, saida: 0, bloqueada: 0, total: 0, emUso: 0 });
+const vazia = (): Contagem => ({ livre: 0, ocupada: 0, conferencia: 0, saida: 0, total: 0, emUso: 0 });
 
 export interface PatioState {
   pronto: boolean;
@@ -42,7 +42,7 @@ export function contar(vagas: Record<string, EstadoVaga>) {
   return { contagem, porSetor };
 }
 
-const emUso = (st: StatusVaga) => st !== "livre" && st !== "bloqueada";
+const emUso = (st: StatusVaga) => st !== "livre";
 
 /** troca de status de uma vaga sem recontar as 1.022: só o setor da vaga ganha objeto novo, então quem assina outro
  *  setor (callouts, resumos) não re-renderiza; sem troca de status, nada muda */

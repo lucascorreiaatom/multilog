@@ -44,17 +44,16 @@ export class SimulatedSource implements YardDataSource {
     const alvo: Record<string, number> = { EST: 0.76, PUL: 0.72, CPG: 0.48, DOC: 0.75 };
     for (const v of planta.vagas) {
       let status: StatusVaga = "livre";
-      if (r() < 0.006) status = "bloqueada";
-      else if (r() < alvo[v.setor]) {
+      if (r() < alvo[v.setor]) {
         if (v.setor === "DOC") status = r() < 0.85 ? "conferencia" : "saida";
         else {
           const x = r();
-          status = x < 0.66 ? "ocupada" : x < 0.8 ? "conferencia" : x < 0.86 ? "vistoria" : "saida";
+          status = x < 0.66 ? "ocupada" : x < 0.86 ? "conferencia" : "saida";
         }
       }
       const desde = agora - Math.floor(r() * 30 * H);
       vagas[v.id] = { status, desde };
-      if (status !== "livre" && status !== "bloqueada") {
+      if (status !== "livre") {
         const id = `oc-${++this.seq}`;
         const horasNoPatio = status === "ocupada" ? r() * 20 : r() * 60;
         ocupantes[id] = ocupanteFicticio(r, id, agora, { perigosa: v.setor === "CPG", gate: 1 + Math.floor(r() * 4), horaEntrada: agora - Math.floor(horasNoPatio * H) });
@@ -119,7 +118,7 @@ export class SimulatedSource implements YardDataSource {
 
   private ocupacao(): number {
     const vs = Object.values(this.estado.vagas);
-    return vs.filter((v) => v.status !== "livre" && v.status !== "bloqueada").length / vs.length;
+    return vs.filter((v) => v.status !== "livre").length / vs.length;
   }
 
   private tick() {
@@ -161,11 +160,12 @@ export class SimulatedSource implements YardDataSource {
     if (placaManual) oc.veiculo.placa = placaManual.toUpperCase();
     this.estado.ocupantes[id] = oc;
     this.emitir({ tipo: "ocupante", ocupante: oc });
-    this.setVaga(vagaId, "reservada", id);
+    // o gatilho sai antes da vaga mudar: a cena marca o caminhão como em movimento e não o estaciona antes de chegar
     this.emAnimacao.add(vagaId);
     const g: Gatilho = { tipo: "entrada", ocupanteId: id, vagaId, pista, hora: this.estado.agora };
     this.emitir({ tipo: "gatilho", gatilho: g });
-    this.evento({ tipo: "entrada", vagaId, placa: oc.veiculo.placa, gate: pista, status: "reservada", texto: `Entrada pelo Gate ${pista}` });
+    this.setVaga(vagaId, "ocupada", id);
+    this.evento({ tipo: "entrada", vagaId, placa: oc.veiculo.placa, gate: pista, status: "ocupada", texto: `Entrada pelo Gate ${pista}` });
   }
 
   private saidaAleatoria() {
@@ -186,14 +186,10 @@ export class SimulatedSource implements YardDataSource {
   }
 
   private progressoAleatorio() {
-    const candidatos = Object.entries(this.estado.vagas).filter(([id, e]) => ["ocupada", "vistoria", "conferencia"].includes(e.status) && !this.emAnimacao.has(id));
+    const candidatos = Object.entries(this.estado.vagas).filter(([id, e]) => ["ocupada", "conferencia"].includes(e.status) && !this.emAnimacao.has(id));
     if (!candidatos.length) return;
     const [vagaId, e] = candidatos[Math.floor(this.rng() * candidatos.length)];
-    const oc = e.ocupanteId ? this.estado.ocupantes[e.ocupanteId] : undefined;
-    let acao: Acao = "iniciarConferencia";
-    if (e.status === "ocupada" && oc && (oc.carga.canal === "vermelho" || oc.carga.canal === "amarelo") && this.rng() < 0.5) acao = "iniciarVistoria";
-    if (e.status === "conferencia") acao = "liberarSaida";
-    this.acaoVaga(vagaId, acao);
+    this.acaoVaga(vagaId, e.status === "conferencia" ? "liberarSaida" : "iniciarConferencia");
   }
 
   acaoVaga(vagaId: string, acao: Acao): ResultadoAcao {
@@ -209,7 +205,7 @@ export class SimulatedSource implements YardDataSource {
     if (!novo) return { ok: false, motivo: `Ação indisponível para status ${STATUS[e.status].nome}` };
     this.setVaga(vagaId, novo);
     const placa = e.ocupanteId ? this.estado.ocupantes[e.ocupanteId]?.veiculo.placa : undefined;
-    const tipos: Partial<Record<Acao, Evento["tipo"]>> = { iniciarVistoria: "vistoria", iniciarConferencia: "conferencia", liberarSaida: "saida-liberada", bloquear: "bloqueio", desbloquear: "desbloqueio" };
+    const tipos: Partial<Record<Acao, Evento["tipo"]>> = { iniciarConferencia: "conferencia", liberarSaida: "saida-liberada" };
     this.evento({ tipo: tipos[acao] ?? "conferencia", vagaId, placa, status: novo, texto: STATUS[novo].nome });
     return { ok: true };
   }
@@ -233,8 +229,7 @@ export class SimulatedSource implements YardDataSource {
   animacaoConcluida(g: Gatilho, fase: "estacionou" | "deixou-vaga" | "saiu") {
     if (g.tipo === "entrada" && fase === "estacionou") {
       this.emAnimacao.delete(g.vagaId);
-      if (this.estado.vagas[g.vagaId].status === "reservada") {
-        this.setVaga(g.vagaId, "ocupada");
+      if (this.estado.vagas[g.vagaId].status === "ocupada") {
         this.evento({ tipo: "estacionou", vagaId: g.vagaId, placa: this.estado.ocupantes[g.ocupanteId]?.veiculo.placa, status: "ocupada", texto: STATUS.ocupada.nome });
       }
     }

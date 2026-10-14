@@ -11,7 +11,7 @@ import { usePatio } from "@/lib/store/patio";
 import { useUi } from "@/lib/store/ui";
 
 /** status em que há caminhão parado na vaga */
-const COM_CAMINHAO: StatusVaga[] = ["ocupada", "vistoria", "conferencia", "saida"];
+const COM_CAMINHAO: StatusVaga[] = ["ocupada", "conferencia", "saida"];
 
 const caminho = (p: Ponto[]) => `M${p.map(([x, y]) => `${x.toFixed(2)},${y.toFixed(2)}`).join("L")}Z`;
 

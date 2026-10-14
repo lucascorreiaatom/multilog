@@ -1,5 +1,5 @@
 "use client";
-// Primitivas visuais do Conceito 1 (clay). Todas as medidas em px do grid de 4 (spacing = 1px).
+// Primitivas visuais (clay). Todas as medidas em px do grid de 4 (spacing = 1px).
 import { useCallback, type ButtonHTMLAttributes, type ReactNode } from "react";
 
 export const cx = (...c: (string | false | null | undefined)[]) => c.filter(Boolean).join(" ");
@@ -34,6 +34,9 @@ export function Chip({ children, className, tom = "neutro" }: { children: ReactN
   };
   return <span className={cx("inline-flex h-28 items-center gap-8 rounded-[14px] px-12 text-[12px] font-semibold leading-16", tons[tom], className)}>{children}</span>;
 }
+
+/** botão de ícone dentro do container do cabeçalho: sem fundo próprio, só o hover */
+export const ICONE_CABECALHO = "flex size-40 shrink-0 items-center justify-center rounded-full text-text outline-none transition-colors hover:bg-chip focus-visible:ring-2 focus-visible:ring-accent";
 
 /** dois tamanhos de botão na interface: 48 px nos controles do mapa, 40 px em ações dentro de cartões e no cabeçalho */
 export function BotaoIcone({ children, className, rotulo, ativo, principal, compacto, ...rest }: { children: ReactNode; rotulo: string; ativo?: boolean; principal?: boolean; compacto?: boolean } & ButtonHTMLAttributes<HTMLButtonElement>) {

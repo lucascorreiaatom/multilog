@@ -1,7 +1,7 @@
 // Medição de desempenho da cena: tempo de quadro (p50/p95/p99), quadros longos e long tasks,
 // com a câmera parada e durante arrasto simulado. Saída em JSON para comparar antes e depois.
 // Uso: node scripts/perf.mjs <url> <rotulo> [cpu=1] [largura=1440] [altura=900] [segundos=12]
-// Ex.:  node scripts/perf.mjs "http://localhost:3000/conceito-1?sem=ao" sem-ao 4
+// Ex.:  node scripts/perf.mjs "http://localhost:3000/mapa?sem=ao" sem-ao 4
 import { mkdirSync, writeFileSync } from "node:fs";
 import { chromium } from "@playwright/test";
 
@@ -16,7 +16,7 @@ const erros = [];
 page.on("pageerror", (e) => erros.push(e.message));
 await page.goto(url, { waitUntil: "networkidle", timeout: 120000 });
 if (page.url().includes("/login")) {
-  await Promise.all([page.waitForURL(/conceito-\d/, { timeout: 120000 }), page.click('button[type="submit"]')]);
+  await Promise.all([page.waitForURL(/\/mapa/, { timeout: 120000 }), page.click('button[type="submit"]')]);
   if (new URL(url).search) await page.goto(url, { waitUntil: "networkidle", timeout: 120000 });
 }
 // SELETOR: o que indica a cena pronta (padrão: canvas do 3D; no Conceito 2 use [data-testid="mapa-2d"])

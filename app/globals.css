@@ -29,15 +29,13 @@
   --chip: rgb(17 41 75 / 0.06);
   --logo: #11294b;
 
-  /* status de vaga: funcionais, separados da marca. Conferência em índigo (derivado do #4E3A93)
-     e reservada em magenta, para não colidir com o azul #4E91ED do acento */
+  /* status de vaga (os 4 do SoW): funcionais, separados da marca. Conferência em índigo (derivado do #4E3A93),
+     para não colidir com o azul #4E91ED do acento. --inativo: cinza neutro de câmera sem sinal e gate fechado */
   --st-livre: #3a9a5b;
   --st-ocupada: #cf4440;
   --st-conferencia: #5a47b8;
   --st-saida: #e0962f;
-  --st-reservada: #c2549e;
-  --st-vistoria: #1aa3b8;
-  --st-bloqueada: #5c6370;
+  --inativo: #5c6370;
   --live: #3a9a5b;
 
   --shadow-clay: 0 1px 2px rgb(17 41 75 / 0.04), 0 8px 24px rgb(17 41 75 / 0.1), inset 0 1px 0 rgb(255 255 255 / 0.9), inset 0 0 0 1px rgb(255 255 255 / 0.5);
@@ -67,9 +65,7 @@
   --st-ocupada: #e5605b;
   --st-conferencia: #8b7ef0;
   --st-saida: #eba84a;
-  --st-reservada: #df7bbd;
-  --st-vistoria: #34bccf;
-  --st-bloqueada: #8a92a2;
+  --inativo: #8a92a2;
   --live: #4fb874;
   --shadow-clay: 0 1px 2px rgb(0 0 0 / 0.3), 0 8px 24px rgb(2 10 24 / 0.4), inset 0 1px 0 rgb(255 255 255 / 0.08), inset 0 0 0 1px rgb(255 255 255 / 0.06);
   --shadow-card: 0 1px 2px rgb(2 10 24 / 0.3), inset 0 0 0 1px rgb(255 255 255 / 0.05);
@@ -103,9 +99,7 @@
   --color-st-ocupada: var(--st-ocupada);
   --color-st-conferencia: var(--st-conferencia);
   --color-st-saida: var(--st-saida);
-  --color-st-reservada: var(--st-reservada);
-  --color-st-vistoria: var(--st-vistoria);
-  --color-st-bloqueada: var(--st-bloqueada);
+  --color-inativo: var(--inativo);
   --color-live: var(--live);
   --shadow-clay: var(--shadow-clay);
   --shadow-card: var(--shadow-card);
@@ -297,12 +291,9 @@ html.plano .vidro {
 .mapa-plano .st-ocupada .piso { fill: var(--st-ocupada); }
 .mapa-plano .st-conferencia .piso { fill: var(--st-conferencia); }
 .mapa-plano .st-saida .piso { fill: var(--st-saida); }
-.mapa-plano .st-reservada .piso { fill: var(--st-reservada); }
-.mapa-plano .st-vistoria .piso { fill: var(--st-vistoria); }
-.mapa-plano .st-bloqueada .piso { fill: var(--st-bloqueada); }
 /* visão geral sem filtro: duas cores só (livre e em uso), como no resumo dos setores; as cores de cada status
-   aparecem ao aproximar, ao filtrar pela legenda ou no Modo foco (que não tem resumos e mostra o status, como no 3D) */
-.mapa-plano[data-lod="geral"]:not([data-filtro]):not([data-foco]) .vaga:not(.st-livre):not(.st-bloqueada) .piso { fill: var(--mapa-vaga-uso); }
+   aparecem ao aproximar ou ao filtrar pela legenda */
+.mapa-plano[data-lod="geral"]:not([data-filtro]) .vaga:not(.st-livre) .piso { fill: var(--mapa-vaga-uso); }
 /* fora do filtro: a vaga fica neutra e sem caminhão, como no 3D */
 .mapa-plano .vaga[data-fora] .piso { fill: var(--mapa-vaga-neutra); }
 .mapa-plano .vaga[data-fora] .caminhao,

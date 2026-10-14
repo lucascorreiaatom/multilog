@@ -18,9 +18,9 @@ export interface Sessao {
 type Permissao = Acao | "alternarGate" | "atribuirEntrada" | "verDadosPessoais";
 
 const MATRIZ: Record<Perfil, Permissao[]> = {
-  operacao: ["iniciarConferencia", "liberarSaida", "registrarSaida", "bloquear", "desbloquear", "alternarGate", "atribuirEntrada"],
-  receita: ["iniciarVistoria", "iniciarConferencia", "liberarSaida", "verDadosPessoais"],
-  admin: ["iniciarVistoria", "iniciarConferencia", "liberarSaida", "registrarSaida", "bloquear", "desbloquear", "alternarGate", "atribuirEntrada", "verDadosPessoais"],
+  operacao: ["iniciarConferencia", "liberarSaida", "registrarSaida", "alternarGate", "atribuirEntrada"],
+  receita: ["iniciarConferencia", "liberarSaida", "verDadosPessoais"],
+  admin: ["iniciarConferencia", "liberarSaida", "registrarSaida", "alternarGate", "atribuirEntrada", "verDadosPessoais"],
 };
 
 export function pode(perfil: Perfil, p: Permissao): boolean {

@@ -62,8 +62,8 @@ export function Busca() {
   return (
     <div ref={raiz} className="relative h-40">
       <Command shouldFilter={false} label="Buscar no pátio" onKeyDown={(e) => { if (e.key === "Escape") { e.preventDefault(); fechar(); } }}>
-        <div className={cx("vidro flex h-40 items-center overflow-hidden rounded-full shadow-card transition-[width,background-color] duration-300 ease-[cubic-bezier(0.22,1,0.36,1)] max-md:transition-none",
-          aberta ? "w-[360px] max-md:w-[calc(100vw-32px)] bg-card" : "w-40 bg-card hover:bg-card-muted")}>
+        <div className={cx("vidro flex h-40 items-center overflow-hidden rounded-full shadow-clay transition-[width,background-color] duration-300 ease-[cubic-bezier(0.22,1,0.36,1)] max-md:transition-none",
+          aberta ? "w-[360px] max-md:w-[calc(100vw-32px)] bg-panel" : "w-40 bg-panel hover:bg-card-muted")}>
           <button type="button" aria-label="Buscar placa, vaga, câmera ou prédio" title="Buscar ( / )" aria-expanded={aberta}
             onClick={() => (aberta ? campo.current?.focus() : useUi.getState().setBusca(true))}
             className="flex size-40 shrink-0 items-center justify-center rounded-full text-text">

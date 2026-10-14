@@ -8,13 +8,13 @@ const b = await chromium.launch({ args: ["--use-angle=metal", "--enable-gpu", "-
 const ctx = await b.newContext();
 const p0 = await ctx.newPage();
 await p0.goto(`${base}/login`);
-await Promise.all([p0.waitForURL(/conceito-1/), p0.click('button[type="submit"]')]);
+await Promise.all([p0.waitForURL(/\/mapa/), p0.click('button[type="submit"]')]);
 await p0.close();
 let total = 0;
 for (const [w, h] of TELAS) for (const estado of ESTADOS) {
   const p = await ctx.newPage();
   await p.setViewportSize({ width: w, height: h });
-  await p.goto(`${base}/conceito-1?fixture=1`, { waitUntil: "networkidle" });
+  await p.goto(`${base}/mapa?fixture=1`, { waitUntil: "networkidle" });
   await p.waitForTimeout(2500);
   if (estado === "ampliada") await p.click('button[aria-label="Ampliar imagem"]');
   if (estado === "detalhe") { await p.keyboard.press("/"); await p.keyboard.type("EST-B2"); await p.waitForTimeout(300); await p.keyboard.press("Enter"); }

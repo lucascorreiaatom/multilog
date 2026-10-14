@@ -3,11 +3,10 @@
 // public/modelos/chao-detalhe.jpg (512×512, ~150 KB) guarda só o relevo de luz de cada uma, um canal por superfície
 // (R grama, G asfalto, B concreto; 128 = 1,0). O shader lê 2 vezes por pixel em coordenadas de mundo: uma na escala de
 // metros (grão) e outra em centenas de metros (manchas), o que quebra a repetição vista do alto. Só multiplica a cor da
-// paleta, então tema noturno e Modo foco continuam valendo (no Modo foco a variação é zerada para a maquete ficar limpa).
+// paleta, então o tema noturno continua valendo.
 // Gerada por scripts/modelos-chao.py. Créditos em public/modelos/CREDITOS.txt.
 import { useCallback, useEffect, useMemo } from "react";
 import * as THREE from "three";
-import { useUi } from "@/lib/store/ui";
 
 export const URL_CHAO = "/modelos/chao-detalhe.jpg";
 
@@ -38,7 +37,6 @@ export type PerfilChao = keyof typeof PERFIS;
 
 /** onBeforeCompile para um meshStandardMaterial de chão (malha sem instâncias) */
 export function useDetalheChao(perfil: PerfilChao) {
-  const foco = useUi((s) => s.foco);
   const u = useMemo(() => {
     const c = PERFIS[perfil];
     return {
@@ -49,11 +47,11 @@ export function useDetalheChao(perfil: PerfilChao) {
     };
   }, [perfil]);
   useEffect(() => {
-    const aplicar = () => { u.uChaoForca.value = foco ? 0 : PERFIS[perfil].forca; };
+    const aplicar = () => { u.uChaoForca.value = PERFIS[perfil].forca; };
     // até a textura chegar a força fica em 0 (sem isso o chão piscaria preto no primeiro quadro)
     if (carregada) aplicar(); else aoCarregar.add(aplicar);
     return () => { aoCarregar.delete(aplicar); };
-  }, [u, foco, perfil]);
+  }, [u, perfil]);
   return useCallback((shader: THREE.WebGLProgramParametersWithUniforms) => {
     Object.assign(shader.uniforms, u);
     shader.vertexShader = shader.vertexShader

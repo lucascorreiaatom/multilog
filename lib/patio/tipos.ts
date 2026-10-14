@@ -1,16 +1,14 @@
 // Domínio operacional do pátio: status de vaga, ocupantes, gates e eventos.
 
-export type StatusVaga = "livre" | "reservada" | "ocupada" | "vistoria" | "conferencia" | "saida" | "bloqueada";
+/** os 4 status do SoW MUL01 (p.4): ocupado e livre, mais os 2 definidos no UX (em conferência e saindo do recinto) */
+export type StatusVaga = "livre" | "ocupada" | "conferencia" | "saida";
 
-/** descricao: uma linha para a legenda e a dica da vaga (fluxo: ocupada, vistoria RFB, conferência, saída liberada) */
+/** curto: rótulo que cabe nos cards de filtro (o nome completo vai na dica) · descricao: uma linha para a legenda e a dica da vaga (fluxo: ocupada, em conferência, saindo do recinto) */
 export const STATUS: Record<StatusVaga, { nome: string; curto: string; cor: string; ordem: number; descricao: string }> = {
-  ocupada: { nome: "Ocupada", curto: "Ocupada", cor: "var(--st-ocupada)", ordem: 0, descricao: "Caminhão estacionado, aguardando o próximo passo" },
+  ocupada: { nome: "Ocupada", curto: "Ocupada", cor: "var(--st-ocupada)", ordem: 0, descricao: "Caminhão estacionado na vaga" },
   livre: { nome: "Livre", curto: "Livre", cor: "var(--st-livre)", ordem: 1, descricao: "Vaga disponível para um novo caminhão" },
-  conferencia: { nome: "Em conferência", curto: "Conferência", cor: "var(--st-conferencia)", ordem: 2, descricao: "Carga em conferência física; o caminhão ainda não pode sair" },
-  saida: { nome: "Saída liberada", curto: "Saída liberada", cor: "var(--st-saida)", ordem: 3, descricao: "Conferência concluída: o caminhão pode sair" },
-  reservada: { nome: "Reservada", curto: "Reservada", cor: "var(--st-reservada)", ordem: 4, descricao: "Vaga definida para um caminhão que acabou de entrar" },
-  vistoria: { nome: "Aguardando vistoria RFB", curto: "Vistoria RFB", cor: "var(--st-vistoria)", ordem: 5, descricao: "Na fila da vistoria da Receita Federal" },
-  bloqueada: { nome: "Bloqueada", curto: "Bloqueada", cor: "var(--st-bloqueada)", ordem: 6, descricao: "Fora de uso (manutenção ou interdição)" },
+  conferencia: { nome: "Em conferência", curto: "Em conferência", cor: "var(--st-conferencia)", ordem: 2, descricao: "Carga em conferência ou vistoria, na vaga ou na doca" },
+  saida: { nome: "Saindo do recinto", curto: "Em saída", cor: "var(--st-saida)", ordem: 3, descricao: "Conferência concluída: o caminhão está deixando o recinto" },
 };
 
 export const ORDEM_STATUS = (Object.keys(STATUS) as StatusVaga[]).sort((a, b) => STATUS[a].ordem - STATUS[b].ordem);
@@ -48,8 +46,8 @@ export interface Gate {
 }
 
 export type TipoEvento =
-  | "entrada" | "estacionou" | "vistoria" | "conferencia" | "saida-liberada" | "saida" | "liberada"
-  | "bloqueio" | "desbloqueio" | "gate-aberto" | "gate-fechado" | "camera-offline" | "camera-online" | "permanencia";
+  | "entrada" | "estacionou" | "conferencia" | "saida-liberada" | "saida" | "liberada"
+  | "gate-aberto" | "gate-fechado" | "camera-offline" | "camera-online" | "permanencia";
 
 export interface Evento {
   id: string;

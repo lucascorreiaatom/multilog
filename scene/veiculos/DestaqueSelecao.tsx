@@ -54,7 +54,7 @@ export function DestaqueSelecao() {
   useEffect(() => {
     if (!etiqueta) return;
     etiqueta.className = "pointer-events-none absolute top-0 left-0 z-[5] will-change-transform";
-    const raizDom = document.querySelector('[data-testid="conceito-1"]');
+    const raizDom = document.querySelector('[data-testid="mapa"]');
     raizDom?.appendChild(etiqueta);
     const des = registrarProjetado("selecao-caminhao", { el: etiqueta, pos: ancora, dy: -12 });
     return () => { des(); etiqueta.remove(); };
@@ -69,8 +69,8 @@ export function DestaqueSelecao() {
     if (!v || !e) { g.visible = false; if (etiqueta) etiqueta.innerHTML = ""; return; }
     g.visible = true;
     let pose: Pose | undefined = e.ocupanteId ? veiculosEmMovimento.get(e.ocupanteId) : undefined;
-    const temCaminhao = !!e.ocupanteId && ["ocupada", "vistoria", "conferencia", "saida", "reservada"].includes(e.status);
-    if (!pose && temCaminhao && e.status !== "reservada") { const f = poseEstacionado(v); pose = poseAlinhada(f.pos, f.rumo); }
+    const temCaminhao = !!e.ocupanteId && e.status !== "livre";
+    if (!pose && temCaminhao) { const f = poseEstacionado(v); pose = poseAlinhada(f.pos, f.rumo); }
     const pulso = 1 + Math.sin(estado.clock.elapsedTime * 3) * 0.04;
     if (pose && cavalo.current && carreta.current) {
       // cavalo: do eixo traseiro à frente; carreta: do pino-rei à traseira

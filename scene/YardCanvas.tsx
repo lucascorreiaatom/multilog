@@ -15,7 +15,7 @@ import { Patio } from "./ambiente/Patio";
 import { Predios } from "./ambiente/Predios";
 import { CamerasExternas, Cobertura } from "./cameras/CamerasExternas";
 import { Transmissao } from "./cameras/Transmissao";
-import { PALETA, PALETA_FOCO } from "./paleta";
+import { PALETA } from "./paleta";
 import { projetarTodos } from "./projetor";
 import { Caminhoes } from "./veiculos/Caminhoes";
 import { DestaqueSelecao } from "./veiculos/DestaqueSelecao";
@@ -158,8 +158,8 @@ function ProjetorDom() {
 /** sombra projetada só no nível máximo: a passada de sombra redesenha a cena inteira (caminhões inclusive).
  *  Noite é tema escuro operacional: a cor fria da paleta diz "noite", a intensidade continua alta para o status ler;
  *  sem sombra à noite (a da lua seria invisível e custa uma passada). */
-function Luzes({ noite, sombra, foco }: { noite: boolean; sombra: boolean; foco: boolean }) {
-  const p = foco ? PALETA_FOCO[noite ? "escuro" : "claro"] : noite ? PALETA.noite : PALETA.dia;
+function Luzes({ noite, sombra }: { noite: boolean; sombra: boolean }) {
+  const p = noite ? PALETA.noite : PALETA.dia;
   const sol = useRef<THREE.DirectionalLight>(null!);
   useEffect(() => {
     const s = sol.current;
@@ -171,17 +171,17 @@ function Luzes({ noite, sombra, foco }: { noite: boolean; sombra: boolean; foco:
   }, []);
   return (
     <>
-      <hemisphereLight args={[p.hemisferioCeu, p.hemisferioChao, noite ? 1.1 : foco ? 1.6 : 1.25]} />
+      <hemisphereLight args={[p.hemisferioCeu, p.hemisferioChao, noite ? 1.1 : 1.25]} />
       <directionalLight
         ref={sol}
         position={[-320, 520, -380]}
-        intensity={noite ? 1.0 : foco ? 1.9 : 2.4}
+        intensity={noite ? 1.0 : 2.4}
         color={p.sol}
         castShadow={sombra && !noite}
         shadow-bias={-0.0004}
         shadow-normalBias={0.6}
       />
-      <ambientLight intensity={noite ? 0.3 : foco ? 0.45 : 0.25} />
+      <ambientLight intensity={noite ? 0.3 : 0.25} />
     </>
   );
 }
@@ -223,9 +223,8 @@ function SemEventos() {
 
 function Cena({ sombra, leve }: { sombra: boolean; leve: boolean }) {
   const tema = useUi((s) => s.tema);
-  const foco = useUi((s) => s.foco);
   const noite = tema === "escuro";
-  const p = foco ? PALETA_FOCO[noite ? "escuro" : "claro"] : noite ? PALETA.noite : PALETA.dia;
+  const p = noite ? PALETA.noite : PALETA.dia;
   const offline = usePatio((s) => s.camerasOffline);
   const selecionar = useUi((s) => s.selecionar);
   const focar = useUi((s) => s.focar);
@@ -237,7 +236,7 @@ function Cena({ sombra, leve }: { sombra: boolean; leve: boolean }) {
   }, [scene, p.ceu, p.neblina, noite]);
   return (
     <>
-      <Luzes noite={noite} foco={foco} sombra={sombra && !SEM.has("sombra")} />
+      <Luzes noite={noite} sombra={sombra && !SEM.has("sombra")} />
       <Entorno p={p} densidade={SEM.has("mata") ? 0.01 : 1} />
       <Patio p={p} noite={noite} />
       <Predios p={p} noite={noite} onSelecionar={(id) => { selecionar({ tipo: "predio", id }); focar({ tipo: "predio", id }); }} />
@@ -252,7 +251,6 @@ function Cena({ sombra, leve }: { sombra: boolean; leve: boolean }) {
 }
 
 export default function YardCanvas() {
-  const foco = useUi((s) => s.foco);
   const noiteUi = useUi((s) => s.tema === "escuro");
   const dprForcado = typeof window !== "undefined" ? Number(new URLSearchParams(window.location.search).get("dpr")) || 0 : 0;
   const grafico = useUi((s) => s.grafico);
@@ -280,7 +278,7 @@ export default function YardCanvas() {
       {!SEM.has("pos") && <EffectComposer multisampling={q.msaa} enableNormalPass={false}>
         {!SEM.has("ao") && q.ao ? <N8AO aoRadius={7} distanceFalloff={1.2} intensity={noiteUi ? 1.5 : 2.4} quality="medium" halfRes={q.ao === "meia"} /> : <></>}
         <SMAA />
-        <ToneMapping mode={foco || noiteUi ? ToneMappingMode.NEUTRAL : ToneMappingMode.AGX} />
+        <ToneMapping mode={noiteUi ? ToneMappingMode.NEUTRAL : ToneMappingMode.AGX} />
       </EffectComposer>}
     </Canvas>
   );

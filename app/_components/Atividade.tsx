@@ -10,7 +10,7 @@ import { useRelogio } from "@/lib/relogio";
 import { PERMANENCIA_MAX_H, STATUS } from "@/lib/patio/tipos";
 import { usePatio } from "@/lib/store/patio";
 import { useUi } from "@/lib/store/ui";
-import { AreaRolagem, Ponto } from "./ui";
+import { AreaRolagem, ICONE_CABECALHO, Ponto } from "./ui";
 
 const secao = "px-8 pt-12 pb-4 text-[12px] font-semibold leading-16 text-text-2";
 const linha = "flex h-40 w-full items-center gap-12 rounded-[10px] px-8 text-left text-[13px] leading-20 text-text hover:bg-chip";
@@ -47,9 +47,9 @@ export function Atividade() {
     <Popover.Root open={aberto} onOpenChange={abrir}>
       <Popover.Trigger asChild>
         <button type="button" aria-label={rotulo} title="Alarmes e eventos"
-          className="relative flex size-40 items-center justify-center rounded-full bg-card text-text shadow-card vidro hover:bg-card-muted data-[state=open]:bg-card-muted">
+          className={`relative ${ICONE_CABECALHO} data-[state=open]:bg-chip`}>
           <Bell size={18} />
-          {(alarmes > 0 || novos > 0) && <span className={`absolute top-8 right-8 size-8 rounded-full ring-2 ring-card ${alarmes > 0 ? "bg-st-ocupada" : "bg-accent"}`} />}
+          {(alarmes > 0 || novos > 0) && <span className={`absolute top-8 right-8 size-8 rounded-full ring-2 ring-panel ${alarmes > 0 ? "bg-st-ocupada" : "bg-accent"}`} />}
         </button>
       </Popover.Trigger>
       <Popover.Portal>

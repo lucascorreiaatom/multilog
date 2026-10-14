@@ -42,13 +42,13 @@ export function Cobertura() {
   const ligada = useUi((s) => s.cobertura);
   // card da câmera fechado = nenhuma câmera em destaque
   const ativa = useUi((s) => (s.blocos.camera === "oculto" ? null : s.cameraAtiva));
-  const sensor = useUi((s) => s.sensor);
+  // em grade todas as visões estão na tela: todos os leques com o mesmo destaque
+  const sensor = useUi((s) => (s.grade ? -1 : s.sensor));
   const geos = useMemo(() => camerasExternas.map((c) => {
     const mod = MODELOS[c.modelo];
     const alcance = c.modelo === "Q6225-LE" ? 140 : c.modelo === "P1487-LE" ? 70 : c.modelo === "P3827-PVE" ? 45 : 60;
     const fatias: THREE.BufferGeometry[] = [];
-    const dirs = mod.projecao === "panoramica180" ? [0] : mod.direcoes;
-    for (const d of dirs) {
+    for (const d of mod.direcoes) {
       const abertura = (Math.min(mod.fovH, 359) * Math.PI) / 180;
       const g = new THREE.CircleGeometry(alcance, 24, -abertura / 2, abertura);
       g.rotateX(-Math.PI / 2);
@@ -66,7 +66,7 @@ export function Cobertura() {
           <group key={c.numero} position={[c.posicao[0], 0.12, c.posicao[1]]}>
             {fatias.map((g, i) => (
               <mesh key={i} geometry={g} renderOrder={2}>
-                <meshBasicMaterial color={destaque ? "#4e91ed" : "#909ca6"} transparent opacity={destaque ? (i === sensor || fatias.length === 1 ? 0.26 : 0.12) : 0.08} depthWrite={false} {...sobre(CAMADA.sobreposicao)} />
+                <meshBasicMaterial color={destaque ? "#4e91ed" : "#909ca6"} transparent opacity={destaque ? (sensor < 0 || i === sensor || fatias.length === 1 ? 0.26 : 0.12) : 0.08} depthWrite={false} {...sobre(CAMADA.sobreposicao)} />
               </mesh>
             ))}
           </group>

@@ -16,8 +16,8 @@ import { cursorClicavel } from "../cursor";
 /** cores do piso por status. Dia: tons de tinta de piso, mais sóbrios que os da interface.
  *  Noite: iguais aos --st-* do tema escuro (app/globals.css) para piso e legenda baterem; mantenha os dois juntos */
 export const COR_PISO: Record<"dia" | "noite", Record<StatusVaga, string>> = {
-  dia: { livre: "#5fae74", ocupada: "#cf5a52", conferencia: "#6656c0", saida: "#e3a34a", reservada: "#c8649f", vistoria: "#3cb2c4", bloqueada: "#6e7480" },
-  noite: { livre: "#4fb874", ocupada: "#e5605b", conferencia: "#8b7ef0", saida: "#eba84a", reservada: "#df7bbd", vistoria: "#34bccf", bloqueada: "#8a92a2" },
+  dia: { livre: "#5fae74", ocupada: "#cf5a52", conferencia: "#6656c0", saida: "#e3a34a" },
+  noite: { livre: "#4fb874", ocupada: "#e5605b", conferencia: "#8b7ef0", saida: "#eba84a" },
 };
 
 /** autoiluminação da tinta das vagas (0 de dia): à noite o status lê em qualquer ângulo sem acender o resto da cena.

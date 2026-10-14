@@ -12,7 +12,7 @@ import { vagasPorId } from "@/lib/site";
 import { assinarGatilhos, concluirGatilhoSemAnimacao, usePatio } from "@/lib/store/patio";
 import { useUi } from "@/lib/store/ui";
 import { atributoFiltro, ocultavel, profundidadeOcultavel } from "../filtroStatus";
-import { CAMINHAO_FOCO, CAMINHAO_PADRAO } from "../paleta";
+import { CAMINHAO_PADRAO } from "../paleta";
 import { AnimacaoCaminhao, poseAlinhada, type Pose } from "./animador";
 import { useModeloCaminhao } from "./caminhaoModelo";
 import { cursorClicavel } from "../cursor";
@@ -22,7 +22,7 @@ const CAP = 1200;
 const ANIMAR = typeof window !== "undefined" && new URLSearchParams(window.location.search).get("animar") === "1";
 /** frota padronizada: todo caminhão é desenhado com carreta baú, qualquer que seja o implemento do ocupante */
 const TIPOS: Implemento[] = ["bau"];
-const ESTACIONADO: StatusVaga[] = ["ocupada", "vistoria", "conferencia", "saida"];
+const ESTACIONADO: StatusVaga[] = ["ocupada", "conferencia", "saida"];
 const ZERO = new THREE.Matrix4().makeScale(0, 0, 0);
 /** estacionado numa vaga cujo status passa no filtro do mapa (filtro vazio = todos) */
 const passaFiltro = (st: StatusVaga) => { const f = useUi.getState().filtroStatus; return f.length === 0 || f.includes(st); };
@@ -201,8 +201,8 @@ function Frota() {
     }
     if (oc) {
       const ui = useUi.getState();
-      // frota padronizada: a cor vem só do modo e do tema, não do ocupante
-      const cores = (ui.foco ? CAMINHAO_FOCO : CAMINHAO_PADRAO)[ui.tema];
+      // frota padronizada: a cor vem só do tema, não do ocupante
+      const cores = CAMINHAO_PADRAO[ui.tema];
       refCavaloCorpo.current.setColorAt(sl.cavalo, tmp.c.set(cores.cavalo));
       if (sl.tipo !== undefined && sl.carreta !== undefined) refCarretaCorpo.current[sl.tipo]?.setColorAt(sl.carreta, tmp.c.set(cores.carga));
     }
@@ -271,7 +271,7 @@ function Frota() {
       }
       slotDe(g.ocupanteId);
     });
-    const des3 = useUi.subscribe((s) => [s.foco, s.tema, s.filtroStatus] as const, () => {
+    const des3 = useUi.subscribe((s) => [s.tema, s.filtroStatus] as const, () => {
       const vagas = usePatio.getState().vagas;
       const vagaDe = new Map<string, string>();
       for (const [vagaId, e] of Object.entries(vagas)) if (e.ocupanteId) vagaDe.set(e.ocupanteId, vagaId);
@@ -281,7 +281,7 @@ function Frota() {
         const geo = vagasPorId.get(vagaId);
         if (geo) { const fim = poseEstacionado(geo); aplicar(sl, ocId, poseAlinhada(fim.pos, fim.rumo), passaFiltro(vagas[vagaId].status)); }
       }
-    }, { equalityFn: (a, b) => a[0] === b[0] && a[1] === b[1] && a[2] === b[2] });
+    }, { equalityFn: (a, b) => a[0] === b[0] && a[1] === b[1] });
     return () => { des1(); des2(); des3(); };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);

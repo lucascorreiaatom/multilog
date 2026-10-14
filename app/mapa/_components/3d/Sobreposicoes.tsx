@@ -37,7 +37,7 @@ function MarcadorCamera({ numero, pos, ativa, offline }: { numero: number; pos: 
             ativa ? "bg-accent text-accent-ink" : "bg-card text-text hover:bg-card-muted",
           )}
         >
-          {offline ? <VideoOff size={16} className={ativa ? "" : "text-st-bloqueada"} /> : <Video size={16} />}
+          {offline ? <VideoOff size={16} className={ativa ? "" : "text-inativo"} /> : <Video size={16} />}
         </button>
         {ativa && <span className="tnum inline-flex h-24 items-center whitespace-nowrap rounded-full bg-dark px-8 text-[12px] font-semibold leading-16 text-on-dark">{codigo}</span>}
       </div>
@@ -119,9 +119,6 @@ export function Sobreposicoes() {
   const modoTv = useUi((s) => s.modoTv);
   const blocos = useUi((s) => s.blocos);
   const predioAtivo = useUi((s) => (s.selecao?.tipo === "predio" ? s.selecao.id : null));
-  // Modo foco: nenhuma caixa sobre o mapa; só as vagas (cor do status) e, ao clicar numa, o detalhe da Tela
-  const foco = useUi((s) => s.foco);
-  if (foco) return null;
   return (
     <div className="pointer-events-none absolute inset-0 overflow-hidden" aria-hidden={false}>
       {!modoTv && blocos.predios !== "oculto" && PREDIOS_ROTULADOS.filter((b) => b.id !== "armazem" || blocos.callouts === "oculto").map((b) => <RotuloPredio key={b.id} b={b} ativo={predioAtivo === b.id} />)}

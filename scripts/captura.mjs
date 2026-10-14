@@ -11,7 +11,7 @@ page.on("console", (m) => { if (m.type() === "error" || m.type() === "warning") 
 page.on("pageerror", (e) => logs.push(`pageerror: ${e.message}`));
 await page.goto(url, { waitUntil: "networkidle", timeout: 120000 });
 if (page.url().includes("/login")) {
-  await Promise.all([page.waitForURL(/conceito-\d/, { timeout: 120000 }), page.click('button[type="submit"]')]);
+  await Promise.all([page.waitForURL(/\/mapa/, { timeout: 120000 }), page.click('button[type="submit"]')]);
   if (new URL(url).search) await page.goto(url, { waitUntil: "networkidle", timeout: 120000 });
 }
 await page.waitForTimeout(+espera);

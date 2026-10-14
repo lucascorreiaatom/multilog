@@ -12,8 +12,8 @@ import { camerasPatioPorLocal } from "@/lib/cameras/catalogo";
 import { ListaCameras } from "./ListaCameras";
 import { AreaRolagem, Barra, Cartao, Ponto, cx } from "./ui";
 
+/** os 4 status do SoW, em grade 2x2 */
 const PRINCIPAIS: StatusVaga[] = ["ocupada", "livre", "conferencia", "saida"];
-const OUTROS: StatusVaga[] = ["reservada", "vistoria", "bloqueada"];
 
 export function ConteudoPatio() {
   const contagem = usePatio((s) => s.contagem);
@@ -57,20 +57,8 @@ export function ConteudoPatio() {
           <button key={s} {...propsFiltro(s)}
             className={cx("flex h-72 flex-col justify-center gap-4 rounded-[16px] px-16 text-left shadow-card transition-[opacity,box-shadow] outline-none hover:bg-card-muted focus-visible:ring-2 focus-visible:ring-accent",
               filtro.includes(s) ? "bg-card-muted realce-acento" : "bg-card", apagado(s) && "opacity-55")}>
-            <span className="flex items-center gap-8 whitespace-nowrap text-[13px] leading-20 text-text-2"><Ponto cor={STATUS[s].cor} />{STATUS[s].nome}</span>
+            <span className="flex items-center gap-8 whitespace-nowrap text-[13px] leading-20 text-text-2"><Ponto cor={STATUS[s].cor} />{STATUS[s].curto}</span>
             <span className="tnum text-[22px] font-bold leading-28 text-text" data-testid={`status-${s}`}>{numero(contagem[s])}</span>
-          </button>
-        ))}
-      </div>
-      {/* status secundários: um cartão por linha (cada um é um botão), número alinhado à direita */}
-      <div className="flex flex-col gap-8">
-        {OUTROS.map((s) => (
-          <button key={s} {...propsFiltro(s)}
-            className={cx("flex h-40 items-center gap-8 rounded-[16px] px-16 text-left text-[13px] leading-20 text-text-2 shadow-card transition-[opacity,box-shadow] outline-none hover:bg-card-muted focus-visible:ring-2 focus-visible:ring-accent",
-              filtro.includes(s) ? "bg-card-muted realce-acento" : "bg-card", apagado(s) && "opacity-55")}>
-            <Ponto cor={STATUS[s].cor} />
-            <span className="min-w-0 flex-1 truncate">{STATUS[s].nome}</span>
-            <span className="tnum font-semibold text-text">{numero(contagem[s])}</span>
           </button>
         ))}
       </div>
@@ -137,7 +125,7 @@ function DetalheStatus({ s, contagem, porSetor }: { s: StatusVaga; contagem: Con
   return (
     <div className="text-[12px] leading-16 text-text-2">
       <div className="flex items-center justify-between gap-8">
-        <span className="flex items-center gap-8 text-[13px] font-semibold leading-20 text-text"><Ponto cor={STATUS[s].cor} />{STATUS[s].nome}</span>
+        <span className="flex items-center gap-8 text-[13px] font-semibold leading-20 text-text"><Ponto cor={STATUS[s].cor} />{STATUS[s].curto}</span>
         <span className="tnum text-[13px] font-semibold leading-20 text-text">{pct(contagem[s], contagem.total)}%</span>
       </div>
       <p className="tnum mt-4">{numero(contagem[s])} de {numero(contagem.total)} vagas do pátio</p>

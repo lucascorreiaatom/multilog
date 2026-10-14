@@ -119,9 +119,6 @@ function RotuloPredio({ b }: { b: Predio }) {
 
 export function Sobreposicoes() {
   const blocos = useUi((s) => s.blocos);
-  // Modo foco (igual ao 3D): nenhuma caixa sobre o mapa; só as vagas pela cor do status e, ao clicar numa, o detalhe
-  const foco = useUi((s) => s.foco);
-  if (foco) return null;
   return (
     <div className="pointer-events-none absolute inset-0 overflow-hidden">
       {blocos.predios !== "oculto" && ROTULADOS.map((b) => <RotuloPredio key={b.id} b={b} />)}
