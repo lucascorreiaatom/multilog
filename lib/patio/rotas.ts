@@ -17,14 +17,17 @@ export interface Rota {
   trechos: Trecho[];
 }
 
-/** geometria do conjunto cavalo + carreta (metros, a partir do eixo traseiro do cavalo) */
+/** geometria do conjunto cavalo + carreta do modelo do Blender (metros, a partir do eixo traseiro do cavalo) */
 export const CAMINHAO = {
-  frente: 4.8, // para-choque dianteiro à frente do eixo traseiro do cavalo
-  pinoRei: 0.4, // quinta roda à frente do eixo traseiro
-  eixoCarreta: 10.2, // do pino-rei ao centro do conjunto de eixos da carreta
-  traseiraCarreta: 13.0, // do pino-rei à traseira da carreta
+  frente: 4.7, // para-choque dianteiro à frente do eixo traseiro do cavalo
+  pinoRei: 0, // quinta roda sobre o centro do tandem traseiro
+  eixoCarreta: 10.75, // do pino-rei ao centro do conjunto de eixos da carreta
+  traseiraCarreta: 13.65, // do pino-rei à traseira da carreta
 };
-export const TRASEIRA_TOTAL = CAMINHAO.traseiraCarreta - CAMINHAO.pinoRei; // 12,6 m atrás do eixo de referência
+
+/** espinha, perpendicular e doca: entra de ré, cabine para o corredor; longitudinal: de frente, cabine no batente */
+const deRe = (v: VagaGeo) => v.tipo !== "longitudinal";
+export const TRASEIRA_TOTAL = CAMINHAO.traseiraCarreta - CAMINHAO.pinoRei; // 13,65 m atrás do eixo de referência
 
 const nos = planta.vias.nos;
 const adj = new Map<string, string[]>();
@@ -118,8 +121,8 @@ const pontosNos = (ids: string[]) => ids.map((id) => nos[id]);
 
 /** posição final do eixo de referência (eixo traseiro do cavalo) na vaga */
 export function poseEstacionado(v: VagaGeo): { pos: Vec2; rumo: Vec2 } {
-  if (v.tipo === "doca") {
-    // de ré: traseira da carreta junto à porta, cavalo apontando para fora
+  if (deRe(v)) {
+    // de ré: traseira da carreta junto ao batente (ou à porta da doca), cavalo apontando para o corredor
     return { pos: add(v.batente, mul(v.eixo, 0.4 + TRASEIRA_TOTAL)), rumo: v.eixo };
   }
   // de frente: cavalo junto ao batente
@@ -143,7 +146,7 @@ export function rotaEntrada(vagaId: string, pista: number): Rota {
   if (!v) throw new Error(`vaga ${vagaId} inexistente`);
   const final = poseEstacionado(v);
   const chegada = mul(v.eixo, -1) as Vec2; // direção de entrada na vaga
-  const ar = arestaProxima(v.acesso, v.tipo === "doca" ? undefined : chegada);
+  const ar = arestaProxima(v.acesso, deRe(v) ? undefined : chegada);
   const ids = caminho("rod-o", `gate${pista}-n`)!
     .concat(caminho(`gate${pista}-n`, "scan-s")!.slice(1))
     .concat((caminho("scan-s", ar.de) ?? ["scan-s"]).slice(1));
@@ -152,8 +155,8 @@ export function rotaEntrada(vagaId: string, pista: number): Rota {
   const inicioManobra = sub(ar.proj, mul(ar.d, recuo));
   let pontos: Vec2[];
   const trechos: Trecho[] = [];
-  if (v.tipo === "doca") {
-    // passa da doca, posiciona com o cavalo apontando para fora e entra de ré em linha reta
+  if (deRe(v)) {
+    // passa da vaga, posiciona com o cavalo apontando para o corredor e entra de ré em linha reta
     const espera = add(final.pos, mul(v.eixo, 15));
     const curva = bezier(ar.proj, add(ar.proj, mul(ar.d, 9)), sub(espera, mul(v.eixo, 9)), espera, 14);
     pontos = suavizar([...base, ar.proj]).concat(curva);
@@ -182,7 +185,7 @@ export function rotaSaida(vagaId: string, pista: number): Rota {
   const trechos: Trecho[] = [];
   let partida: Vec2;
   let rumoPartida: Vec2;
-  if (v.tipo === "doca") {
+  if (deRe(v)) {
     partida = ini.pos; rumoPartida = ini.rumo;
   } else if (v.tipo === "longitudinal" && v.saidaPeloTopo) {
     const topo = v.saidaPeloTopo;

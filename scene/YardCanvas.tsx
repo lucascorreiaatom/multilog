@@ -1,8 +1,9 @@
 "use client";
-// Canvas único da cena do pátio (WebGL2): cenário do Blender, vagas, prédios, caminhões, câmeras e transmissão AO VIVO.
+// Canvas único da cena do pátio (WebGL2): cenário, vagas, caminhões, carros e câmeras do projeto Blender (multilog_foz),
+// com a luz do app Vite do mapa, e a transmissão AO VIVO.
 import { CameraControls } from "@react-three/drei";
 import { Canvas, events as eventosPadrao, useFrame, useThree, type RootStore } from "@react-three/fiber";
-import { EffectComposer, N8AO, SMAA, ToneMapping } from "@react-three/postprocessing";
+import { Bloom, EffectComposer, N8AO, SMAA, ToneMapping, Vignette } from "@react-three/postprocessing";
 import { ToneMappingMode } from "postprocessing";
 import { Suspense, useEffect, useMemo, useRef } from "react";
 import * as THREE from "three";
@@ -10,15 +11,18 @@ import { camerasExternas } from "@/lib/cameras/catalogo";
 import { centroSetor, planta, vagasPorId } from "@/lib/site";
 import { usePatio } from "@/lib/store/patio";
 import { useUi, type AlvoCamera3D } from "@/lib/store/ui";
+import { Atmosfera, SombraEstatica } from "./ambiente/Atmosfera";
 import { Cenario } from "./ambiente/Cenario";
 import { Entorno } from "./ambiente/Entorno";
 import { Patio } from "./ambiente/Patio";
+import { PocasLuz } from "./ambiente/PocasLuz";
 import { Predios } from "./ambiente/Predios";
 import { CamerasExternas, Cobertura } from "./cameras/CamerasExternas";
 import { Transmissao } from "./cameras/Transmissao";
 import { PALETA } from "./paleta";
 import { projetarTodos } from "./projetor";
 import { Caminhoes } from "./veiculos/Caminhoes";
+import { CarrosEstacionados } from "./veiculos/CarrosEstacionados";
 import { DestaqueSelecao } from "./veiculos/DestaqueSelecao";
 
 /** vista inicial: do norte (rodovia) olhando para o sul, como na Imagem 2 */
@@ -156,37 +160,6 @@ function ProjetorDom() {
   return null;
 }
 
-/** sombra projetada só no nível máximo: a passada de sombra redesenha a cena inteira (caminhões inclusive).
- *  Noite é tema escuro operacional: a cor fria da paleta diz "noite", a intensidade continua alta para o status ler;
- *  sem sombra à noite (a da lua seria invisível e custa uma passada). */
-function Luzes({ noite, sombra }: { noite: boolean; sombra: boolean }) {
-  const p = noite ? PALETA.noite : PALETA.dia;
-  const sol = useRef<THREE.DirectionalLight>(null!);
-  useEffect(() => {
-    const s = sol.current;
-    s.shadow.camera.left = -460; s.shadow.camera.right = 460;
-    s.shadow.camera.top = 320; s.shadow.camera.bottom = -320;
-    s.shadow.camera.near = 50; s.shadow.camera.far = 1600;
-    s.shadow.camera.updateProjectionMatrix();
-    s.shadow.mapSize.set(2048, 2048);
-  }, []);
-  return (
-    <>
-      <hemisphereLight args={[p.hemisferioCeu, p.hemisferioChao, noite ? 1.1 : 1.35]} />
-      <directionalLight
-        ref={sol}
-        position={[-320, 520, -380]}
-        intensity={noite ? 1.0 : 2.9}
-        color={p.sol}
-        castShadow={sombra && !noite}
-        shadow-bias={-0.0004}
-        shadow-normalBias={0.6}
-      />
-      <ambientLight intensity={noite ? 0.3 : 0.25} />
-    </>
-  );
-}
-
 /** eventos 3D sem raycast desperdiçado: a cena só tem clique e cursor de hover, então
  *  - nada de raycast no pointermove com botão apertado (arrasto da câmera) nem na roda do mouse;
  *  - o hover junta os pointermove de um quadro num raycast só (mouses de 1000 Hz mandam vários por quadro).
@@ -222,31 +195,30 @@ function SemEventos() {
   return null;
 }
 
-function Cena({ sombra, leve }: { sombra: boolean; leve: boolean }) {
+/** céu, luz e sombra iguais aos do app Vite do mapa (ambiente/Atmosfera.tsx). A sombra do sol é feita uma vez e
+ *  refeita quando o pátio muda; no nível máximo ela acompanha também os caminhões em movimento. */
+function Cena({ dinamica, leve, mapaSombra }: { dinamica: boolean; leve: boolean; mapaSombra: number }) {
   const tema = useUi((s) => s.tema);
   const noite = tema === "escuro";
   const p = noite ? PALETA.noite : PALETA.dia;
   const offline = usePatio((s) => s.camerasOffline);
   const selecionar = useUi((s) => s.selecionar);
   const focar = useUi((s) => s.focar);
-  const { scene } = useThree();
-  useEffect(() => {
-    scene.background = new THREE.Color(p.ceu);
-    // à noite a neblina vem mais perto e dissolve o entorno distante no céu
-    scene.fog = noite ? new THREE.Fog(p.neblina, 800, 2200) : new THREE.Fog(p.neblina, 1500, 3600);
-  }, [scene, p.ceu, p.neblina, noite]);
   return (
     <>
-      <Luzes noite={noite} sombra={sombra && !SEM.has("sombra")} />
+      <Atmosfera noite={noite} mapaSombra={mapaSombra} />
+      {!SEM.has("sombra") && <SombraEstatica dinamica={dinamica} versao={tema} />}
       <Entorno p={p} />
       <Suspense fallback={null}>
         <Cenario noite={noite} semEntorno={SEM.has("mata")} />
       </Suspense>
-      <Patio p={p} noite={noite} />
+      <PocasLuz noite={noite} />
+      <CarrosEstacionados />
+      <Patio noite={noite} />
       <Predios p={p} noite={noite} onSelecionar={(id) => { selecionar({ tipo: "predio", id }); focar({ tipo: "predio", id }); }} />
       {!SEM.has("caminhoes") && <Caminhoes />}
       <DestaqueSelecao />
-      <CamerasExternas p={p} />
+      <CamerasExternas />
       <Cobertura />
       {!SEM.has("feed") && <Transmissao noite={noite} offline={offline} leve={leve} />}
       <ProjetorDom />
@@ -272,7 +244,7 @@ export default function YardCanvas() {
       style={{ position: "absolute", inset: 0 }}
       data-testid="cena-3d"
     >
-      <Cena sombra={q.sombra} leve={nivel === "desempenho"} />
+      <Cena dinamica={q.sombra} leve={nivel === "desempenho"} mapaSombra={nivel === "desempenho" ? 2048 : 4096} />
       <Rig />
       <PlanoProximo />
       {PERF && <InfoCena nivel={nivel} />}
@@ -280,10 +252,12 @@ export default function YardCanvas() {
       {SEM.has("pos") && <RenderSimples />}
       {/* MSAA 4x: faixas das vagas (0,14 m) e vãos entre vagas ficam abaixo de 1 px; só com SMAA viram pontilhado e piscam */}
       {!SEM.has("pos") && <EffectComposer multisampling={q.msaa} enableNormalPass={false}>
-        {!SEM.has("ao") && q.ao ? <N8AO aoRadius={7} distanceFalloff={1.2} intensity={noiteUi ? 1.5 : 2.4} quality="medium" halfRes={q.ao === "meia"} /> : <></>}
+        {!SEM.has("ao") && q.ao ? <N8AO aoRadius={6} distanceFalloff={0.8} intensity={noiteUi ? 1.4 : 2.4} quality="medium" halfRes={q.ao === "meia"} /> : <></>}
+        {noiteUi ? <Bloom mipmapBlur intensity={1.1} luminanceThreshold={0.9} luminanceSmoothing={0.25} /> : <></>}
         <SMAA />
-        {/* dia em Neutral (Khronos PBR): mantém a saturação e o branco do sol; o AgX dessaturava e deixava o dia nublado */}
-        <ToneMapping mode={ToneMappingMode.NEUTRAL} />
+        {/* mesmo acabamento do app Vite do mapa: ACES e vinheta leve */}
+        <ToneMapping mode={ToneMappingMode.ACES_FILMIC} />
+        <Vignette offset={0.28} darkness={noiteUi ? 0.6 : 0.35} />
       </EffectComposer>}
     </Canvas>
   );

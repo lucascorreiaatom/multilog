@@ -1,6 +1,7 @@
 // Cenário modelado no Blender (multilog_foz, export_app.py --alvo=next): chão, ruas, sinalização, canteiros,
 // prédios, portaria, cerca, postes e entorno, já no referencial de lib/site/planta.json.
-// O que muda com o status (vagas, cancelas, caminhões, câmeras) continua desenhado pela cena por cima.
+// O que muda com o status (vagas, cancelas, caminhões, câmeras) é desenhado pela cena por cima, a partir de
+// lib/site/planta.json, gerado pelo mesmo projeto Blender.
 import { useGLTF } from "@react-three/drei";
 import * as THREE from "three";
 import { mergeGeometries } from "three/addons/utils/BufferGeometryUtils.js";
@@ -14,20 +15,13 @@ useGLTF.preload(URL_ENTORNO, DRACO);
 /** pisos e pinturas rentes ao chão não projetam sombra */
 const SEM_SOMBRA = /^(Grama|Asfalto|Concreto_Piso|Calcada|Meio_Fio|Tinta_|Lavoura|Tela_)/;
 
-/** tema escuro: cada família de material escurece numa proporção próxima à da PALETA.noite */
-const FATOR_NOITE: [RegExp, number][] = [
-  [/^(Grama|Lavoura|Copa_|Tronco)/, 0.26],
-  [/^(Asfalto|Concreto|Calcada|Meio_Fio|Aco_Balanca)/, 0.55],
-  [/^Tinta_/, 0.8],
-  [/^Conteiner_/, 0.65],
-];
-const FATOR_NOITE_PADRAO = 0.42;
+/** à noite (como no app Vite): a luz do ambiente cai e acendem vidros, LEDs dos postes, letreiros e a faixa azul */
 const BRILHO_NOITE: Record<string, [string, number]> = {
-  Vidro: ["#f2c879", 0.55],
-  Claraboia: ["#f2c879", 0.15],
-  Luz_LED: ["#ffd38a", 3],
-  Letreiro_Branco: ["#ffffff", 1.2],
-  Azul_Multilog: ["#4a6a9e", 0.35],
+  Vidro: ["#ffcf8f", 0.85],
+  Claraboia: ["#ffe2b0", 0.3],
+  Luz_LED: ["#fff3dc", 7],
+  Letreiro_Branco: ["#ffffff", 2],
+  Azul_Multilog: ["#2f6fe8", 0.6],
 };
 
 export interface PecaCenario {
@@ -73,21 +67,18 @@ export function useCenario(url: string) {
   return unirPorMaterial(scene);
 }
 
-/** troca o material entre dia e noite guardando a cor original de dia no próprio material */
+/** acende ou apaga os materiais que brilham à noite, guardando o brilho de dia no próprio material */
 export function aplicarTema(pecas: PecaCenario[], noite: boolean) {
   for (const { material: m } of pecas) {
-    const dia = (m.userData.dia ??= { cor: m.color.getHex(), emissiva: m.emissive.getHex(), brilho: m.emissiveIntensity }) as {
-      cor: number; emissiva: number; brilho: number;
-    };
-    m.color.setHex(dia.cor);
-    m.emissive.setHex(dia.emissiva);
-    m.emissiveIntensity = dia.brilho;
-    if (!noite) continue;
-    m.color.multiplyScalar(FATOR_NOITE.find(([re]) => re.test(m.name))?.[1] ?? FATOR_NOITE_PADRAO);
     const brilho = BRILHO_NOITE[m.name];
-    if (brilho) {
+    if (!brilho) continue;
+    const dia = (m.userData.dia ??= { emissiva: m.emissive.getHex(), intensidade: m.emissiveIntensity }) as { emissiva: number; intensidade: number };
+    if (noite) {
       m.emissive.set(brilho[0]);
       m.emissiveIntensity = brilho[1];
+    } else {
+      m.emissive.setHex(dia.emissiva);
+      m.emissiveIntensity = dia.intensidade;
     }
   }
 }

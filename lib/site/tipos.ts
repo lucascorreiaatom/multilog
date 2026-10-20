@@ -66,7 +66,8 @@ export interface Planta {
   areaCPG: Vec2[];
   blocosContainer: Vec2[][];
   canteirosContainer: Vec2[];
-  vagasLeves: { centro: Vec2; giro: 0 | 1 }[];
+  /** vagas de carro; rumo: da vaga para o corredor (o carro entra de frente) */
+  vagasLeves: { centro: Vec2; giro: 0 | 1; rumo?: Vec2 }[];
   cerca: Vec2[];
   postes: Vec2[];
   pistasGate: PistaGate[];

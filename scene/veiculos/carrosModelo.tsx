@@ -1,29 +1,18 @@
 "use client";
-// Carros de passeio com modelo (KayKit City Builder Bits, CC0, Kay Lousberg), convertidos por scripts/modelos-carros.mjs.
-// Mesmo contrato das geometrias procedurais: "corpo" é tingido pela cor da instância (paleta e tema) e "neutro"
-// traz pneus, vidros, frisos e lanternas em cores de vértice. Sem textura; ~800 triângulos por carro; 2 draw calls por
-// variante, qualquer que seja a quantidade de carros.
-import { useGLTF } from "@react-three/drei";
-import { useLayoutEffect, useMemo, useRef } from "react";
+// Carros de passeio modelados no Blender (sedan e SUV de public/modelos/veiculos.glb, ver modelosVeiculo.ts).
+// "corpo" é tingido pela cor da instância e "neutro" traz pneus, vidros, faróis e lanternas em cores de vértice;
+// 2 draw calls por variante, qualquer que seja a quantidade de carros.
+import { useLayoutEffect, useRef } from "react";
 import * as THREE from "three";
-import type { PecasCaminhao } from "../geometrias/caminhao";
+import { useModelosVeiculo, type PecasCaminhao } from "./modelosVeiculo";
 
-export const URL_CARROS = "/modelos/carros.glb";
-/** variantes no arquivo, na ordem dos índices usados pela cena */
-export const VARIANTES_CARRO = ["hatch", "sedan", "perua"] as const;
+/** variantes, na ordem dos índices usados pela cena */
+export const VARIANTES_CARRO = ["sedan", "suv"] as const;
 
 /** geometrias de cada variante (suspende até o .glb carregar; envolva em <Suspense>) */
 export function useModelosCarro(): PecasCaminhao[] {
-  const { nodes } = useGLTF(URL_CARROS, false, false);
-  return useMemo(
-    () => VARIANTES_CARRO.map((v) => ({
-      corpo: (nodes[`${v}_corpo`] as THREE.Mesh).geometry,
-      neutro: (nodes[`${v}_neutro`] as THREE.Mesh).geometry,
-    })),
-    [nodes],
-  );
+  return useModelosVeiculo().carros;
 }
-useGLTF.preload(URL_CARROS, false, false);
 
 export interface CarroParado {
   x: number;

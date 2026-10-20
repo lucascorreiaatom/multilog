@@ -67,7 +67,5 @@ export const PALETA = {
   },
 };
 
-/** cores padrão da frota: todos os caminhões iguais */
-export const CAMINHAO_PADRAO = { claro: { cavalo: "#f4f5f7", carga: "#dfe3e8" }, escuro: { cavalo: "#dde0e5", carga: "#c6cad1" } };
 
 export type Paleta = typeof PALETA.dia;

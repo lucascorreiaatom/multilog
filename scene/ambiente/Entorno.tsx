@@ -16,7 +16,7 @@ const Z_RODOVIA = planta.vias.nos["rod-gate"][1]; // eixo da rodovia (m), fora d
 export function Entorno({ p }: { p: Paleta }) {
   return (
     <group>
-      <Horizonte p={p} />
+      <Horizonte />
       <Suspense fallback={null}>
         <Trafego p={p} />
       </Suspense>
@@ -24,13 +24,16 @@ export function Entorno({ p }: { p: Paleta }) {
   );
 }
 
+/** mesma cor do material Grama_Entorno do cenário: o horizonte continua o terreno sem emenda */
+const GRAMA_ENTORNO = "#9cb183";
+
 /** gramado sob o cenário, até onde a câmera alcança (o terreno do Blender cobre ~1,8 km em volta do recinto) */
-function Horizonte({ p }: { p: Paleta }) {
+function Horizonte() {
   const detalheGrama = useDetalheChao("grama");
   return (
     <mesh rotation-x={-Math.PI / 2} position-y={-0.05} receiveShadow>
       <planeGeometry args={[6000, 6000]} />
-      <meshStandardMaterial color={p.gramaEscura} roughness={1} {...sobre(CAMADA.grama)} onBeforeCompile={detalheGrama} />
+      <meshStandardMaterial color={GRAMA_ENTORNO} roughness={1} {...sobre(CAMADA.grama)} onBeforeCompile={detalheGrama} />
     </mesh>
   );
 }

@@ -8,7 +8,7 @@ describe("grafo de vias", () => {
     for (const p of [4, 5, 6]) expect(caminho("n325", `gate${p}-s`)).not.toBeNull();
   });
 
-  it("gera rota de entrada e de saída para todas as 1.022 vagas", () => {
+  it("gera rota de entrada e de saída para todas as vagas", () => {
     const falhas: string[] = [];
     for (const v of planta.vagas) {
       try {

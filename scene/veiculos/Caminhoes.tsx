@@ -1,7 +1,7 @@
 "use client";
 // Frota de caminhões: estacionados (um por vaga ocupada) e em movimento (gatilhos de entrada e saída).
 // Instanciado: 2 malhas para o cavalo e 2 por tipo de implemento, poucas draw calls para 1.000+ veículos.
-// Modelo: scene/veiculos/caminhaoModelo.ts (Scania e carreta baú do Sketchfab, CC-BY; créditos em public/modelos).
+// Modelos do Blender (scene/veiculos/modelosVeiculo.ts): implemento e cores vêm do ocupante, como no simulador.
 import { useFrame } from "@react-three/fiber";
 import { Suspense, useEffect, useMemo, useRef } from "react";
 import * as THREE from "three";
@@ -12,16 +12,14 @@ import { vagasPorId } from "@/lib/site";
 import { assinarGatilhos, concluirGatilhoSemAnimacao, usePatio } from "@/lib/store/patio";
 import { useUi } from "@/lib/store/ui";
 import { atributoFiltro, ocultavel, profundidadeOcultavel } from "../filtroStatus";
-import { CAMINHAO_PADRAO } from "../paleta";
 import { AnimacaoCaminhao, poseAlinhada, type Pose } from "./animador";
-import { useModeloCaminhao } from "./caminhaoModelo";
+import { IMPLEMENTOS, useModelosVeiculo } from "./modelosVeiculo";
 import { cursorClicavel } from "../cursor";
 
 const CAP = 1200;
 /** trajeto animado gate até vaga: desligado por padrão; reativar com ?animar=1 */
 const ANIMAR = typeof window !== "undefined" && new URLSearchParams(window.location.search).get("animar") === "1";
-/** frota padronizada: todo caminhão é desenhado com carreta baú, qualquer que seja o implemento do ocupante */
-const TIPOS: Implemento[] = ["bau"];
+const TIPOS: Implemento[] = IMPLEMENTOS;
 const ESTACIONADO: StatusVaga[] = ["ocupada", "conferencia", "saida"];
 const ZERO = new THREE.Matrix4().makeScale(0, 0, 0);
 /** estacionado numa vaga cujo status passa no filtro do mapa (filtro vazio = todos) */
@@ -75,7 +73,7 @@ interface Slot {
   carreta?: number;
 }
 
-/** caminhões com modelo real (Scania + carreta baú, public/modelos/caminhao.glb); aparecem quando o .glb carrega */
+/** caminhões com os modelos do Blender (public/modelos/veiculos.glb); aparecem quando o .glb carrega */
 export function Caminhoes() {
   return (
     <Suspense fallback={null}>
@@ -85,14 +83,14 @@ export function Caminhoes() {
 }
 
 function Frota() {
-  const modelo = useModeloCaminhao();
-  const cavalo = modelo.cavalo;
-  const carretas = useMemo(() => Object.fromEntries(TIPOS.map((t) => [t, modelo.carreta])) as Record<Implemento, typeof modelo.carreta>, [modelo]);
-  // cavalo: atlas de textura; carreta: cores de vértice. A cor da instância tinge as malhas "corpo".
-  const matCorpo = useMemo(() => Object.assign(new THREE.MeshStandardMaterial({ map: modelo.atlas, roughness: 0.55, metalness: 0.05 }), { onBeforeCompile: ocultavel }), [modelo]);
-  const matNeutro = useMemo(() => Object.assign(new THREE.MeshStandardMaterial({ map: modelo.atlas, roughness: 0.7, metalness: 0.1 }), { onBeforeCompile: ocultavel }), [modelo]);
-  const matCarretaCorpo = useMemo(() => Object.assign(new THREE.MeshStandardMaterial({ vertexColors: true, roughness: 0.55, metalness: 0.05 }), { onBeforeCompile: ocultavel }), []);
-  const matCarretaNeutro = useMemo(() => Object.assign(new THREE.MeshStandardMaterial({ vertexColors: true, roughness: 0.7, metalness: 0.1 }), { onBeforeCompile: ocultavel }), []);
+  const modelos = useModelosVeiculo();
+  const cavalo = modelos.cavalo;
+  const carretas = modelos.carretas;
+  // cores de vértice dos materiais do Blender; a cor da instância tinge as malhas "corpo"
+  const matCorpo = useMemo(() => Object.assign(new THREE.MeshStandardMaterial({ vertexColors: true, roughness: 0.35, metalness: 0.15 }), { onBeforeCompile: ocultavel }), []);
+  const matNeutro = useMemo(() => Object.assign(new THREE.MeshStandardMaterial({ vertexColors: true, roughness: 0.6, metalness: 0.3 }), { onBeforeCompile: ocultavel }), []);
+  const matCarretaCorpo = useMemo(() => Object.assign(new THREE.MeshStandardMaterial({ vertexColors: true, roughness: 0.5, metalness: 0.1 }), { onBeforeCompile: ocultavel }), []);
+  const matCarretaNeutro = useMemo(() => Object.assign(new THREE.MeshStandardMaterial({ vertexColors: true, roughness: 0.6, metalness: 0.3 }), { onBeforeCompile: ocultavel }), []);
   const matSombra = useMemo(() => profundidadeOcultavel(), []);
 
   const refCavaloCorpo = useRef<THREE.InstancedMesh>(null!);
@@ -174,7 +172,7 @@ function Frota() {
 
   const aplicar = (sl: Slot, ocId: string, pose: Pose, visivel = true) => {
     const oc = usePatio.getState().ocupantes[ocId];
-    const tipo: Implemento = "bau";
+    const tipo: Implemento = oc?.veiculo.implemento ?? "bau";
     if (sl.tipo !== tipo) {
       soltarCarreta(sl);
       const i = poolCarreta.current[tipo].alocar(ocId);
@@ -200,11 +198,8 @@ function Frota() {
       sujas.current.add(sl.tipo);
     }
     if (oc) {
-      const ui = useUi.getState();
-      // frota padronizada: a cor vem só do tema, não do ocupante
-      const cores = CAMINHAO_PADRAO[ui.tema];
-      refCavaloCorpo.current.setColorAt(sl.cavalo, tmp.c.set(cores.cavalo));
-      if (sl.tipo !== undefined && sl.carreta !== undefined) refCarretaCorpo.current[sl.tipo]?.setColorAt(sl.carreta, tmp.c.set(cores.carga));
+      refCavaloCorpo.current.setColorAt(sl.cavalo, tmp.c.set(oc.veiculo.corCavalo));
+      if (sl.tipo !== undefined && sl.carreta !== undefined) refCarretaCorpo.current[sl.tipo]?.setColorAt(sl.carreta, tmp.c.set(oc.veiculo.corCarga));
     }
   };
 

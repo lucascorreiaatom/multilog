@@ -1,18 +1,7 @@
 Modelos 3D usados na cena do pátio (public/modelos/)
 
-patio.glb e entorno.glb
-  Cenário do recinto modelado no Blender pela Atom6 a partir da pág. 6 do PDF Implantação Nova Foz CFTV Ver. 03
-  (chão, ruas, sinalização, canteiros, prédios, portaria, cerca, postes, mata, lavoura e contêineres).
+patio.glb, entorno.glb e veiculos.glb
+  Modelados no Blender pela Atom6 a partir da pág. 6 do PDF Implantação Nova Foz CFTV Ver. 03: cenário do recinto
+  (chão, ruas, sinalização, canteiros, prédios, portaria, cerca, postes, mata, lavoura e contêineres), cavalo
+  mecânico, carretas (baú, sider, porta-contêiner 20' e 40', graneleiro e tanque) e carros de passeio.
   Fonte e exportação: ver docs/cenario-blender.md. Comprimidos com Draco (decodificador em public/draco/).
-
-carros.glb
-  KayKit City Builder Bits, por Kay Lousberg (kaylousberg.com). Licença CC0 1.0 (sem atribuição obrigatória).
-  Ver LICENSE-KayKit-City-Builder-Bits.txt. Convertido por scripts/modelos-carros.mjs.
-
-caminhao.glb (licença CC-BY 4.0: atribuição obrigatória, https://creativecommons.org/licenses/by/4.0/)
-  Cavalo: "scania" por animara777
-    https://sketchfab.com/3d-models/scania-667b102d84534c50868b784398629408
-  Carreta: "Refrigerated Trailer (Custom Model)" por matthew13482
-    https://sketchfab.com/3d-models/refrigerated-trailer-custom-model-1d23f8e7bbef4655a62ead4f92398de2
-  Modificações: cabine repintada de branco, texturas reunidas num atlas, rodas da carreta refeitas, escala e
-  referencial ajustados à cena. Convertido por scripts/modelos-caminhao.mjs.

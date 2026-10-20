@@ -1,43 +1,55 @@
-# Cenário 3D modelado no Blender
+# Mapa 3D modelado no Blender
 
-O cenário da cena 3D (`public/modelos/patio.glb` e `entorno.glb`) vem de um projeto Blender que digitaliza a
-pág. 6 do PDF Implantação Nova Foz CFTV Ver. 03: ruas e ilhas vetorizadas dos traços da planta, canteiros com
-meio-fio, setas, faixas de pedestre, prédios com fachada e logo, portaria, cerca, 138 postes, mata, lavoura e
-contêineres empilhados.
+Deste repositório fica a interface (painéis, cards, cabeçalho, busca, controles, mapa 2D). O mapa vem do projeto
+Blender `multilog_foz`, o mesmo do app Vite do mapa: cenário, vagas e geometria do recinto, caminhões, carros,
+luz, céu, sombra e noite.
 
-## O que vem do GLB e o que a cena desenha
+## O que vem do projeto Blender
 
-| Do GLB (`scene/ambiente/Cenario.tsx`) | Da cena, a partir de `lib/site/planta.json` |
+| Arquivo | Conteúdo |
 | --- | --- |
-| Chão, asfalto, meio-fio, canteiros, sinalização das ruas | Piso e faixas das vagas (status, filtro, clique) |
-| Prédios, portaria, scanner, reservatório, coberturas | Alvo de clique de cada prédio, cancelas dos Gates |
-| Cerca, postes, árvores, mata, lavoura, rodovia | Caminhões e simulador, tráfego da rodovia, câmeras |
+| `public/modelos/patio.glb` | Chão, ruas e ilhas vetorizadas da pág. 6, meio-fio, faixas das vagas, setas, batentes, prédios com fachada e logo, portaria, cerca, 138 postes, árvores |
+| `public/modelos/entorno.glb` | Mata, lavoura, rodovia e contêineres empilhados |
+| `public/modelos/veiculos.glb` | Cavalo (origem no eixo traseiro), carretas por implemento (origem no pino-rei) e carros |
+| `lib/site/planta.json` | Vagas, prédios, Gates, postes, cerca, áreas e vagas de carro, no formato de `lib/site/tipos.ts` |
 
-O GLB é unido por material ao carregar (algumas dezenas de draw calls). No tema escuro, `aplicarTema` escurece
-cada família de material e acende vidros, LEDs e letreiros (`scene/ambiente/cenarioModelo.ts`).
+`planta.json` é gerado por `planta_next.py` no projeto Blender. Ele mantém os ids e nomes que a interface usa
+(`EST-A01`, `PUL-F03`, `DOC-N02`, ids dos prédios) e traz da versão anterior deste repositório só o que o projeto
+Blender não traça: o grafo de vias do simulador, as posições das câmeras externas, a plataforma do scanner e os
+canteiros do pátio de contêineres, convertidos para o referencial novo.
+
+Não rode `npm run build-site`: ele regrava `planta.json` com a digitalização antiga.
+
+## Na cena
+
+- `scene/ambiente/Cenario.tsx` carrega os GLBs e une as malhas por material (algumas dezenas de draw calls).
+- `scene/ambiente/Atmosfera.tsx`: céu, ambiente, sol e lua do app Vite. A sombra do sol é refeita quando o
+  status das vagas muda (no nível máximo de qualidade, a cada quadro).
+- `scene/ambiente/Patio.tsx`: status das vagas por cima da pintura do cenário (preenchimento e cabeceira), com
+  clique e filtro.
+- `scene/veiculos/modelosVeiculo.ts`: caminhões e carros; implemento e cores vêm do ocupante (simulador).
+- Espinha, perpendicular e doca estacionam de ré, com a cabine para o corredor (`lib/patio/rotas.ts`).
+- À noite acendem vidros, LEDs, letreiros e as poças de luz dos postes (`PocasLuz.tsx`).
 
 ## Referencial
 
-O GLB já sai no referencial de `planta.json`: 0,78 m por pixel do raster nativo 1006x612, origem no centro do
-raster, X para a direita do desenho e Z para baixo (sul). Conferido contra os contornos: o armazém bate em
-décimos de metro e as vagas digitalizadas aqui caem a 0,1 m (média lateral) das faixas do cenário.
+Metros, X para a direita do desenho (leste), Z para baixo (sul), 0,8136 m por pixel do raster nativo 1006x612
+da pág. 6, origem no mesmo ponto do app Vite. A rodovia segue o eixo do simulador (`vias.nos["rod-gate"]`).
 
-A rodovia segue o eixo do simulador (`vias.nos["rod-gate"]`), já que a BR-277 fica fora da planta.
+## Contagens
+
+| Setor | Vagas |
+| --- | ---: |
+| Pátio Estacionamento (fileiras A a J) | 817 |
+| Pátio Pulmão (5 fileiras em espinha, colunas junto ao plurimodal e aos Gates) | 146 |
+| Cargas Perigosas | 48 |
+| Docas do Armazém (6 norte, 6 sul; só as portas desenhadas na pág. 6) | 12 |
 
 ## Atualizar
 
-O projeto Blender fica em `~/Documents/Blender-test/multilog_foz` (máquina do Robson). Depois de mudar o cenário:
+O projeto Blender fica em `~/Documents/Blender-test/multilog_foz` (máquina do Robson):
 
 ```bash
+Blender -b --factory-startup -P build_multilog.py -- --no-export
 Blender -b multilog_foz.blend -P export_app.py -- /caminho/deste/repo --alvo=next
 ```
-
-Isso regrava `public/modelos/patio.glb`, `entorno.glb` e o decodificador em `public/draco/`. As faixas das vagas
-de caminhão, os batentes e a numeração dos painéis da portaria ficam de fora: aqui quem manda é `planta.json`.
-
-## Diferenças conhecidas entre o cenário e `planta.json`
-
-- Docas DOC-S01 a S04: na pág. 6 não há portas de doca nesse trecho da fachada sul do armazém; o cenário não
-  tem portas ali.
-- Algumas pontas de fileira (EST-A55, A56, B60, B61, C59, C60, D57, D58, E55, E56, F52, F53): no cenário
-  ficam na ponta do canteiro.
