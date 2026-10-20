@@ -18,6 +18,8 @@ const eslintConfig = defineConfig([
     "out/**",
     "build/**",
     "next-env.d.ts",
+    // decodificador Draco do three (minificado), servido para os GLBs comprimidos do cenário
+    "public/draco/**",
   ]),
 ]);
 

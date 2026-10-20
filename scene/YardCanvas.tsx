@@ -1,15 +1,16 @@
 "use client";
-// Canvas único da cena do pátio (WebGL2): entorno, pátio, prédios, caminhões, câmeras e transmissão AO VIVO.
+// Canvas único da cena do pátio (WebGL2): cenário do Blender, vagas, prédios, caminhões, câmeras e transmissão AO VIVO.
 import { CameraControls } from "@react-three/drei";
 import { Canvas, events as eventosPadrao, useFrame, useThree, type RootStore } from "@react-three/fiber";
 import { EffectComposer, N8AO, SMAA, ToneMapping } from "@react-three/postprocessing";
 import { ToneMappingMode } from "postprocessing";
-import { useEffect, useMemo, useRef } from "react";
+import { Suspense, useEffect, useMemo, useRef } from "react";
 import * as THREE from "three";
 import { camerasExternas } from "@/lib/cameras/catalogo";
 import { centroSetor, planta, vagasPorId } from "@/lib/site";
 import { usePatio } from "@/lib/store/patio";
 import { useUi, type AlvoCamera3D } from "@/lib/store/ui";
+import { Cenario } from "./ambiente/Cenario";
 import { Entorno } from "./ambiente/Entorno";
 import { Patio } from "./ambiente/Patio";
 import { Predios } from "./ambiente/Predios";
@@ -237,7 +238,10 @@ function Cena({ sombra, leve }: { sombra: boolean; leve: boolean }) {
   return (
     <>
       <Luzes noite={noite} sombra={sombra && !SEM.has("sombra")} />
-      <Entorno p={p} densidade={SEM.has("mata") ? 0.01 : 1} />
+      <Entorno p={p} />
+      <Suspense fallback={null}>
+        <Cenario noite={noite} semEntorno={SEM.has("mata")} />
+      </Suspense>
       <Patio p={p} noite={noite} />
       <Predios p={p} noite={noite} onSelecionar={(id) => { selecionar({ tipo: "predio", id }); focar({ tipo: "predio", id }); }} />
       {!SEM.has("caminhoes") && <Caminhoes />}

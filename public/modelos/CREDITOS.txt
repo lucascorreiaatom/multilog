@@ -1,5 +1,10 @@
 Modelos 3D usados na cena do pátio (public/modelos/)
 
+patio.glb e entorno.glb
+  Cenário do recinto modelado no Blender pela Atom6 a partir da pág. 6 do PDF Implantação Nova Foz CFTV Ver. 03
+  (chão, ruas, sinalização, canteiros, prédios, portaria, cerca, postes, mata, lavoura e contêineres).
+  Fonte e exportação: ver docs/cenario-blender.md. Comprimidos com Draco (decodificador em public/draco/).
+
 carros.glb
   KayKit City Builder Bits, por Kay Lousberg (kaylousberg.com). Licença CC0 1.0 (sem atribuição obrigatória).
   Ver LICENSE-KayKit-City-Builder-Bits.txt. Convertido por scripts/modelos-carros.mjs.
