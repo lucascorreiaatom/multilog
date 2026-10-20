@@ -171,11 +171,11 @@ function Luzes({ noite, sombra }: { noite: boolean; sombra: boolean }) {
   }, []);
   return (
     <>
-      <hemisphereLight args={[p.hemisferioCeu, p.hemisferioChao, noite ? 1.1 : 1.25]} />
+      <hemisphereLight args={[p.hemisferioCeu, p.hemisferioChao, noite ? 1.1 : 1.35]} />
       <directionalLight
         ref={sol}
         position={[-320, 520, -380]}
-        intensity={noite ? 1.0 : 2.4}
+        intensity={noite ? 1.0 : 2.9}
         color={p.sol}
         castShadow={sombra && !noite}
         shadow-bias={-0.0004}
@@ -232,7 +232,7 @@ function Cena({ sombra, leve }: { sombra: boolean; leve: boolean }) {
   useEffect(() => {
     scene.background = new THREE.Color(p.ceu);
     // à noite a neblina vem mais perto e dissolve o entorno distante no céu
-    scene.fog = noite ? new THREE.Fog(p.neblina, 800, 2200) : new THREE.Fog(p.neblina, 1100, 2900);
+    scene.fog = noite ? new THREE.Fog(p.neblina, 800, 2200) : new THREE.Fog(p.neblina, 1500, 3600);
   }, [scene, p.ceu, p.neblina, noite]);
   return (
     <>
@@ -278,7 +278,8 @@ export default function YardCanvas() {
       {!SEM.has("pos") && <EffectComposer multisampling={q.msaa} enableNormalPass={false}>
         {!SEM.has("ao") && q.ao ? <N8AO aoRadius={7} distanceFalloff={1.2} intensity={noiteUi ? 1.5 : 2.4} quality="medium" halfRes={q.ao === "meia"} /> : <></>}
         <SMAA />
-        <ToneMapping mode={noiteUi ? ToneMappingMode.NEUTRAL : ToneMappingMode.AGX} />
+        {/* dia em Neutral (Khronos PBR): mantém a saturação e o branco do sol; o AgX dessaturava e deixava o dia nublado */}
+        <ToneMapping mode={ToneMappingMode.NEUTRAL} />
       </EffectComposer>}
     </Canvas>
   );

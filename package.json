@@ -12,6 +12,8 @@
     "build-site": "node scripts/build-site.mjs"
   },
   "dependencies": {
+    "@dicebear/avataaars": "^9.4.2",
+    "@dicebear/core": "^9.4.3",
     "@radix-ui/react-dialog": "^1.2.0",
     "@radix-ui/react-popover": "^1.2.0",
     "@radix-ui/react-tabs": "^1.1.22",

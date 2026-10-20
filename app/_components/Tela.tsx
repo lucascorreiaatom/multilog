@@ -80,7 +80,7 @@ export function Tela({ sessao, mapa, video, rodape }: {
           type="button"
           onClick={() => setPainelAberto((v) => !(v ?? window.innerWidth >= 1280))}
           aria-label={painelAberto ? "Recolher painel" : "Abrir painel"}
-          className="absolute top-28 left-16 z-20 flex size-40 items-center justify-center vidro rounded-full bg-panel text-text shadow-clay xl:hidden"
+          className="absolute top-28 left-16 z-20 flex size-40 items-center justify-center vidro rounded-full bg-elevado text-text shadow-clay xl:hidden"
         >
           <PanelLeft size={18} />
         </button>
@@ -88,9 +88,9 @@ export function Tela({ sessao, mapa, video, rodape }: {
         {blocos.visao !== "oculto" && <PainelInfo
           data-ocupa="esq"
           className={cx(
-            "absolute top-16 left-16 z-10",
-            blocos.visao === "aberto" && "bottom-16",
-            " w-[344px] transition-transform duration-300 max-xl:top-80",
+            // recolher e expandir pela altura (mesma curva e duração da lista de câmeras); recolhido = logo + abas (112 px)
+            "absolute top-16 left-16 z-10 w-[344px] transition-[transform,height] duration-300 ease-[cubic-bezier(0.22,1,0.36,1)] motion-reduce:transition-none max-xl:top-80",
+            blocos.visao === "aberto" ? "h-[calc(100%-32px)] max-xl:h-[calc(100%-96px)]" : "h-112",
             painelAberto !== true && "max-xl:-translate-x-[376px]",
             painelAberto === false && "xl:-translate-x-[376px]",
           )}

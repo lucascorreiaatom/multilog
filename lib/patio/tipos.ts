@@ -21,12 +21,14 @@ export const NOME_IMPLEMENTO: Record<Implemento, string> = {
 
 export type Canal = "verde" | "amarelo" | "vermelho" | "cinza";
 export type Operacao = "importacao" | "exportacao";
+export type Pais = "BR" | "PY" | "AR";
+export const NOME_PAIS: Record<Pais, string> = { BR: "Brasil", PY: "Paraguai", AR: "Argentina" };
 
 export interface Ocupante {
   id: string;
-  motorista: { nome: string; cpf: string; cnh: string; telefone: string; nacionalidade: "BR" | "PY" | "AR" };
-  veiculo: { placa: string; placaCarreta: string; implemento: Implemento; corCavalo: string; corCarga: string; transportadora: string; pesoEntradaKg: number };
-  carga: { operacao: Operacao; documento: string; lacre: string; descricao: string; perigosa: boolean; canal: Canal; processo: string };
+  motorista: { nome: string; feminino: boolean; cpf: string; cnh: string; telefone: string; nacionalidade: Pais };
+  veiculo: { placa: string; placaCarreta: string; implemento: Implemento; modelo: string; ano: number; eixos: number; corCavalo: string; corCarga: string; transportadora: string; pesoEntradaKg: number };
+  carga: { operacao: Operacao; documento: string; lacre: string; descricao: string; perigosa: boolean; canal: Canal; processo: string; origem: string; destino: string };
   gateEntrada: number;
   horaEntrada: number;
 }

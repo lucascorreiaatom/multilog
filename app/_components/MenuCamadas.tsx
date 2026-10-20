@@ -27,9 +27,11 @@ const GRUPOS: { titulo: string; itens: Item[] }[] = [
   },
 ];
 const MODOS: { id: ModoGrafico; nome: string; descricao: string }[] = [
-  { id: "alta", nome: "Alta qualidade", descricao: "Vidro desfocado e sombreamento completo" },
-  { id: "desempenho", nome: "Desempenho", descricao: "Mais fluido em computadores simples" },
+  { id: "alta", nome: "Alta qualidade", descricao: "Sombras e acabamento completos" },
+  { id: "desempenho", nome: "Desempenho", descricao: "Mais fluido em máquinas simples" },
 ];
+/** caixa e rádio desmarcados: contorno visível sobre o branco (o fundo de chip sumia) */
+const DESMARCADO = "border-[1.5px] border-text-3/60 bg-elevado";
 const BLOCOS = GRUPOS.flatMap((g) => g.itens.map((i) => i.id)).filter((id): id is Bloco => id !== "cobertura");
 
 export function MenuCamadas() {
@@ -39,11 +41,27 @@ export function MenuCamadas() {
   const plano = useTipoMapa() === "plano";
   const grupos = GRUPOS.map((g) => ({ ...g, itens: g.itens.filter((i) => !(plano && i.id === "cobertura")) }));
   const grafico = useUi((s) => s.grafico);
+  const modoTv = useUi((s) => s.modoTv);
   const ligado = (id: Item["id"]) => (id === "cobertura" ? cobertura : blocos[id] !== "oculto");
   const alternar = (id: Item["id"]) => {
     const ui = useUi.getState();
     if (id === "cobertura") ui.setCobertura(!cobertura);
     else ui.setBloco(id, ligado(id) ? "oculto" : "aberto");
+  };
+  // os atalhos cobrem todas as caixas do menu: blocos da interface e a cobertura das câmeras (estado à parte, que antes
+  // ficava de fora). Mostrar todos também sai do Modo TV, que esconde marcadores e nomes; só o mapa fecha o detalhe aberto
+  const mostrarTodos = () => {
+    const ui = useUi.getState();
+    BLOCOS.forEach((b) => ui.setBloco(b, "aberto"));
+    if (!plano) ui.setCobertura(true);
+    ui.setModoTv(false);
+  };
+  const soMapa = () => {
+    const ui = useUi.getState();
+    BLOCOS.forEach((b) => ui.setBloco(b, "oculto"));
+    ui.setCobertura(false);
+    ui.setAmpliada(false);
+    ui.selecionar(null);
   };
   return (
     <Popover.Root>
@@ -51,17 +69,17 @@ export function MenuCamadas() {
         <BotaoIcone rotulo="Camadas do mapa"><Layers size={20} /></BotaoIcone>
       </Popover.Trigger>
       <Popover.Portal>
-        <Popover.Content side="left" align="end" sideOffset={12} className="z-50 w-[288px] rounded-[16px] bg-panel p-8 shadow-float vidro">
-          <p className="px-8 pt-4 text-[14px] font-semibold leading-20 text-text">Camadas do mapa</p>
+        <Popover.Content side="left" align="end" sideOffset={12} className="faixa-elevada z-50 w-[320px] rounded-[20px] bg-elevado p-16 shadow-float">
+          <p className="px-8 text-[16px] font-semibold leading-24 text-text">Camadas do mapa</p>
           {grupos.map((g) => (
-            <div key={g.titulo} className="mt-8">
-              <p className="px-8 pb-4 text-[12px] font-semibold leading-16 text-text-2">{g.titulo}</p>
+            <div key={g.titulo} className="mt-16">
+              <p className="px-8 pb-8 text-[12px] font-semibold leading-16 text-text-2">{g.titulo}</p>
               <ul className="flex flex-col gap-4">
                 {g.itens.map((i) => (
                   <li key={i.id}>
                     <button type="button" role="menuitemcheckbox" aria-checked={ligado(i.id)} onClick={() => alternar(i.id)}
                       className="flex h-40 w-full items-center gap-12 rounded-[10px] px-8 text-left text-[13px] leading-20 text-text hover:bg-chip">
-                      <span className={cx("flex size-20 items-center justify-center rounded-[6px]", ligado(i.id) ? "bg-accent text-accent-ink" : "bg-chip")}>{ligado(i.id) && <Check size={14} />}</span>
+                      <span className={cx("flex size-20 shrink-0 items-center justify-center rounded-[6px]", ligado(i.id) ? "bg-accent text-accent-ink" : DESMARCADO)}>{ligado(i.id) && <Check size={14} />}</span>
                       {i.nome}
                     </button>
                   </li>
@@ -69,21 +87,36 @@ export function MenuCamadas() {
               </ul>
             </div>
           ))}
+          {/* Modo TV (telão da operação, só no 3D): esconde dados pessoais, marcadores e nomes de prédio */}
+          {!plano && (
+            <div className="mt-16">
+              <p className="px-8 pb-8 text-[12px] font-semibold leading-16 text-text-2">Exibição</p>
+              <button type="button" role="menuitemcheckbox" aria-checked={modoTv} onClick={() => useUi.getState().setModoTv(!modoTv)}
+                className="flex min-h-48 w-full items-center gap-12 rounded-[12px] px-8 py-4 text-left hover:bg-chip">
+                <span className={cx("flex size-20 shrink-0 items-center justify-center rounded-[6px]", modoTv ? "bg-accent text-accent-ink" : DESMARCADO)}>{modoTv && <Check size={14} />}</span>
+                <span className="min-w-0 flex-1">
+                  <span className="block text-[13px] leading-20 text-text">Modo TV</span>
+                  <span className="block whitespace-nowrap text-[12px] leading-16 text-text-2">Telão, sem dados pessoais</span>
+                </span>
+              </button>
+            </div>
+          )}
           {/* qualidade gráfica só pesa no 3D: alta mantém o visual completo, desempenho mira 60 qps em GPU integrada */}
           {!plano && (
-            <div className="mt-8" role="radiogroup" aria-label="Qualidade gráfica">
-              <p className="px-8 pb-4 text-[12px] font-semibold leading-16 text-text-2">Qualidade gráfica</p>
+            <div className="mt-16" role="radiogroup" aria-label="Qualidade gráfica">
+              <p className="px-8 pb-8 text-[12px] font-semibold leading-16 text-text-2">Qualidade gráfica</p>
               <ul className="flex flex-col gap-4">
                 {MODOS.map((m) => (
                   <li key={m.id}>
                     <button type="button" role="radio" aria-checked={grafico === m.id} onClick={() => useUi.getState().setGrafico(m.id)}
-                      className="flex min-h-40 w-full items-center gap-12 rounded-[10px] px-8 py-4 text-left hover:bg-chip">
-                      <span className={cx("flex size-20 shrink-0 items-center justify-center rounded-full", grafico === m.id ? "bg-accent" : "bg-chip")}>
+                      className="flex min-h-48 w-full items-center gap-12 rounded-[12px] px-8 py-4 text-left hover:bg-chip">
+                      <span className={cx("flex size-20 shrink-0 items-center justify-center rounded-full", grafico === m.id ? "bg-accent" : DESMARCADO)}>
                         {grafico === m.id && <span className="size-8 rounded-full bg-on-dark" />}
                       </span>
                       <span className="min-w-0 flex-1">
                         <span className="block text-[13px] leading-20 text-text">{m.nome}</span>
-                        <span className="block text-[12px] leading-16 text-text-2">{m.descricao}</span>
+                        {/* descrição em uma linha: texto curto que cabe na largura do menu */}
+                        <span className="block whitespace-nowrap text-[12px] leading-16 text-text-2">{m.descricao}</span>
                       </span>
                     </button>
                   </li>
@@ -91,9 +124,9 @@ export function MenuCamadas() {
               </ul>
             </div>
           )}
-          <div className="mt-8 flex gap-8 px-4 pb-4">
-            <button type="button" onClick={() => BLOCOS.forEach((b) => useUi.getState().setBloco(b, "aberto"))} className="h-40 flex-1 rounded-full bg-card text-[13px] font-semibold leading-20 text-text shadow-card hover:bg-card-muted">Mostrar todos</button>
-            <button type="button" onClick={() => BLOCOS.forEach((b) => useUi.getState().setBloco(b, "oculto"))} className="h-40 flex-1 rounded-full bg-card text-[13px] font-semibold leading-20 text-text shadow-card hover:bg-card-muted">Só o mapa</button>
+          <div className="mt-16 flex gap-8 border-t border-text-3/20 pt-16">
+            <button type="button" onClick={mostrarTodos} className="h-40 flex-1 rounded-full bg-card text-[13px] font-semibold leading-20 text-text shadow-card hover:bg-card-muted">Mostrar todos</button>
+            <button type="button" onClick={soMapa} className="h-40 flex-1 rounded-full bg-card text-[13px] font-semibold leading-20 text-text shadow-card hover:bg-card-muted">Só o mapa</button>
           </div>
         </Popover.Content>
       </Popover.Portal>

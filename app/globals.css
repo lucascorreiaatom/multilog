@@ -12,10 +12,14 @@
 :root {
   --bg: #e3e8ef;
   /* superfícies em vidro (glassmorphism): translúcidas para não esconder o pátio 3D; o blur vem de .vidro */
-  /* opacidade alta o bastante para o texto não sumir sobre o pátio colorido (legibilidade, pedido da reunião) */
-  --panel: rgb(244 246 250 / 0.8);
-  --card: rgb(255 255 255 / 0.68);
-  --card-muted: rgb(255 255 255 / 0.86);
+  /* painel opaco quase branco e cartões brancos por cima, separados por borda e sombra (o cinza-azulado mais forte
+     pesava). A transparência lavava o texto sobre a mata e o pátio colorido, então as superfícies não deixam o 3D passar */
+  --panel: #f5f7fb;
+  --card: #ffffff;
+  --card-muted: #eff4fa;
+  /* superfície elevada: rodapé de câmeras do painel e pílulas soltas sobre o mapa (cabeçalho, busca), em branco
+     para destacar do 3D */
+  --elevado: #ffffff;
   --line: #dfe4ec;
   --text: #11294b;
   --text-2: #445671;
@@ -39,16 +43,18 @@
   --live: #3a9a5b;
 
   --shadow-clay: 0 1px 2px rgb(17 41 75 / 0.04), 0 8px 24px rgb(17 41 75 / 0.1), inset 0 1px 0 rgb(255 255 255 / 0.9), inset 0 0 0 1px rgb(255 255 255 / 0.5);
-  --shadow-card: 0 1px 2px rgb(17 41 75 / 0.04), 0 2px 8px rgb(17 41 75 / 0.04), inset 0 0 0 1px rgb(255 255 255 / 0.6);
+  /* sombra curta e leve: a borda fina faz a separação e a sombra só assenta o cartão (a difusa de 8 px poluía) */
+  --shadow-card: 0 1px 2px rgb(17 41 75 / 0.05), inset 0 0 0 1px rgb(17 41 75 / 0.08);
   --shadow-float: 0 2px 4px rgb(17 41 75 / 0.06), 0 12px 32px rgb(17 41 75 / 0.12);
 }
 
 /* escuro: família navy da marca no lugar do neutro */
 :root[data-theme="dark"] {
   --bg: #0a1628;
-  --panel: rgb(17 41 75 / 0.8);
-  --card: rgb(24 52 92 / 0.64);
-  --card-muted: rgb(32 62 106 / 0.8);
+  --panel: #0c1f3a;
+  --card: #1c3a64;
+  --card-muted: #244676;
+  --elevado: #1c3a64;
   --line: #233a5c;
   --text: #eef3fa;
   --text-2: #b4c1d3;
@@ -83,6 +89,7 @@
   --color-panel: var(--panel);
   --color-card: var(--card);
   --color-card-muted: var(--card-muted);
+  --color-elevado: var(--elevado);
   --color-line: var(--line);
   --color-text: var(--text);
   --color-text-2: var(--text-2);
@@ -120,11 +127,21 @@ body {
   overflow: hidden;
 }
 
-/* vidro: desfoca e satura o pátio atrás das superfícies translúcidas. Só nas camadas que ficam
+/* vidro: desfoca o pátio atrás das superfícies translúcidas. Só nas camadas que ficam
    direto sobre a cena; cartões dentro de um painel já herdam o desfoque dele. */
 @utility vidro {
-  -webkit-backdrop-filter: blur(24px) saturate(160%);
-  backdrop-filter: blur(24px) saturate(160%);
+  -webkit-backdrop-filter: blur(24px) saturate(110%);
+  backdrop-filter: blur(24px) saturate(110%);
+}
+
+/* faixa elevada (bg-elevado): por cima dela, os cartões descem um tom para não sumirem no branco */
+.faixa-elevada {
+  --card: #eef2f8;
+  --card-muted: #e3e9f2;
+}
+:root[data-theme="dark"] .faixa-elevada {
+  --card: #244676;
+  --card-muted: #2b5088;
 }
 
 /* realce-acento: azul da marca leve e esfumaçado sobre o fundo do cartão (status selecionado no filtro) */
@@ -145,14 +162,14 @@ body {
    prédio) perdem o desfoque e ficam quase opacas. O desfoque sobre o canvas, que repinta todo quadro, era o maior
    custo da GPU integrada; parada, a diferença visual é mínima */
 html.desempenho .flutuante {
-  --card: rgb(255 255 255 / 0.94);
-  --card-muted: rgb(255 255 255 / 0.98);
+  --card: #ffffff;
+  --card-muted: #eff4fa;
   -webkit-backdrop-filter: none;
   backdrop-filter: none;
 }
 html.desempenho[data-theme="dark"] .flutuante {
-  --card: rgb(24 52 92 / 0.94);
-  --card-muted: rgb(32 62 106 / 0.98);
+  --card: #1c3a64;
+  --card-muted: #244676;
 }
 
 /* depuração de desempenho (?sem=vidro): sem desfoque atrás das superfícies */
@@ -273,6 +290,7 @@ html.plano {
 }
 html.plano[data-theme="dark"] {
   --panel: #11294b;
+  --elevado: #183559;
   --card: #183559;
   --card-muted: #1f4170;
 }

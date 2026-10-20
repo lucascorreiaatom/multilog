@@ -1,6 +1,8 @@
 "use client";
 // Sobreposições projetadas da cena: marcadores das câmeras externas, callouts dos setores (Imagem 1) e nomes dos prédios.
 // O projetor da cena atualiza a posição de todos num único loop, sem re-render do React.
+// Camadas: marcadores de câmera embaixo (a ativa um degrau acima), nomes de prédio no meio e callouts dos setores no
+// topo; a informação de área não fica atrás de um ícone de câmera.
 import { Building2, ChevronRight, Video, VideoOff } from "lucide-react";
 import { useCallback } from "react";
 import * as THREE from "three";
@@ -25,7 +27,7 @@ function MarcadorCamera({ numero, pos, ativa, offline }: { numero: number; pos: 
   const ref = useProjetado(`cam-${numero}`, pos, ativa ? 4000 : 620);
   const codigo = `CAM-${String(numero).padStart(3, "0")}`;
   return (
-    <div ref={ref} className="pointer-events-none absolute top-0 left-0 will-change-transform" style={{ visibility: "hidden" }}>
+    <div ref={ref} className={cx("pointer-events-none absolute top-0 left-0 will-change-transform", ativa ? "z-[3]" : "z-[1]")} style={{ visibility: "hidden" }}>
       <div className="pointer-events-auto absolute flex -translate-x-1/2 -translate-y-1/2 items-center gap-8">
         <button
           type="button"
@@ -51,7 +53,7 @@ function Callout({ setor, predioAtivo }: { setor: SetorVagas; predioAtivo: strin
   const ref = useProjetado(`setor-${setor}`, [x, 0, z], 1800);
   const valor = pct(c.emUso, c.total);
   return (
-    <div ref={ref} className="pointer-events-none absolute top-0 left-0 will-change-transform" style={{ visibility: "hidden" }}>
+    <div ref={ref} className="pointer-events-none absolute top-0 left-0 z-[4] will-change-transform" style={{ visibility: "hidden" }}>
       <div className="absolute flex -translate-x-1/2 -translate-y-full flex-col items-center">
         <button
           type="button"
@@ -102,7 +104,7 @@ function RotuloPredio({ b, ativo }: { b: Predio; ativo: boolean }) {
   const ref = useProjetado(`predio-${b.id}`, [x, b.altura + 2, z], ativo ? 4000 : 700);
   const internas = camerasInternas.filter((c) => b.paginas?.includes(c.pagina)).length;
   return (
-    <div ref={ref} className="pointer-events-none absolute top-0 left-0 will-change-transform" style={{ visibility: "hidden" }}>
+    <div ref={ref} className="pointer-events-none absolute top-0 left-0 z-[2] will-change-transform" style={{ visibility: "hidden" }}>
       <button type="button" onClick={() => selecionarPredio(b.id)} title={internas ? `${b.nome} · ${internas} câmeras internas` : b.nome}
         className={cx("vidro flutuante pointer-events-auto absolute flex h-28 -translate-x-1/2 -translate-y-full items-center gap-4 whitespace-nowrap rounded-full px-8 text-[12px] font-semibold leading-16 shadow-float outline-none focus-visible:ring-2 focus-visible:ring-accent",
           ativo ? "bg-accent text-accent-ink" : "bg-card text-text hover:bg-card-muted")}>

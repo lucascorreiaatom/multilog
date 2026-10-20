@@ -1,6 +1,7 @@
 "use client";
 // Botão de recolher/expandir um bloco da tela (o estado fica salvo no navegador).
-import { ChevronDown, ChevronUp } from "lucide-react";
+import { ChevronUp } from "lucide-react";
+import { cx } from "./ui";
 import { useUi, type Bloco } from "@/lib/store/ui";
 
 export function BotaoRecolher({ bloco, nome }: { bloco: Bloco; nome: string }) {
@@ -15,7 +16,8 @@ export function BotaoRecolher({ bloco, nome }: { bloco: Bloco; nome: string }) {
       onClick={() => useUi.getState().setBloco(bloco, recolhido ? "aberto" : "recolhido")}
       className="flex size-40 items-center justify-center rounded-full text-text-2 hover:bg-chip hover:text-text"
     >
-      {recolhido ? <ChevronDown size={18} /> : <ChevronUp size={18} />}
+      {/* gira em vez de trocar de ícone, no mesmo tempo da animação do bloco */}
+      <ChevronUp size={18} className={cx("transition-transform duration-300 ease-[cubic-bezier(0.22,1,0.36,1)] motion-reduce:transition-none", recolhido && "rotate-180")} />
     </button>
   );
 }

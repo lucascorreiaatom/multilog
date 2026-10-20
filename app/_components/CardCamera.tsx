@@ -9,7 +9,7 @@ import { dataHora } from "@/lib/formato";
 import { useRelogio } from "@/lib/relogio";
 import { usePatio } from "@/lib/store/patio";
 import { useUi } from "@/lib/store/ui";
-import { BotaoIcone, Chip, Painel, Ponto, cx } from "./ui";
+import { BotaoIcone, Chip, Painel, cx } from "./ui";
 
 
 const nomeLocal = (c: Camera) => (c.tipo === "externa" ? c.local : `${c.local}${c.nivel ? ` · ${c.nivel}` : ""}`);
@@ -41,6 +41,31 @@ export function CardCamera({ className, Video }: { className?: string; Video?: V
   const visoes = multi && grade ? Array.from({ length: mod.sensores }, (_, i) => i) : [multi ? sensor : 0];
   const emGrade = visoes.length > 1;
 
+  const botaoAmpliar = (
+    <BotaoIcone rotulo={ampliada ? "Reduzir imagem" : "Ampliar imagem"} compacto onClick={() => useUi.getState().setAmpliada(!ampliada)}>
+      {ampliada ? <Minimize2 size={18} /> : <Maximize2 size={18} />}
+    </BotaoIcone>
+  );
+  const setas = (
+    <>
+      <BotaoIcone rotulo="Câmera anterior" compacto onClick={() => ir(-1)}><ChevronLeft size={20} /></BotaoIcone>
+      <BotaoIcone rotulo="Próxima câmera" compacto onClick={() => ir(1)}><ChevronRight size={20} /></BotaoIcone>
+    </>
+  );
+  // só ícone: o texto disputava espaço com as setas e truncava no card estreito
+  const localizar = (
+    <BotaoIcone
+      rotulo={cam.tipo === "externa" ? "Localizar no mapa" : "Câmera interna: sem posição no mapa"}
+      ativo
+      disabled={cam.tipo !== "externa"}
+      compacto
+      className="hover:bg-accent-hover"
+      onClick={() => useUi.getState().focar({ tipo: "camera", numero: cam.numero })}
+    >
+      <LocateFixed size={20} />
+    </BotaoIcone>
+  );
+
   return (
     <Painel
       className={cx("flex gap-16 p-12", ampliada ? "w-full max-w-[960px] flex-col gap-16 p-16" : "h-[232px] w-full max-w-[688px]", className)}
@@ -70,16 +95,8 @@ export function CardCamera({ className, Video }: { className?: string; Video?: V
             </button>
           ) : <span key={i} data-tile data-sensor={i} className="pointer-events-none" />)}
         </Tiles>
-        <div className="pointer-events-none absolute inset-x-12 top-12 flex items-start justify-between">
-          <Chip tom="escuro"><Ponto cor={online ? "#e5484d" : "#8a92a2"} redondo />{online ? "AO VIVO" : "SEM SINAL"}</Chip>
-          <span className="flex gap-8">
-            <Chip tom="escuro">{cam.codigo}</Chip>
-            <button type="button" aria-label={ampliada ? "Reduzir imagem" : "Ampliar imagem"} title={ampliada ? "Reduzir imagem" : "Ampliar imagem"} onClick={() => useUi.getState().setAmpliada(!ampliada)}
-              className="pointer-events-auto flex size-32 items-center justify-center rounded-full bg-[rgb(17_41_75/0.72)] text-white backdrop-blur-[8px] flutuante hover:bg-[rgb(17_41_75/0.9)]">
-              {ampliada ? <Minimize2 size={14} /> : <Maximize2 size={14} />}
-            </button>
-          </span>
-        </div>
+        {/* sobre o vídeo só o que é da imagem (data e PTZ); status, código e ações ficam na coluna ao lado, para não
+            cruzar os tiles da grade */}
         {/* na grade compacta a data cobriria o rótulo dos sensores de baixo */}
         {(!emGrade || ampliada) && <div className="pointer-events-none absolute bottom-12 left-12">
           <Chip tom="escuro" className="tnum">{agora ? dataHora(agora) : "--/--/---- --:--:--"}</Chip>
@@ -89,51 +106,45 @@ export function CardCamera({ className, Video }: { className?: string; Video?: V
         )}
       </div>
 
-      <div className={cx("flex min-w-0 flex-1", ampliada ? "flex-row flex-wrap items-center justify-between gap-16 px-4" : "min-w-[150px] flex-col py-4 pr-4")}>
-        <div className="min-w-0">
-          <div className="flex items-center gap-8">
-            <p className="min-w-0 flex-1 truncate text-[13px] leading-20 text-text-2">{/* multissensor são sempre externas: o espaço vai para a contagem de visões */}
-              {multi ? `${mod.nome} · ${mod.sensores} visões` : `${cam.tipo === "externa" ? "Câmera externa" : "Câmera interna"} · ${mod.nome}`}</p>
-            {!ampliada && <span className="-my-8 -mr-4"><BotaoFechar /></span>}
-          </div>
-          <div className="mt-4 flex min-w-0 items-center gap-12">
-            <h3 className="min-w-0 truncate text-[20px] font-semibold leading-28 tracking-[-0.01em] text-text">{nomeLocal(cam)}</h3>
-            <span className="flex shrink-0 items-center gap-8 text-[13px] leading-20 text-text-2" title={online ? "Online" : "Offline · sem sinal"}>
-              <Ponto cor={online ? "var(--live)" : "var(--inativo)"} redondo pulso={online} />
-              {/* no card compacto o título ocupa a largura; o rótulo fica só no ampliado */}
-              <span className={cx(!ampliada && "sr-only")}>{online ? "Online" : "Offline · sem sinal"}</span>
+      <div className={cx("flex min-w-0 flex-1", ampliada ? "flex-row items-stretch justify-between gap-16 px-4" : "min-w-[150px] flex-col py-4 pr-4")}>
+        <div className="min-w-0 flex-1">
+          {/* linha de status: código à esquerda; no compacto, fechar à direita */}
+          <div className="flex h-32 items-center gap-8">
+            {/* ao vivo é o normal e não leva selo (o cabeçalho já mostra); só a falta de sinal aparece */}
+            <span className="tnum min-w-0 flex-1 truncate text-[12px] font-semibold leading-16 text-text-2">
+              {cam.codigo}{!online && <span className="text-st-ocupada"> · Sem sinal</span>}
             </span>
+            {!ampliada && <span className="-mr-4 flex shrink-0"><BotaoFechar /></span>}
           </div>
+          <h3 className="mt-4 truncate text-[20px] font-semibold leading-28 tracking-[-0.01em] text-text">{nomeLocal(cam)}</h3>
+          {/* multissensor são sempre externas: o espaço vai para a contagem de visões */}
+          <p className="truncate text-[13px] leading-20 text-text-2">
+            {multi ? `${mod.nome} · ${mod.sensores} visões` : `${cam.tipo === "externa" ? "Câmera externa" : "Câmera interna"} · ${mod.nome}`}</p>
           {multi && (
             <div className="mt-8 flex gap-4" role="tablist" aria-label="Visões da câmera">
               <button type="button" role="tab" aria-selected={grade} onClick={() => useUi.getState().setGrade(true)}
-                className={cx("h-28 rounded-full px-12 text-[12px] font-semibold leading-16", grade ? "bg-accent text-accent-ink" : "bg-chip text-text-2 hover:text-text")}>
+                className={cx("h-28 rounded-full px-12 text-[12px] font-semibold leading-16", grade ? "bg-accent text-accent-ink" : "bg-card text-text shadow-card hover:bg-card-muted")}>
                 Todas
               </button>
               {Array.from({ length: mod.sensores }, (_, i) => (
                 <button key={i} type="button" role="tab" aria-selected={!grade && sensor === i} onClick={() => useUi.getState().setSensor(i)}
-                  aria-label={`Sensor ${i + 1}`} className={cx("h-28 w-40 rounded-full text-[12px] font-semibold leading-16", !grade && sensor === i ? "bg-accent text-accent-ink" : "bg-chip text-text-2 hover:text-text")}>
+                  aria-label={`Sensor ${i + 1}`} className={cx("h-28 w-40 rounded-full text-[12px] font-semibold leading-16", !grade && sensor === i ? "bg-accent text-accent-ink" : "bg-card text-text shadow-card hover:bg-card-muted")}>
                   S{i + 1}
                 </button>
               ))}
             </div>
           )}
         </div>
-        <div className={cx("flex gap-8", ampliada ? "items-center" : "mt-auto items-center")}>
-          <BotaoIcone rotulo="Câmera anterior" compacto onClick={() => ir(-1)}><ChevronLeft size={20} /></BotaoIcone>
-          <BotaoIcone rotulo="Próxima câmera" compacto onClick={() => ir(1)}><ChevronRight size={20} /></BotaoIcone>
-          {/* só ícone: o texto disputava espaço com as setas e truncava no card estreito */}
-          <BotaoIcone
-            rotulo={cam.tipo === "externa" ? "Localizar no mapa" : "Câmera interna: sem posição no mapa"}
-            ativo
-            disabled={cam.tipo !== "externa"}
-            compacto
-            className="ml-auto hover:bg-accent-hover"
-            onClick={() => useUi.getState().focar({ tipo: "camera", numero: cam.numero })}
-          >
-            <LocateFixed size={20} />
-          </BotaoIcone>
-        </div>
+        {/* ações de imagem (ampliar/reduzir e localizar) sempre juntas, à direita da base; no ampliado as setas sobem para o
+            topo da coluna direita, no compacto ficam na base à esquerda */}
+        {ampliada ? (
+          <div className="flex shrink-0 flex-col items-end justify-between gap-16">
+            <div className="flex items-center gap-8">{setas}</div>
+            <div className="flex items-center gap-8">{botaoAmpliar}{localizar}</div>
+          </div>
+        ) : (
+          <div className="mt-auto flex items-center gap-8">{setas}<span className="ml-auto flex gap-8">{botaoAmpliar}{localizar}</span></div>
+        )}
       </div>
     </Painel>
   );
@@ -155,7 +166,7 @@ function BotaoFechar() {
         ui.setBloco("camera", "oculto");
         if (ui.selecao?.tipo === "camera") ui.selecionar(null);
       }}
-      className="flex size-40 items-center justify-center rounded-full text-text-2 hover:bg-chip hover:text-text">
+      className="flex size-32 items-center justify-center rounded-full text-text-2 outline-none hover:bg-chip hover:text-text focus-visible:ring-2 focus-visible:ring-accent">
       <X size={18} />
     </button>
   );

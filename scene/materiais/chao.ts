@@ -26,12 +26,14 @@ function texturaChao() {
   return textura;
 }
 
-/** canal (R grama, G asfalto, B concreto), m por repetição do grão, m das manchas, tom amarelado nas manchas, força */
+/** canal (R grama, G asfalto, B concreto), m por repetição do grão, m das manchas, tom amarelado nas manchas, força,
+ *  peso do grão. O grão fino era o que deixava grama e asfalto grosseiros vistos do alto: fica leve, e a vida vem das
+ *  manchas grandes (claro/escuro e amarelado), que seguem com força */
 const PERFIS = {
-  grama: { canal: [1, 0, 0], grao: 14, mancha: 260, tom: 1, forca: 0.9 },
-  campo: { canal: [1, 0, 0], grao: 9, mancha: 180, tom: 0.6, forca: 0.8 },
-  asfalto: { canal: [0, 1, 0], grao: 10, mancha: 150, tom: 0, forca: 0.7 },
-  concreto: { canal: [0, 0, 1], grao: 6, mancha: 110, tom: 0, forca: 0.55 },
+  grama: { canal: [1, 0, 0], grao: 14, mancha: 260, tom: 1, forca: 0.9, granulo: 0.3 },
+  campo: { canal: [1, 0, 0], grao: 9, mancha: 180, tom: 0.6, forca: 0.8, granulo: 0.35 },
+  asfalto: { canal: [0, 1, 0], grao: 10, mancha: 150, tom: 0, forca: 0.7, granulo: 0.35 },
+  concreto: { canal: [0, 0, 1], grao: 6, mancha: 110, tom: 0, forca: 0.55, granulo: 0.5 },
 } as const;
 export type PerfilChao = keyof typeof PERFIS;
 
@@ -44,6 +46,7 @@ export function useDetalheChao(perfil: PerfilChao) {
       uChaoCanal: { value: new THREE.Vector3(...c.canal) },
       uChaoA: { value: new THREE.Vector3(c.grao, c.mancha, c.tom) },
       uChaoForca: { value: 0 },
+      uChaoGranulo: { value: c.granulo },
     };
   }, [perfil]);
   useEffect(() => {
@@ -58,12 +61,12 @@ export function useDetalheChao(perfil: PerfilChao) {
       .replace("#include <common>", "#include <common>\nvarying vec2 vChaoXZ;")
       .replace("#include <project_vertex>", "#include <project_vertex>\nvChaoXZ = (modelMatrix * vec4(transformed, 1.0)).xz;");
     shader.fragmentShader = shader.fragmentShader
-      .replace("#include <common>", "#include <common>\nuniform sampler2D uChao;\nuniform vec3 uChaoCanal;\nuniform vec3 uChaoA;\nuniform float uChaoForca;\nvarying vec2 vChaoXZ;")
+      .replace("#include <common>", "#include <common>\nuniform sampler2D uChao;\nuniform vec3 uChaoCanal;\nuniform vec3 uChaoA;\nuniform float uChaoForca;\nuniform float uChaoGranulo;\nvarying vec2 vChaoXZ;")
       .replace("#include <map_fragment>", `#include <map_fragment>
       {
         float chaoG = 2.0 * dot(texture2D(uChao, vChaoXZ / uChaoA.x).rgb, uChaoCanal);
         float chaoM = 2.0 * dot(texture2D(uChao, vChaoXZ / uChaoA.y + vec2(0.37, 0.61)).rgb, uChaoCanal);
-        float chaoV = chaoG * mix(1.0, chaoM, 0.45);
+        float chaoV = mix(1.0, chaoG, uChaoGranulo) * mix(1.0, chaoM, 0.55);
         vec3 chaoTom = mix(vec3(1.0), vec3(1.08, 1.04, 0.85), smoothstep(1.05, 1.4, chaoM) * uChaoA.z);
         diffuseColor.rgb *= mix(vec3(1.0), chaoV * chaoTom, uChaoForca);
       }`);

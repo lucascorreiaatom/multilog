@@ -15,6 +15,7 @@ export function ConteudoGates() {
   const gates = usePatio((s) => s.gates);
   const selecao = useUi((s) => s.selecao);
   return (
+    <>
     <AreaRolagem className="flex min-h-0 flex-1 flex-col px-16 pb-16">
       <ul className="flex flex-col gap-12">
         {gates.map((g) => {
@@ -40,9 +41,9 @@ export function ConteudoGates() {
           );
         })}
       </ul>
-      {/* filas dos gates: requisito destacado pelo cliente; aberta nesta aba e logo abaixo dos gates, à vista sem rolar.
-          Não vai para o rodapé fixo: aberta, ela espremeria a lista de gates */}
-      <div className="mt-16"><ListaCameras titulo="Câmeras dos gates" grupos={camerasGates} abertaInicial /></div>
     </AreaRolagem>
+    {/* rodapé fixo do painel, igual às câmeras do pátio; as filas dos gates vêm primeiro na lista */}
+    <ListaCameras fixa titulo="Câmeras dos gates" grupos={camerasGates} />
+    </>
   );
 }

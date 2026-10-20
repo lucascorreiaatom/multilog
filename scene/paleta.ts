@@ -2,8 +2,9 @@
 // Prédios claros com faixa no azul Multilog #002F67 (Brand Book). "Em conferência" usa índigo, sem conflito.
 export const PALETA = {
   dia: {
-    ceu: "#dfe8f1",
-    neblina: "#dfe8f1",
+    // céu limpo de dia ensolarado (o cinza-azulado anterior lia como nublado)
+    ceu: "#cfe4f8",
+    neblina: "#d6e8f8",
     grama: "#9cc77a",
     gramaEscura: "#7fb35f",
     campo: "#c9b27a",
@@ -28,8 +29,8 @@ export const PALETA = {
     carro: ["#f4f5f7", "#2e3440", "#9aa1ab", "#c9332f", "#1f4fa3", "#dfe3e8", "#6b717d"],
     cancela: "#d8453a",
     domo: "#f4f5f7",
-    sol: "#fff6e8",
-    hemisferioCeu: "#e9f1fb",
+    sol: "#fff1d9",
+    hemisferioCeu: "#e3efff",
     hemisferioChao: "#b9c4a8",
   },
   noite: {

@@ -61,7 +61,9 @@ export function BotaoIcone({ children, className, rotulo, ativo, principal, comp
 export function Barra({ valor, cor = "var(--accent)", altura = 6 }: { valor: number; cor?: string; altura?: number }) {
   return (
     <div className="w-full overflow-hidden rounded-full bg-chip" style={{ height: altura }}>
-      <div className="h-full rounded-full transition-[width] duration-500" style={{ width: `${Math.max(0, Math.min(100, valor))}%`, background: cor }} />
+      {/* preenchimento em gradiente do tom claro ao escuro da cor, acompanhando a largura preenchida */}
+      <div className="h-full rounded-full transition-[width] duration-500"
+        style={{ width: `${Math.max(0, Math.min(100, valor))}%`, background: `linear-gradient(90deg, color-mix(in srgb, ${cor} 50%, #ffffff), color-mix(in srgb, ${cor} 85%, #11294b))` }} />
     </div>
   );
 }
