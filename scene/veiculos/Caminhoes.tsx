@@ -11,6 +11,7 @@ import type { Implemento, StatusVaga } from "@/lib/patio/tipos";
 import { vagasPorId } from "@/lib/site";
 import { assinarGatilhos, concluirGatilhoSemAnimacao, usePatio } from "@/lib/store/patio";
 import { useUi } from "@/lib/store/ui";
+import { iluminadoPelaNoite } from "../ambiente/luzAssada";
 import { atributoFiltro, ocultavel, profundidadeOcultavel } from "../filtroStatus";
 import { AnimacaoCaminhao, poseAlinhada, type Pose } from "./animador";
 import { IMPLEMENTOS, useModelosVeiculo } from "./modelosVeiculo";
@@ -87,10 +88,10 @@ function Frota() {
   const cavalo = modelos.cavalo;
   const carretas = modelos.carretas;
   // cores de vértice dos materiais do Blender; a cor da instância tinge as malhas "corpo"
-  const matCorpo = useMemo(() => Object.assign(new THREE.MeshStandardMaterial({ vertexColors: true, roughness: 0.35, metalness: 0.15 }), { onBeforeCompile: ocultavel }), []);
-  const matNeutro = useMemo(() => Object.assign(new THREE.MeshStandardMaterial({ vertexColors: true, roughness: 0.6, metalness: 0.3 }), { onBeforeCompile: ocultavel }), []);
-  const matCarretaCorpo = useMemo(() => Object.assign(new THREE.MeshStandardMaterial({ vertexColors: true, roughness: 0.5, metalness: 0.1 }), { onBeforeCompile: ocultavel }), []);
-  const matCarretaNeutro = useMemo(() => Object.assign(new THREE.MeshStandardMaterial({ vertexColors: true, roughness: 0.6, metalness: 0.3 }), { onBeforeCompile: ocultavel }), []);
+  const matCorpo = useMemo(() => iluminadoPelaNoite(Object.assign(new THREE.MeshStandardMaterial({ vertexColors: true, roughness: 0.35, metalness: 0.15 }), { onBeforeCompile: ocultavel })), []);
+  const matNeutro = useMemo(() => iluminadoPelaNoite(Object.assign(new THREE.MeshStandardMaterial({ vertexColors: true, roughness: 0.6, metalness: 0.3 }), { onBeforeCompile: ocultavel })), []);
+  const matCarretaCorpo = useMemo(() => iluminadoPelaNoite(Object.assign(new THREE.MeshStandardMaterial({ vertexColors: true, roughness: 0.5, metalness: 0.1 }), { onBeforeCompile: ocultavel })), []);
+  const matCarretaNeutro = useMemo(() => iluminadoPelaNoite(Object.assign(new THREE.MeshStandardMaterial({ vertexColors: true, roughness: 0.6, metalness: 0.3 }), { onBeforeCompile: ocultavel })), []);
   const matSombra = useMemo(() => profundidadeOcultavel(), []);
 
   const refCavaloCorpo = useRef<THREE.InstancedMesh>(null!);

@@ -12,6 +12,7 @@ luz, céu, sombra e noite.
 | `public/modelos/entorno.glb` | Mata, lavoura, rodovia e contêineres empilhados |
 | `public/modelos/veiculos.glb` | Cavalo (origem no eixo traseiro), carretas por implemento (origem no pino-rei) e carros |
 | `lib/site/planta.json` | Vagas, prédios, Gates, postes, cerca, áreas e vagas de carro, no formato de `lib/site/tipos.ts` |
+| `public/modelos/luz-noite-*.webp` e `lib/site/luz.json` | Iluminação global da noite assada no Cycles: luz no chão, luz no teto e altura do teto, vistas de cima |
 
 `planta.json` é gerado por `planta_next.py` no projeto Blender. Ele mantém os ids e nomes que a interface usa
 (`EST-A01`, `PUL-F03`, `DOC-N02`, ids dos prédios) e traz da versão anterior deste repositório só o que o projeto
@@ -23,13 +24,16 @@ Não rode `npm run build-site`: ele regrava `planta.json` com a digitalização 
 ## Na cena
 
 - `scene/ambiente/Cenario.tsx` carrega os GLBs e une as malhas por material (algumas dezenas de draw calls).
-- `scene/ambiente/Atmosfera.tsx`: céu, ambiente, sol e lua do app Vite. A sombra do sol é refeita quando o
-  status das vagas muda (no nível máximo de qualidade, a cada quadro).
+- `scene/ambiente/Atmosfera.tsx`: de dia, céu, ambiente e sol do app Vite; à noite, o céu, o luar e a exposição
+  do render noturno do Blender. A sombra do sol é refeita quando o status das vagas muda (no nível máximo de
+  qualidade, a cada quadro).
 - `scene/ambiente/Patio.tsx`: status das vagas por cima da pintura do cenário (preenchimento e cabeceira), com
   clique e filtro.
 - `scene/veiculos/modelosVeiculo.ts`: caminhões e carros; implemento e cores vêm do ocupante (simulador).
 - Espinha, perpendicular e doca estacionam de ré, com a cabine para o corredor (`lib/patio/rotas.ts`).
-- À noite acendem vidros, LEDs, letreiros e as poças de luz dos postes (`PocasLuz.tsx`).
+- À noite acendem vidros, LEDs e letreiros, e entra a iluminação global assada no Blender (`luzAssada.ts`).
+  As luminárias do render (pétalas dos postes, docas, portaria e arandelas) e os rebatimentos do Cycles ficam nos
+  mapas; cada material lê a luz pela posição no mundo, então caminhões e carros acendem ao passar pelas poças.
 
 ## Referencial
 
@@ -52,4 +56,5 @@ O projeto Blender fica em `~/Documents/Blender-test/multilog_foz` (máquina do R
 ```bash
 Blender -b --factory-startup -P build_multilog.py -- --no-export
 Blender -b multilog_foz.blend -P export_app.py -- /caminho/deste/repo --alvo=next
+Blender -b multilog_foz.blend -P bake_luz.py -- /caminho/deste/repo 3072 384
 ```

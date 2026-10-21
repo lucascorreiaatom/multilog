@@ -15,7 +15,6 @@ import { Atmosfera, SombraEstatica } from "./ambiente/Atmosfera";
 import { Cenario } from "./ambiente/Cenario";
 import { Entorno } from "./ambiente/Entorno";
 import { Patio } from "./ambiente/Patio";
-import { PocasLuz } from "./ambiente/PocasLuz";
 import { Predios } from "./ambiente/Predios";
 import { CamerasExternas, Cobertura } from "./cameras/CamerasExternas";
 import { Transmissao } from "./cameras/Transmissao";
@@ -212,7 +211,6 @@ function Cena({ dinamica, leve, mapaSombra }: { dinamica: boolean; leve: boolean
       <Suspense fallback={null}>
         <Cenario noite={noite} semEntorno={SEM.has("mata")} />
       </Suspense>
-      <PocasLuz noite={noite} />
       <CarrosEstacionados />
       <Patio noite={noite} />
       <Predios p={p} noite={noite} onSelecionar={(id) => { selecionar({ tipo: "predio", id }); focar({ tipo: "predio", id }); }} />
@@ -253,11 +251,12 @@ export default function YardCanvas() {
       {/* MSAA 4x: faixas das vagas (0,14 m) e vãos entre vagas ficam abaixo de 1 px; só com SMAA viram pontilhado e piscam */}
       {!SEM.has("pos") && <EffectComposer multisampling={q.msaa} enableNormalPass={false}>
         {!SEM.has("ao") && q.ao ? <N8AO aoRadius={6} distanceFalloff={0.8} intensity={noiteUi ? 1.4 : 2.4} quality="medium" halfRes={q.ao === "meia"} /> : <></>}
-        {noiteUi ? <Bloom mipmapBlur intensity={1.1} luminanceThreshold={0.9} luminanceSmoothing={0.25} /> : <></>}
+        {/* só o que emite (LEDs, letreiros) passa do limiar; o chão iluminado pelas luminárias não brilha, como no render */}
+        {noiteUi ? <Bloom mipmapBlur intensity={0.7} luminanceThreshold={3.5} luminanceSmoothing={0.4} /> : <></>}
         <SMAA />
         {/* mesmo acabamento do app Vite do mapa: ACES e vinheta leve */}
         <ToneMapping mode={ToneMappingMode.ACES_FILMIC} />
-        <Vignette offset={0.28} darkness={noiteUi ? 0.6 : 0.35} />
+        <Vignette offset={0.28} darkness={0.35} />
       </EffectComposer>}
     </Canvas>
   );

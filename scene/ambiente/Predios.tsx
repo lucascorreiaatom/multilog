@@ -10,6 +10,7 @@ import type { Predio } from "@/lib/site/tipos";
 import type { Paleta } from "../paleta";
 import { passagemGate } from "../veiculos/Caminhoes";
 import { cursorClicavel } from "../cursor";
+import { iluminadoPelaNoite } from "./luzAssada";
 
 const forma = (pts: [number, number][]) => new THREE.Shape(pts.map(([x, z]) => new THREE.Vector2(x, -z)));
 
@@ -57,8 +58,8 @@ function Gates({ onSelecionar }: { p: Paleta; noite: boolean; onSelecionar?: (id
     poste: new THREE.BoxGeometry(0.45, ALTURA_POSTE, 0.45),
     lampada: new THREE.SphereGeometry(0.2, 12, 12),
     faixa: new THREE.BoxGeometry(0.7, 0.15, 0.16),
-    branco: new THREE.MeshStandardMaterial({ color: "#f4f4f2", roughness: 0.5 }),
-    vermelho: new THREE.MeshStandardMaterial({ color: "#d33a35", roughness: 0.5 }),
+    branco: iluminadoPelaNoite(new THREE.MeshStandardMaterial({ color: "#f4f4f2", roughness: 0.5 })),
+    vermelho: iluminadoPelaNoite(new THREE.MeshStandardMaterial({ color: "#d33a35", roughness: 0.5 })),
     aberto: new THREE.MeshBasicMaterial({ color: "#22b35e", toneMapped: false }),
     fechado: new THREE.MeshBasicMaterial({ color: "#e5484d", toneMapped: false }),
   }), []);

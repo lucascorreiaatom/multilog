@@ -5,3 +5,7 @@ patio.glb, entorno.glb e veiculos.glb
   (chão, ruas, sinalização, canteiros, prédios, portaria, cerca, postes, mata, lavoura e contêineres), cavalo
   mecânico, carretas (baú, sider, porta-contêiner 20' e 40', graneleiro e tanque) e carros de passeio.
   Fonte e exportação: ver docs/cenario-blender.md. Comprimidos com Draco (decodificador em public/draco/).
+
+luz-noite-chao.webp, luz-noite-teto.webp e luz-noite-altura.webp
+  Iluminação global da noite assada no Cycles pelo mesmo projeto Blender (bake_luz.py): luminárias do render com os
+  rebatimentos de luz, vistas de cima. Escala e retângulo coberto em lib/site/luz.json.

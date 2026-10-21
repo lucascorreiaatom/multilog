@@ -5,6 +5,7 @@
 import { useGLTF } from "@react-three/drei";
 import * as THREE from "three";
 import { mergeGeometries } from "three/addons/utils/BufferGeometryUtils.js";
+import { iluminadoPelaNoite } from "./luzAssada";
 
 const DRACO = "/draco/";
 export const URL_PATIO = "/modelos/patio.glb";
@@ -15,13 +16,15 @@ useGLTF.preload(URL_ENTORNO, DRACO);
 /** pisos e pinturas rentes ao chão não projetam sombra */
 const SEM_SOMBRA = /^(Grama|Asfalto|Concreto_Piso|Calcada|Meio_Fio|Tinta_|Lavoura|Tela_)/;
 
-/** à noite (como no app Vite): a luz do ambiente cai e acendem vidros, LEDs dos postes, letreiros e a faixa azul */
-const BRILHO_NOITE: Record<string, [string, number]> = {
-  Vidro: ["#ffcf8f", 0.85],
-  Claraboia: ["#ffe2b0", 0.3],
-  Luz_LED: ["#fff3dc", 7],
-  Letreiro_Branco: ["#ffffff", 2],
-  Azul_Multilog: ["#2f6fe8", 0.6],
+/** à noite acendem vidros, claraboias, LEDs dos postes, letreiros e a faixa azul com a cor e a força de emissão do
+ *  render do Blender (luzes_noite.emissivos), em linear; o LED dos postes fica abaixo dos 60 do Blender para o
+ *  bloom não abrir um halo em cada poste */
+const BRILHO_NOITE: Record<string, [[number, number, number], number]> = {
+  Vidro: [[1, 0.82, 0.56], 2.2],
+  Claraboia: [[1, 0.9, 0.7], 0.8],
+  Luz_LED: [[1, 1, 1], 14],
+  Letreiro_Branco: [[1, 1, 1], 6],
+  Azul_Multilog: [[0.16, 0.42, 0.95], 1.4],
 };
 
 export interface PecaCenario {
@@ -54,7 +57,7 @@ function unirPorMaterial(cena: THREE.Object3D): PecaCenario[] {
   });
   const pecas = [...grupos.entries()].map(([chave, { material, geos }]) => ({
     chave,
-    material,
+    material: iluminadoPelaNoite(material),
     geometria: mergeGeometries(geos),
     sombra: !SEM_SOMBRA.test(material.name),
   }));
@@ -74,7 +77,7 @@ export function aplicarTema(pecas: PecaCenario[], noite: boolean) {
     if (!brilho) continue;
     const dia = (m.userData.dia ??= { emissiva: m.emissive.getHex(), intensidade: m.emissiveIntensity }) as { emissiva: number; intensidade: number };
     if (noite) {
-      m.emissive.set(brilho[0]);
+      m.emissive.setRGB(...brilho[0], THREE.LinearSRGBColorSpace);
       m.emissiveIntensity = brilho[1];
     } else {
       m.emissive.setHex(dia.emissiva);

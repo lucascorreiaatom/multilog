@@ -2,8 +2,9 @@
 // Carros de passeio modelados no Blender (sedan e SUV de public/modelos/veiculos.glb, ver modelosVeiculo.ts).
 // "corpo" é tingido pela cor da instância e "neutro" traz pneus, vidros, faróis e lanternas em cores de vértice;
 // 2 draw calls por variante, qualquer que seja a quantidade de carros.
-import { useLayoutEffect, useRef } from "react";
+import { useLayoutEffect, useMemo, useRef } from "react";
 import * as THREE from "three";
+import { iluminadoPelaNoite } from "../ambiente/luzAssada";
 import { useModelosVeiculo, type PecasCaminhao } from "./modelosVeiculo";
 
 /** variantes, na ordem dos índices usados pela cena */
@@ -27,6 +28,10 @@ export interface CarroParado {
 export function CarrosInstanciados({ pecas, itens }: { pecas: PecasCaminhao; itens: CarroParado[] }) {
   const corpo = useRef<THREE.InstancedMesh>(null);
   const neutro = useRef<THREE.InstancedMesh>(null);
+  const materiais = useMemo(() => ({
+    corpo: iluminadoPelaNoite(new THREE.MeshStandardMaterial({ vertexColors: true, roughness: 0.45 })),
+    neutro: iluminadoPelaNoite(new THREE.MeshStandardMaterial({ vertexColors: true, roughness: 0.6 })),
+  }), []);
   useLayoutEffect(() => {
     if (!corpo.current || !neutro.current) return;
     const m = new THREE.Matrix4(), q = new THREE.Quaternion(), y = new THREE.Vector3(0, 1, 0), c = new THREE.Color(), s = new THREE.Vector3();
@@ -46,12 +51,8 @@ export function CarrosInstanciados({ pecas, itens }: { pecas: PecasCaminhao; ite
   if (!itens.length) return null;
   return (
     <group>
-      <instancedMesh ref={corpo} args={[pecas.corpo, undefined, itens.length]} castShadow>
-        <meshStandardMaterial vertexColors roughness={0.45} />
-      </instancedMesh>
-      <instancedMesh ref={neutro} args={[pecas.neutro, undefined, itens.length]} castShadow>
-        <meshStandardMaterial vertexColors roughness={0.6} />
-      </instancedMesh>
+      <instancedMesh ref={corpo} args={[pecas.corpo, materiais.corpo, itens.length]} castShadow />
+      <instancedMesh ref={neutro} args={[pecas.neutro, materiais.neutro, itens.length]} castShadow />
     </group>
   );
 }

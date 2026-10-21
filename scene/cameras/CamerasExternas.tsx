@@ -7,6 +7,7 @@ import { mergeGeometries } from "three/addons/utils/BufferGeometryUtils.js";
 import { camerasExternas } from "@/lib/cameras/catalogo";
 import { MODELOS } from "@/lib/cameras/modelos";
 import { useUi } from "@/lib/store/ui";
+import { iluminadoPelaNoite } from "../ambiente/luzAssada";
 import { CAMADA, sobre } from "../camadas";
 
 const ESCALA_CABECA = 1.8;
@@ -52,7 +53,8 @@ export function CamerasExternas() {
   const poste = useRef<THREE.InstancedMesh>(null!);
   const refs = useRef<Record<string, THREE.InstancedMesh | null>>({});
   const geos = useMemo(() => ({ ...cabecas(), poste: new THREE.CylinderGeometry(0.11, 0.16, 1, 8) }), []);
-  const material = useMemo(() => new THREE.MeshStandardMaterial({ vertexColors: true, roughness: 0.35, metalness: 0.2 }), []);
+  const material = useMemo(() => iluminadoPelaNoite(new THREE.MeshStandardMaterial({ vertexColors: true, roughness: 0.35, metalness: 0.2 })), []);
+  const metal = useMemo(() => iluminadoPelaNoite(new THREE.MeshStandardMaterial({ color: "#8e959c", roughness: 0.4, metalness: 0.7 })), []);
   const lotes = useMemo(() => {
     const out: Record<"domo" | "bullet" | "ptz", typeof camerasExternas> = { domo: [], bullet: [], ptz: [] };
     for (const c of camerasExternas) out[FORMA[c.modelo] ?? "domo"].push(c);
@@ -79,9 +81,7 @@ export function CamerasExternas() {
   }, [lotes]);
   return (
     <group>
-      <instancedMesh ref={poste} args={[geos.poste, undefined, camerasExternas.length]} castShadow>
-        <meshStandardMaterial color="#8e959c" roughness={0.4} metalness={0.7} />
-      </instancedMesh>
+      <instancedMesh ref={poste} args={[geos.poste, metal, camerasExternas.length]} castShadow />
       {(Object.keys(lotes) as ("domo" | "bullet" | "ptz")[]).map((f) => lotes[f].length > 0 && (
         <instancedMesh key={f} ref={(r) => { refs.current[f] = r; }} args={[geos[f], material, lotes[f].length]} castShadow />
       ))}

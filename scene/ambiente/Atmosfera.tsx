@@ -1,15 +1,22 @@
 "use client";
-// Céu, luz ambiente e sol (ou lua) da cena, iguais aos do app Vite do mapa (multilog_foz): céu físico com
-// reflexo de ambiente de dia; à noite céu azul-escuro, estrelas, ambiente frio e lua. A sombra do sol é calculada
-// uma vez e refeita quando o pátio muda (SombraEstatica), não a cada quadro.
-import { Environment, Sky, Stars } from "@react-three/drei";
+// Céu, luz ambiente e sol (ou lua) da cena. De dia, céu físico com reflexo de ambiente, como no app Vite do mapa.
+// À noite, a mesma noite do render do Blender (luzes_noite.py no projeto multilog_foz): mundo azul #2C4166 com
+// força 1,6 como céu e luz ambiente, luar frio vindo do nordeste e exposição +1; as luminárias entram pela luz
+// assada (luzAssada.ts). A sombra do sol é calculada uma vez e refeita quando o pátio muda (SombraEstatica).
+import { Environment, Sky } from "@react-three/drei";
 import { useThree } from "@react-three/fiber";
 import { useEffect } from "react";
 import * as THREE from "three";
 import { usePatio } from "@/lib/store/patio";
 
 const SOL = new THREE.Vector3(0.52, 0.72, -0.46).normalize();
-const LUA = new THREE.Vector3(-0.35, 0.8, 0.45).normalize();
+/** direção do luar do render (objeto Sol do Blender girado 38°, 0, 140° na noite), no referencial do app */
+const LUA = new THREE.Vector3(0.396, 0.788, -0.472).normalize();
+/** cor do mundo da noite no Blender, em linear, com a força 1,6 */
+const CEU_NOITE = new THREE.Color("#2c4166").multiplyScalar(1.6);
+/** a noite do render tem exposição +1 (2x) com AgX; o ACES escurece mais as sombras, então aqui vai a 2,5x
+ *  (o ACES do three divide por 0,6), calibrado lado a lado com o render na vista inicial */
+const EXPOSICAO_NOITE = 1.5;
 const ALCANCE_SOMBRA = 470;
 
 function LuzDirecional({ direcao, intensidade, cor, mapa }: { direcao: THREE.Vector3; intensidade: number; cor: string; mapa: number }) {
@@ -39,17 +46,19 @@ function CeuDia() {
 }
 
 export function Atmosfera({ noite, mapaSombra = 4096 }: { noite: boolean; mapaSombra?: number }) {
+  const gl = useThree((s) => s.gl);
+  useEffect(() => {
+    gl.toneMappingExposure = noite ? EXPOSICAO_NOITE : 1;
+  }, [gl, noite]);
   if (noite) {
     return (
       <>
-        <color attach="background" args={["#04070d"]} />
-        <fogExp2 attach="fog" args={["#05080f", 0.00055]} />
-        <Stars radius={2400} depth={400} count={5000} factor={7} saturation={0} fade />
-        <Environment resolution={64} frames={1} environmentIntensity={0.55}>
+        <color attach="background" args={[CEU_NOITE]} />
+        <fogExp2 attach="fog" args={[CEU_NOITE, 0.00022]} />
+        <Environment resolution={64} frames={1} environmentIntensity={1.6}>
           <color attach="background" args={["#2c4166"]} />
         </Environment>
-        <hemisphereLight args={["#4a6796", "#141a24", 0.9]} />
-        <LuzDirecional direcao={LUA} intensidade={0.85} cor="#a9c1ee" mapa={mapaSombra} />
+        <LuzDirecional direcao={LUA} intensidade={0.9} cor="#a9c1ee" mapa={mapaSombra} />
       </>
     );
   }
