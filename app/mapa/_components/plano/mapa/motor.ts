@@ -179,6 +179,8 @@ export function criarMotor({ raiz, svg, grupo, aoDica }: {
     if (alvo.closest("button, a, input")) return;
     if (e.pointerType === "mouse" && e.button !== 0) return;
     raiz.setPointerCapture(e.pointerId);
+    // mão fechada desde o aperto do esquerdo até soltar, como no 3D (globals.css, .mapa-plano)
+    if (e.pointerType === "mouse") raiz.dataset.segurando = "";
     ponteiros.set(e.pointerId, posicao(e));
     cancelAnimationFrame(animacao);
     if (ponteiros.size === 1) arrasto = { ...posicao(e), v: atual, moveu: false, alvo };
@@ -217,6 +219,7 @@ export function criarMotor({ raiz, svg, grupo, aoDica }: {
     } else if (ponteiros.size === 0) {
       arrasto = null;
       delete raiz.dataset.arrastando;
+      delete raiz.dataset.segurando;
       if (clique) clicar(clique);
     }
   }

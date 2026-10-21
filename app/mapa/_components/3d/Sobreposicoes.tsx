@@ -122,7 +122,8 @@ export function Sobreposicoes() {
   const blocos = useUi((s) => s.blocos);
   const predioAtivo = useUi((s) => (s.selecao?.tipo === "predio" ? s.selecao.id : null));
   return (
-    <div className="pointer-events-none absolute inset-0 overflow-hidden" aria-hidden={false}>
+    // data-camada-mapa: a roda sobre ícones e etiquetas também aproxima o mapa (YardCanvas, Rig)
+    <div className="pointer-events-none absolute inset-0 overflow-hidden" aria-hidden={false} data-camada-mapa="">
       {!modoTv && blocos.predios !== "oculto" && PREDIOS_ROTULADOS.filter((b) => b.id !== "armazem" || blocos.callouts === "oculto").map((b) => <RotuloPredio key={b.id} b={b} ativo={predioAtivo === b.id} />)}
       {blocos.callouts !== "oculto" && SETORES_VAGAS.map((s) => <Callout key={s} setor={s} predioAtivo={predioAtivo} />)}
       {!modoTv && blocos.marcadores !== "oculto" && camerasExternas.map((c) => (

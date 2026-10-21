@@ -299,8 +299,15 @@ html.plano .vidro {
   backdrop-filter: none;
 }
 
-.mapa-plano { cursor: grab; }
-.mapa-plano[data-arrastando] { cursor: grabbing; }
+/* mapa 3D como o Google Earth: seta parado, dedo sobre o que é clicável e mão fechada enquanto o botão esquerdo ou o
+   direito segura (YardCanvas), também se o mouse sair da cena por cima dos painéis */
+.cena-3d { cursor: default; }
+body[data-clicavel-3d] .cena-3d { cursor: pointer; }
+body[data-segurando-3d], body[data-segurando-3d] * { cursor: grabbing !important; }
+
+/* mapa 2D igual ao 3D: seta parado, dedo sobre vaga e prédio, mão fechada só enquanto o esquerdo segura */
+.mapa-plano { cursor: default; }
+.mapa-plano[data-segurando], .mapa-plano[data-segurando] * { cursor: grabbing !important; }
 /* o desenho fica sempre na própria camada: o gesto só recompõe (motor.ts); só o svg do mapa, não os ícones */
 .mapa-plano > svg { will-change: transform; }
 .mapa-plano .vaga, .mapa-plano .predio { cursor: pointer; }
