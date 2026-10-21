@@ -1,7 +1,7 @@
 // Simulador determinístico do pátio. Mantém a ocupação entre 70% e 85% gerando entradas, progressão
 // de status e saídas. Cada entrada e saída vira um Gatilho, que a cena anima do gate até a vaga.
 import { planta } from "../site";
-import { camerasExternas } from "../cameras/catalogo";
+import { camerasExternas, camerasInternas } from "../cameras/catalogo";
 import type { Gatilho, Mudanca, ResultadoAcao, Snapshot, YardDataSource } from "./fonte";
 import { criarRng, ocupanteFicticio, placa as gerarPlaca, type Rng } from "./ficticio";
 import { proximo, type Acao } from "./maquina";
@@ -16,6 +16,18 @@ export interface OpcoesSimulador {
   intervaloEntrada?: number;
   /** congela relógio e eventos (fixtures e testes visuais) */
   congelado?: boolean;
+}
+
+/** uma câmera interna sem sinal por local com 5 ou mais câmeras (~3 % do total), para as listas não mostrarem só
+ *  verde. Sorteio com gerador próprio: não mexe na sequência que gera vagas, ocupantes e eventos. */
+function internasOffline(seed: number): number[] {
+  const r = criarRng(seed ^ 0x5eed);
+  const grupos = new Map<string, number[]>();
+  for (const c of camerasInternas) {
+    const k = `${c.local}|${c.nivel ?? ""}`;
+    grupos.set(k, [...(grupos.get(k) ?? []), c.numero]);
+  }
+  return [...grupos.values()].filter((g) => g.length >= 5).map((g) => g[Math.floor(r() * g.length)]);
 }
 
 export class SimulatedSource implements YardDataSource {
@@ -65,7 +77,7 @@ export class SimulatedSource implements YardDataSource {
       operacao: p.numero === 1 || p.numero === 2 || p.numero === 5 ? "importacao" : "exportacao",
       aberto: true,
     }));
-    const camerasOffline = [camerasExternas[Math.floor(r() * camerasExternas.length)].numero];
+    const camerasOffline = [camerasExternas[Math.floor(r() * camerasExternas.length)].numero, ...internasOffline(this.opcoes.seed)];
     const eventos: Evento[] = [];
     const ids = Object.keys(vagas).filter((k) => vagas[k].ocupanteId);
     for (let i = 0; i < 12; i++) {

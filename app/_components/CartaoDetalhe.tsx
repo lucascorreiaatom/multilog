@@ -1,9 +1,10 @@
 "use client";
 // Card de detalhe da seleção (componente do vídeo): vaga e ocupante, gate ou prédio.
 // LGPD: no modo TV nunca exibe dados pessoais (só placa, status e horários).
-import { Camera, Flame, SquareParking, Video, VideoOff, X } from "lucide-react";
+import * as Tooltip from "@radix-ui/react-tooltip";
+import { Camera, Flame, SquareParking, Video, X } from "lucide-react";
 import type { ReactNode } from "react";
-import { camerasFila, camerasInternas } from "@/lib/cameras/catalogo";
+import { camerasFila, camerasInternas, type CameraInterna } from "@/lib/cameras/catalogo";
 import { camerasQueCobrem } from "@/lib/cameras/cobertura";
 import { pode } from "@/lib/auth/permissoes";
 import { dataHora, duracao, horaCurta, pesoKg } from "@/lib/formato";
@@ -225,12 +226,61 @@ function DetalheGate({ numero }: { numero: number }) {
   );
 }
 
+/** câmeras internas em grade de 2 colunas (o código é curto e a lista em 1 coluna deixava meia largura vazia):
+ *  ícone, código e bolinha de status, cujo nome aparece só na dica ao passar o mouse; a aberta fica marcada */
+function ListaCameras({ cameras, ativa, offline }: { cameras: CameraInterna[]; ativa: number | null; offline: number[] }) {
+  return (
+    <Tooltip.Provider delayDuration={120} skipDelayDuration={400}>
+      <ul className={cx("grid gap-8", cameras.length > 1 && "grid-cols-2")}>
+        {cameras.map((c) => {
+          const semSinal = offline.includes(c.numero);
+          const aberta = ativa === c.numero;
+          const status = semSinal ? "Sem sinal" : "Transmitindo";
+          return (
+            <li key={c.numero}>
+              <button type="button" onClick={() => useUi.getState().exibirCamera(c.numero)} aria-current={aberta || undefined} aria-label={`${c.codigo}, ${status.toLowerCase()}`}
+                className={cx("flex h-48 w-full items-center gap-8 rounded-[12px] pr-4 pl-12 text-left shadow-card outline-none transition-colors focus-visible:bg-card-muted",
+                  aberta ? "bg-accent-soft" : "bg-card hover:bg-card-muted")}>
+                <Video size={16} className="shrink-0 text-accent" />
+                <span className="tnum min-w-0 flex-1 truncate text-[13px] font-semibold leading-20 text-text">{c.codigo}</span>
+                {/* status do sinal: verde pulsando transmitindo, vermelho parado sem sinal (mesmas cores da lista de câmeras do pátio);
+                    área de 32 px em volta da bolinha para a dica abrir sem mirar nos 8 px */}
+                <Tooltip.Root>
+                  <Tooltip.Trigger asChild>
+                    <span className="flex size-32 shrink-0 items-center justify-center">
+                      <Ponto cor={semSinal ? "var(--st-ocupada)" : "var(--st-livre)"} tamanho={8} redondo pulso={!semSinal} />
+                    </span>
+                  </Tooltip.Trigger>
+                  <Tooltip.Portal>
+                    <Tooltip.Content side="top" sideOffset={4} collisionPadding={16}
+                      className="animar-entrada z-50 rounded-[8px] bg-card-muted px-8 py-4 text-[12px] font-semibold leading-16 text-text shadow-float vidro">
+                      {status}
+                    </Tooltip.Content>
+                  </Tooltip.Portal>
+                </Tooltip.Root>
+              </button>
+            </li>
+          );
+        })}
+      </ul>
+    </Tooltip.Provider>
+  );
+}
+
 function DetalhePredio({ id }: { id: string }) {
   const b = planta.predios.find((p) => p.id === id);
   const ativa = useUi((s) => (s.blocos.camera === "oculto" ? null : s.cameraAtiva));
   const offline = usePatio((s) => s.camerasOffline);
   if (!b) return null;
   const internas = camerasInternas.filter((c) => b.paginas?.includes(c.pagina) && (b.id !== "apoio-motoristas-sala"));
+  // com um local só, o nível basta (o nome do prédio já está no título)
+  const umLocal = new Set(internas.map((c) => c.local)).size === 1;
+  const grupos: { nome: string; cameras: CameraInterna[] }[] = [];
+  for (const c of internas) {
+    const nome = umLocal ? (c.nivel ?? c.local) : c.nivel ? `${c.local} · ${c.nivel}` : c.local;
+    const g = grupos.find((x) => x.nome === nome);
+    if (g) g.cameras.push(c); else grupos.push({ nome, cameras: [c] });
+  }
   return (
     <Corpo>
       {/* subtítulo sempre presente: sem ele sobrava um vão sob o título (o botão fechar é mais alto que uma linha) */}
@@ -240,22 +290,15 @@ function DetalhePredio({ id }: { id: string }) {
           {/* uma linha só: frase curta que cabe na largura do card */}
           {internas.length === 0 ? "Nenhuma câmera interna mapeada" : "Escolha uma para abrir a imagem"}
         </p>
-        {/* quadros 16:9 como os tiles do card AO VIVO. Interna não tem cena 3D: a imagem real vem da integração com o CFTV */}
-        <div className="mt-8 grid grid-cols-2 gap-8">
-          {internas.map((c) => {
-            const semSinal = offline.includes(c.numero);
-            return (
-              <button key={c.numero} type="button" onClick={() => useUi.getState().exibirCamera(c.numero)} title={`${c.codigo} · ${c.local}${c.nivel ? ` · ${c.nivel}` : ""}`}
-                className={cx("group relative flex aspect-video items-center justify-center overflow-hidden rounded-[12px] bg-[#0d1f3a] text-white/40 outline-none hover:ring-2 hover:ring-accent/70 focus-visible:ring-2 focus-visible:ring-accent",
-                  ativa === c.numero && "ring-2 ring-accent")}
-                style={{ backgroundImage: "radial-gradient(120% 90% at 50% 0%, rgb(78 145 237 / 0.18), transparent 70%)" }}>
-                {semSinal ? <VideoOff size={20} /> : <Video size={20} />}
-                <span className="tnum absolute bottom-8 left-8 inline-flex h-20 items-center rounded-full bg-[rgb(17_41_75/0.72)] px-8 text-[12px] font-semibold leading-16 text-white">{c.codigo}</span>
-                {semSinal && <span className="absolute top-8 right-8 inline-flex h-20 items-center rounded-full bg-[rgb(17_41_75/0.72)] px-8 text-[11px] font-semibold leading-16 text-white">Sem sinal</span>}
-              </button>
-            );
-          })}
-        </div>
+        {/* lista simples, sem quadro de prévia: interna não tem cena 3D e a imagem real só vem ao abrir (integração com o CFTV) */}
+        {/* agrupada por local e nível: o rótulo fica no grupo e cada linha mostra só a câmera */}
+        {grupos.length === 1 ? <div className="mt-8"><ListaCameras cameras={grupos[0].cameras} ativa={ativa} offline={offline} /></div> : (
+          <div className="mt-8 flex flex-col gap-8">
+            {grupos.map((g) => (
+              <Grupo key={g.nome} titulo={g.nome}><ListaCameras cameras={g.cameras} ativa={ativa} offline={offline} /></Grupo>
+            ))}
+          </div>
+        )}
       </div>
     </Corpo>
   );

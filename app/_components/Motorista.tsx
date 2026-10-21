@@ -1,42 +1,23 @@
 "use client";
-// Ilustrações do perfil do ocupante da vaga: rosto do motorista e placa Mercosul.
-// O rosto é ilustrativo e determinístico pelo id do ocupante; na operação real ele vem da câmera de face do gate.
-import { createAvatar } from "@dicebear/core";
-import * as avataaars from "@dicebear/avataaars";
-import { useMemo } from "react";
+// Perfil do ocupante da vaga: foto do motorista e placa Mercosul.
+// As fotos são de pessoas fictícias geradas por IA (public/motoristas), escolhidas de forma determinística pelo id do ocupante;
+// na operação real o rosto vem da câmera de face do gate.
 import type { Pais } from "@/lib/patio/tipos";
 
-const COMUM: avataaars.Options = {
-  style: ["default"],
-  // só tons de pele humanos (o estilo traz também amarelo e laranja de desenho)
-  skinColor: ["614335", "ae5d29", "d08b5b", "edb98a", "ffdbb4"],
-  mouth: ["default", "smile", "serious", "twinkle"],
-  eyes: ["default", "happy", "squint", "side"],
-  eyebrows: ["defaultNatural", "flatNatural", "raisedExcitedNatural", "upDownNatural"],
-  clothing: ["shirtCrewNeck", "collarAndSweater", "hoodie", "overall", "shirtVNeck", "blazerAndShirt"],
-  accessories: ["prescription01", "prescription02", "round", "wayfarers"],
-  accessoriesProbability: 20,
-};
-const MASCULINO: avataaars.Options = {
-  top: ["shortFlat", "shortRound", "shortWaved", "shortCurly", "theCaesar", "theCaesarAndSidePart", "sides", "hat", "winterHat02"],
-  facialHair: ["beardLight", "beardMedium", "moustacheFancy"],
-  facialHairProbability: 45,
-};
-const FEMININO: avataaars.Options = {
-  top: ["bob", "bun", "curly", "longButNotTooLong", "straight01", "straight02", "straightAndStrand", "miaWallace"],
-  facialHairProbability: 0,
-};
+const FOTOS = 6;
+
+function hash(s: string) {
+  let h = 2166136261;
+  for (let i = 0; i < s.length; i++) h = Math.imul(h ^ s.charCodeAt(i), 16777619);
+  return h >>> 0;
+}
 
 export function AvatarMotorista({ seed, feminino }: { seed: string; feminino: boolean }) {
-  const uri = useMemo(
-    () => createAvatar(avataaars, { seed, ...COMUM, ...(feminino ? FEMININO : MASCULINO) }).toDataUri(),
-    [seed, feminino],
-  );
+  const src = `/motoristas/${feminino ? "f" : "m"}-${String((hash(seed) % FOTOS) + 1).padStart(2, "0")}.webp`;
   return (
-    <span className="flex size-64 shrink-0 items-end justify-center overflow-hidden rounded-[16px]"
-      style={{ background: "linear-gradient(160deg, var(--accent-soft), color-mix(in srgb, var(--accent) 32%, var(--accent-soft)))" }}>
-      {/* eslint-disable-next-line @next/next/no-img-element -- SVG gerado em memória, sem otimização a fazer */}
-      <img src={uri} alt="" aria-hidden className="size-64 translate-y-4" />
+    <span className="flex size-64 shrink-0 overflow-hidden rounded-[16px] bg-card-muted">
+      {/* eslint-disable-next-line @next/next/no-img-element -- miniatura de 192 px já otimizada, servida direto de public */}
+      <img src={src} alt="" aria-hidden width={64} height={64} className="size-64 object-cover" />
     </span>
   );
 }
