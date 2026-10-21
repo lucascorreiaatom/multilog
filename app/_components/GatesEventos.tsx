@@ -6,7 +6,7 @@ import { usePatio } from "@/lib/store/patio";
 import { useUi } from "@/lib/store/ui";
 import { camerasGates } from "@/lib/cameras/catalogo";
 import { ListaCameras } from "./ListaCameras";
-import { AreaRolagem, cx } from "./ui";
+import { AreaRolagem, cx, linhaLista } from "./ui";
 
 const SENTIDO = { entrada: "Entrada", saida: "Saída", reversivel: "Reversível" } as const;
 const OPERACAO = { importacao: "Importação", exportacao: "Exportação" } as const;
@@ -16,8 +16,9 @@ export function ConteudoGates() {
   const selecao = useUi((s) => s.selecao);
   return (
     <>
-    <AreaRolagem className="flex min-h-0 flex-1 flex-col px-16 pb-16">
-      <ul className="flex flex-col gap-12">
+    {/* mesmo eixo de 20 px da aba Pátio: ícone alinhado ao rodapé de câmeras, seleção sangra 12 px */}
+    <AreaRolagem className="flex min-h-0 flex-1 flex-col px-20 pb-20">
+      <ul className="flex flex-col gap-4">
         {gates.map((g) => {
           const Icone = g.sentido === "entrada" ? ArrowDown : g.sentido === "saida" ? ArrowUp : ArrowDownUp;
           const ativo = selecao?.tipo === "gate" && selecao.numero === g.numero;
@@ -26,7 +27,8 @@ export function ConteudoGates() {
               <button
                 type="button"
                 onClick={() => { useUi.getState().selecionar({ tipo: "gate", numero: g.numero }); useUi.getState().focar({ tipo: "gate", numero: g.numero }); }}
-                className={cx("flex h-48 w-full items-center gap-12 rounded-[16px] px-12 text-left shadow-card outline-none focus-visible:ring-2 focus-visible:ring-accent", ativo ? "bg-card-muted realce-acento" : "bg-card")}
+                aria-current={ativo || undefined}
+                className={cx(linhaLista(ativo), "flex h-56 items-center gap-12")}
               >
                 <span className="flex size-32 shrink-0 items-center justify-center rounded-[10px] bg-chip text-text"><Icone size={16} /></span>
                 <span className="min-w-0 flex-1">

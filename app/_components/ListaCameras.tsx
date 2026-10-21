@@ -10,7 +10,7 @@ import type { Camera } from "@/lib/cameras/catalogo";
 import { MODELOS } from "@/lib/cameras/modelos";
 import { usePatio } from "@/lib/store/patio";
 import { useUi } from "@/lib/store/ui";
-import { AreaRolagem, cx } from "./ui";
+import { AreaRolagem, ROTULO, cx, linhaLista } from "./ui";
 
 function abrirCamera(c: Camera) {
   const ui = useUi.getState();
@@ -37,42 +37,41 @@ export function ListaCameras({ titulo, grupos, abertaInicial = false, fixa = fal
   const achadas = visiveis.reduce((n, g) => n + g.cameras.length, 0);
 
   return (
-    <section className={cx("flex flex-col", fixa && "min-h-0 shrink-0 faixa-elevada border-t border-text-3/20 bg-elevado px-16 py-16")}>
+    <section className={cx("flex flex-col", fixa && "min-h-0 shrink-0 faixa-elevada border-t border-text-3/20 bg-elevado px-20 py-16")}>
       {/* no rodapé a faixa inteira é clara (bg-elevado) e o botão não tem pílula nem hover próprios; dentro da aba, cartão
           branco com o mesmo raio dos cards vizinhos */}
       <button type="button" aria-expanded={aberta} aria-controls={id} onClick={() => setAberta(!aberta)}
         className={cx("flex h-48 items-center gap-12 text-left outline-none transition-colors duration-150 focus-visible:ring-2 focus-visible:ring-accent",
           fixa ? "-mx-8 rounded-full pr-16 pl-8" : "w-full rounded-[16px] bg-card px-12 shadow-card hover:bg-card-muted")}>
         <span className="flex size-32 shrink-0 items-center justify-center rounded-full bg-chip text-text"><Video size={16} /></span>
-        <span className="flex-1 text-[16px] font-semibold leading-24 text-text">{titulo} <span className="tnum font-medium text-text-2">· {total}</span></span>
+        <span className="flex-1 text-[14px] font-semibold leading-20 text-text">{titulo} <span className="tnum font-medium text-text-2">· {total}</span></span>
         {/* no rodapé a lista abre para cima, então a seta aponta para onde ela vai; gira em vez de trocar de ícone */}
         <ChevronDown size={18} className={cx("text-text-2 transition-transform duration-300 ease-[cubic-bezier(0.22,1,0.36,1)] motion-reduce:transition-none", aberta !== fixa && "rotate-180")} />
       </button>
       {/* abre e fecha pela altura (grid 0fr → 1fr) com fade e um deslize curto; fechada fica inerte, fora do foco */}
       <div id={id} inert={!aberta}
         className={cx("grid min-h-0 transition-[grid-template-rows,opacity] duration-300 ease-[cubic-bezier(0.22,1,0.36,1)] motion-reduce:transition-none",
-          aberta ? "grid-rows-[1fr] opacity-100" : "grid-rows-[0fr] opacity-0", fixa && "-mx-16")}>
+          aberta ? "grid-rows-[1fr] opacity-100" : "grid-rows-[0fr] opacity-0", fixa && "-mx-20")}>
         <div className={cx("flex min-h-0 flex-col gap-8 overflow-hidden transition-transform duration-300 ease-[cubic-bezier(0.22,1,0.36,1)] motion-reduce:transition-none",
-          !aberta && "translate-y-8", fixa && "px-16")}>
+          !aberta && "translate-y-8", fixa && "px-20")}>
           {/* margem (não padding) acima da busca: com a faixa fechada em 0fr, padding deixaria 8 px sobrando */}
           <label className="mt-8 flex h-40 shrink-0 items-center gap-8 rounded-full bg-card px-12 shadow-card focus-within:ring-2 focus-within:ring-accent">
             <Search size={16} className="shrink-0 text-text-2" />
             <input value={q} onChange={(e) => setQ(e.target.value)} placeholder="Número, local ou modelo" aria-label={`Buscar em ${titulo.toLowerCase()}`}
               className="h-40 min-w-0 flex-1 bg-transparent text-[14px] leading-20 text-text outline-none placeholder:text-text-2" />
           </label>
-          {termo && <p className="px-4 text-[13px] leading-20 text-text-2" aria-live="polite">{achadas ? `${achadas} de ${total} câmeras` : "Nenhuma câmera encontrada"}</p>}
+          {termo && <p className="text-[13px] leading-20 text-text-2" aria-live="polite">{achadas ? `${achadas} de ${total} câmeras` : "Nenhuma câmera encontrada"}</p>}
           <Rolagem fixa={fixa}>
           {visiveis.map((g) => (
             <div key={g.nome}>
-              <h4 className="px-4 pt-4 pb-4 text-[13px] font-semibold leading-20 text-text-2">{g.nome}</h4>
+              <h4 className={cx(ROTULO, "pt-16 pb-4")}>{g.nome}</h4>
               <ul className="flex flex-col gap-4">
                 {g.cameras.map((c) => {
                   const fora = offline.includes(c.numero), selecionada = ativa === c.numero;
                   return (
                     <li key={c.numero}>
                       <button type="button" onClick={() => abrirCamera(c)} aria-current={selecionada || undefined}
-                        className={cx("flex min-h-48 w-full items-center gap-12 rounded-[12px] px-12 py-4 text-left shadow-card outline-none focus-visible:ring-2 focus-visible:ring-accent",
-                          selecionada ? "bg-card-muted realce-acento" : "bg-card hover:bg-card-muted")}>
+                        className={cx(linhaLista(selecionada), "flex min-h-48 items-center gap-12 py-4")}>
                         <span className={cx("flex size-32 shrink-0 items-center justify-center rounded-full", fora ? "bg-[color-mix(in_srgb,var(--st-ocupada)_14%,transparent)] text-st-ocupada" : "bg-chip text-text")}>
                           {fora ? <VideoOff size={16} /> : <Video size={16} />}
                         </span>
@@ -101,5 +100,6 @@ export function ListaCameras({ titulo, grupos, abertaInicial = false, fixa = fal
 /** no rodapé, os grupos rolam numa área própria de altura limitada; dentro da aba, seguem a rolagem dela */
 function Rolagem({ fixa, children }: { fixa: boolean; children: React.ReactNode }) {
   if (!fixa) return <>{children}</>;
-  return <AreaRolagem className="max-h-[40vh] min-h-0 pb-4">{children}</AreaRolagem>;
+  // -mx-12 px-12: a rolagem corta no próprio limite, então ela abre 12 px de cada lado para o fundo da seleção sangrar
+  return <AreaRolagem className="-mx-12 max-h-[40vh] min-h-0 px-12 pb-4">{children}</AreaRolagem>;
 }

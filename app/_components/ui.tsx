@@ -68,6 +68,15 @@ export function Barra({ valor, cor = "var(--accent)", altura = 6 }: { valor: num
   );
 }
 
+/** rótulo de seção do painel: pequeno, em caixa alta e espaçado, no mesmo eixo do conteúdo */
+export const ROTULO = "text-[12px] font-semibold uppercase leading-16 tracking-[0.06em] text-text-2";
+
+/** linha de lista do painel: texto no eixo, fundo de hover e seleção sangrando 12 px para fora dele
+ *  (o fundo fica a 8 px da borda do painel e o texto ganha folga dos dois lados) */
+export const linhaLista = (ativa: boolean) =>
+  cx("-mx-12 w-[calc(100%+24px)] rounded-[12px] px-12 text-left transition-colors outline-none focus-visible:ring-2 focus-visible:ring-accent",
+    ativa ? "bg-card shadow-card realce-acento" : "hover:bg-chip");
+
 export function Titulo({ children, className }: { children: ReactNode; className?: string }) {
   return <h2 className={cx("text-[16px] font-semibold leading-24 tracking-[-0.01em] text-text", className)}>{children}</h2>;
 }
